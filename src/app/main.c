@@ -44,7 +44,7 @@ int main(void) {
         error_handler();
     }
 
-    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+//    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
     // hand control over to FreeRTOS
     vTaskStartScheduler();

@@ -1,4 +1,4 @@
-PROJECT_NAME := spin_test
+PROJECT_NAME := core-vc
 PROJECT_VERSION := f33
 
 # Build info
@@ -60,10 +60,10 @@ CORE_OBJS :=  $(CORE_SRCS:$(CORE_DIR)/%=$(STM32_BUILD_DIR)/obj/core/%.o)
 
 # Compilation targets
 .PHONY: all
-all: spin_test
+all: core-vc
 
-.PHONY: spin_test
-spin_test: $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).elf $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).bin
+.PHONY: core-vc
+core-vc: $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).elf $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).bin
 
 # Main executable
 $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).bin: $(STM32_BUILD_DIR)/$(PROJECT_NAME)-$(PROJECT_VERSION).elf

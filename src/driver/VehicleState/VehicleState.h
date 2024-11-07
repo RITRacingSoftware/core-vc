@@ -14,4 +14,4 @@ typedef enum
 } VehicleState_e;
 
 void VehicleState_init();
-void VehicleState_100Hz();
+void VehicleState_Task_Update();

@@ -18,7 +18,7 @@ typedef struct
 } Inverter_s;
 
 void Inverters_init();
-void Inverters_100Hz();
+void Inverters_Task_Update();
 void Inverters_update();
 
 // Getters for inverter struct values

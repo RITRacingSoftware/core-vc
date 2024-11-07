@@ -40,9 +40,9 @@ typedef struct
     struct inverter_dbc_fr_amk_setpoints2_t fr_setpoints2;
     struct inverter_dbc_fl_amk_setpoints_t fl_setpoints;
     struct inverter_dbc_fl_amk_setpoints2_t fl_setpoints2;
-} CAN_BUS;
+} INV_BUS;
 
-extern CAN_BUS canBus;
+extern INV_BUS invBus;
 
 bool CAN_tx();
 void CAN_rx();

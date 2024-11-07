@@ -28,7 +28,7 @@ void VehicleState_init()
     timer = 0;
 }
 
-void VehicleState_100Hz()
+void VehicleState_Task_Update()
 {
     GPIO_toggle_precharge_relay();
     GPIO_toggle_interlock_relay();

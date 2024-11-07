@@ -11,6 +11,9 @@
 #include "CAN/driver_can.h"
 #include "GPIO/driver_GPIO.h"
 #include "VehicleState/VehicleState.h"
+#include "APPS/APPS.h"
+#include "Accelerator/Accelerator.h"
+#include "Brakes/Brakes.h"
 
 #define TIME_DELAY 2000
 
@@ -29,14 +32,18 @@ bool VC_init()
     GPIO_init();
     VehicleState_init();
     Inverters_init();
+    APPS_init();
+    Accelerator_init();
 
     return true;
 }
 
-void VC_100Hz()
+void VC_Task_Update()
 {
-    VehicleState_100Hz();
-    Inverters_100Hz();
+    VehicleState_Task_Update();
+    Inverters_Task_Update();
+    Brakes_Task_Update();
+    APPS_Task_Update;
 }
 
 void toggle_heartbeat()

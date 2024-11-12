@@ -2,12 +2,25 @@
 #include "can.h"
 #include "Inverters/Inverters.h"
 #include "inverter_dbc.h"
+#include "main_dbc.h"
 #include "VC/VC.h"
 
+#define CAN_SENSE FDCAN1
+#define CAN_MAIN FDCAN2
+#define CAN_INV FDCAN3
 
+SENSE_BUS senseBus;
+MAIN_BUS mainBus;
 INV_BUS invBus;
 
-int idArr[NUM_IDS_FDCAN2] = {
+static bool CAN_add_filters();
+
+int main_id_arr[NUM_IDS_MAIN] = {
+        MAIN_DBC_SSDB_BRAKE_PRESSURE_FRONT_FRAME_ID,
+        MAIN_DBC_SSDB_STEERING_ANGLE_FRAME_ID
+};
+
+int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET2_FRAME_ID,
@@ -22,9 +35,18 @@ int idArr[NUM_IDS_FDCAN2] = {
         INVERTER_DBC_FL_AMK_RIT_SET2_FRAME_ID
 };
 
+
+bool CAN_init()
+{
+    if (!core_CAN_init(CAN_MAIN)) return false;
+    if (!core_CAN_init(CAN_INV)) return false;
+    if (!CAN_add_filters()) return false;
+}
+
 bool CAN_tx()
 {
-    core_CAN_send_from_tx_queue_task(FDCAN2);
+    core_CAN_send_from_tx_queue_task(CAN_MAIN);
+    core_CAN_send_from_tx_queue_task(CAN_INV);
     return false;
 }
 
@@ -32,7 +54,26 @@ void CAN_rx()
 {
     CanMessage_s canMessage;
 
-    if (core_CAN_receive_from_queue(FDCAN2, &canMessage))
+    if (core_CAN_receive_from_queue(CAN_MAIN, &canMessage))
+    {
+        uint8_t data[8];
+        for (int i = 0; i < 8; i++)
+        {
+            data[i] = (canMessage.data >> (i * 8)) & 0xff;
+        }
+        int id = canMessage.id;
+
+        switch (id)
+        {
+            case MAIN_DBC_SSDB_BRAKE_PRESSURE_FRONT_FRAME_ID:
+                main_dbc_ssdb_brake_pressure_front_unpack(&mainBus.front_bps, &data[0], canMessage.dlc); break;
+
+            case MAIN_DBC_SSDB_STEERING_ANGLE_FRAME_ID:
+                main_dbc_ssdb_steering_angle_unpack(&mainBus.steering_angle, &data[0], canMessage.dlc); break;
+        }
+    }
+
+    if (core_CAN_receive_from_queue(CAN_INV, &canMessage))
     {
         uint8_t data[8];
         for (int i = 0; i < 8; i++)
@@ -124,15 +165,29 @@ int CAN_pack_message(int id, uint8_t *msg_data)
     return -1;
 }
 
-bool CAN_add_filters()
+static bool CAN_add_filters()
 {
-    int minFilter = idArr[0];
-    int maxFilter = idArr[0];
+    int minFilter;
+    int maxFilter;
+    bool status = true;
 
-    for (int i = 1; i < NUM_IDS_FDCAN2; i++)
+    minFilter = main_id_arr[0];
+    maxFilter = main_id_arr[0];
+    for (int i = 1; i < NUM_IDS_MAIN; i++)
     {
-        if (idArr[i] < minFilter) minFilter = idArr[i];
-        if (idArr[i] > maxFilter) maxFilter = idArr[i];
+        if (main_id_arr[i] < minFilter) minFilter = main_id_arr[i];
+        if (main_id_arr[i] > maxFilter) maxFilter = main_id_arr[i];
     }
-    return core_CAN_add_filter(FDCAN2, false, minFilter, maxFilter);
+    status = (status && core_CAN_add_filter(CAN_MAIN, false, minFilter, maxFilter));
+
+    minFilter = inv_id_arr[0];
+    maxFilter = inv_id_arr[0];
+    for (int i = 1; i < NUM_IDS_INV; i++)
+    {
+        if (inv_id_arr[i] < minFilter) minFilter = inv_id_arr[i];
+        if (inv_id_arr[i] > maxFilter) maxFilter = inv_id_arr[i];
+    }
+    status = (status && core_CAN_add_filter(CAN_INV, false, minFilter, maxFilter));
+
+    return status;
 }

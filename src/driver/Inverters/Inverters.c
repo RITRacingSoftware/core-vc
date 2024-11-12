@@ -114,28 +114,24 @@ void Inverters_set_torque_request(uint8_t invNum, double setpoint, double negLim
             invBus.rr_setpoints.rr_amk_torque_setpoint = inverter_dbc_rr_amk_setpoints_rr_amk_torque_setpoint_encode(setpoint);
             invBus.rr_setpoints.rr_amk_torque_limit_negative = inverter_dbc_rr_amk_setpoints_rr_amk_torque_limit_negative_encode(negLimit);
             invBus.rr_setpoints.rr_amk_torque_limit_positive = inverter_dbc_rr_amk_setpoints_rr_amk_torque_limit_positive_encode(posLimit);
-            invBus.rr_setpoints2.rr_actual_speed = inverter_dbc_rr_amk_setpoints2_rr_actual_speed_encode(0);
             break;
 
         case INV_RL:
             invBus.rl_setpoints.rl_amk_torque_setpoint = inverter_dbc_rl_amk_setpoints_rl_amk_torque_setpoint_encode(setpoint);
             invBus.rl_setpoints.rl_amk_torque_limit_negative = inverter_dbc_rl_amk_setpoints_rl_amk_torque_limit_negative_encode(negLimit);
             invBus.rl_setpoints.rl_amk_torque_limit_positive = inverter_dbc_rl_amk_setpoints_rl_amk_torque_limit_positive_encode(posLimit);
-            invBus.rl_setpoints2.rl_actual_speed = inverter_dbc_rl_amk_setpoints2_rl_actual_speed_encode(0);
             break;
 
         case INV_FR:
             invBus.fr_setpoints.fr_amk_torque_setpoint = inverter_dbc_fr_amk_setpoints_fr_amk_torque_setpoint_encode(setpoint);
             invBus.fr_setpoints.fr_amk_torque_limit_negative = inverter_dbc_fr_amk_setpoints_fr_amk_torque_limit_negative_encode(negLimit);
             invBus.fr_setpoints.fr_amk_torque_limit_positive = inverter_dbc_fr_amk_setpoints_fr_amk_torque_limit_positive_encode(posLimit);
-            invBus.fr_setpoints2.fr_actual_speed = inverter_dbc_fr_amk_setpoints2_fr_actual_speed_encode(0);
             break;
 
         case INV_FL:
             invBus.fl_setpoints.fl_amk_torque_setpoint = inverter_dbc_fl_amk_setpoints_fl_amk_torque_setpoint_encode(setpoint);
             invBus.fl_setpoints.fl_amk_torque_limit_negative = inverter_dbc_fl_amk_setpoints_fl_amk_torque_limit_negative_encode(negLimit);
             invBus.fl_setpoints.fl_amk_torque_limit_positive = inverter_dbc_fl_amk_setpoints_fl_amk_torque_limit_positive_encode(posLimit);
-            invBus.fl_setpoints2.fl_actual_speed = inverter_dbc_fl_amk_setpoints2_fl_actual_speed_encode(0);
             break;
     }
 }
@@ -163,30 +159,5 @@ void Inverters_send_setpoints(uint8_t invNum)
     if (CAN_pack_message(id, (uint8_t *)&msg_data) != -1)
     {
         core_CAN_add_message_to_tx_queue(FDCAN2, id, 8, msg_data);
-    }
-}
-
-void Inverters_send_setpoints2(uint8_t invNum)
-{
-    uint16_t msg_data;
-
-    int id;
-    switch (invNum)
-    {
-        case INV_RR:
-            id = INVERTER_DBC_RR_AMK_SETPOINTS2_FRAME_ID; break;
-
-        case INV_RL:
-            id = INVERTER_DBC_RL_AMK_SETPOINTS2_FRAME_ID; break;
-
-        case INV_FR:
-            id = INVERTER_DBC_FR_AMK_SETPOINTS2_FRAME_ID; break;
-
-        case INV_FL:
-            id = INVERTER_DBC_FL_AMK_SETPOINTS2_FRAME_ID; break;
-    }
-    if (CAN_pack_message(id, (uint8_t *)&msg_data) != -1)
-    {
-        core_CAN_add_message_to_tx_queue(FDCAN2, id, 2, msg_data);
     }
 }

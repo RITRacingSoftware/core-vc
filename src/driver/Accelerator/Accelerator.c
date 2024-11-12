@@ -31,17 +31,17 @@ uint8_t Accelerator_get_avg_pos(float *avgPos)
     accelAVoltage = ((float)accelAVal/ADC_MAX_VAL) * ADC_MAX_VOLTAGE;
     accelBVoltage = ((float)accelBVal/ADC_MAX_VAL) * ADC_MAX_VOLTAGE;
 
-    // Send accel A voltage over CAN
-    // Send accel B voltage over CAN
+    mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_voltage_a = main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_voltage_a_encode(accelAVoltage);
+    mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_voltage_b = main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_voltage_b_encode(accelBVoltage);
 
     float accelAPos = (MAX(accelAVoltage - ACCEL_A_OFFSET_V, 0.0) / ACCEL_A_RANGE_V) * 100.0;
     float accelBPos = (MAX(accelBVoltage - ACCEL_B_OFFSET_V, 0.0) / ACCEL_B_RANGE_V) * 100.0;
 
     *avgPos = ((accelAPos + accelBPos) / 2.0);
 
-    // Send accel A position over CAN
-    // Send accel B position over CAN
-    // Send average position over CAN
+    mainBus.pedal_inputs.vc_pedal_inputs_accel_position_a = main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_a_encode(accelAPos);
+    mainBus.pedal_inputs.vc_pedal_inputs_accel_position_b = main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_b_encode(accelBPos);
+    mainBus.pedal_inputs.vc_pedal_inputs_accel_position_avg = main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_avg_encode(*avgPos);
 
     return error_check();
 }

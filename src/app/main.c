@@ -40,7 +40,7 @@ void task_100Hz(void *pvParameters)
     TickType_t next_wake_time = xTaskGetTickCount();
     while(true)
     {
-        VC_100Hz();
+        VC_Task_Update();
         vTaskDelayUntil(&next_wake_time, 10);
     }
 }

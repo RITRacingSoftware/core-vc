@@ -1,5 +1,4 @@
-#ifndef DRIVER_CAN_H
-#define DRIVER_CAN_H
+#pragma once
 
 #include "config.h"
 
@@ -7,6 +6,23 @@
 #include <stdint.h>
 
 #include "inverter_dbc.h"
+#include "main_dbc.h"
+
+typedef struct
+{
+} SENSE_BUS;
+
+typedef struct
+{
+    // Received by VC
+    struct main_dbc_ssdb_brake_pressure_front_t front_bps;
+    struct main_dbc_ssdb_steering_angle_t steering_angle;
+
+    // Sent by VC
+    struct main_dbc_vc_rtds_request_t rtds_request;
+    struct main_dbc_vc_pedal_inputs_t pedal_inputs;
+    struct main_dbc_vc_pedal_inputs_raw_t pedal_inputs_raw;
+} MAIN_BUS;
 
 typedef struct
 {
@@ -33,19 +49,15 @@ typedef struct
 
     // Sent by VC
     struct inverter_dbc_rr_amk_setpoints_t rr_setpoints;
-    struct inverter_dbc_rr_amk_setpoints2_t rr_setpoints2;
     struct inverter_dbc_rl_amk_setpoints_t rl_setpoints;
-    struct inverter_dbc_rl_amk_setpoints2_t rl_setpoints2;
     struct inverter_dbc_fr_amk_setpoints_t fr_setpoints;
-    struct inverter_dbc_fr_amk_setpoints2_t fr_setpoints2;
     struct inverter_dbc_fl_amk_setpoints_t fl_setpoints;
-    struct inverter_dbc_fl_amk_setpoints2_t fl_setpoints2;
 } INV_BUS;
 
 extern INV_BUS invBus;
+extern MAIN_BUS mainBus;
 
+bool CAN_init();
 bool CAN_tx();
 void CAN_rx();
 int CAN_pack_message(int id, uint8_t *msg_data);
-bool CAN_add_filters();
-#endif

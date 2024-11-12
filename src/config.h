@@ -2,9 +2,12 @@
 
 /** GENERAL **/
 #define LOW_SPEED_TASK_FREQ_HZ 100
+#define PRECHARGE_VOLTAGE
 
 /** CAN **/
-#define NUM_IDS_FDCAN2 12
+#define NUM_IDS_SENSE 12
+#define NUM_IDS_MAIN 2
+#define NUM_IDS_INV 12
 
 /** Inverters **/
 #define TORQUE_SETPOINT 2

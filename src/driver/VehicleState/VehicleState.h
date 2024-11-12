@@ -9,7 +9,7 @@ typedef enum
     // receive echo and confirmation, flip interlock relay
     VehicleState_WAIT, // Wait for enable button to be pressed
     VehicleState_STANDBY, // Send inverter enable and on, receive inverter on echos and confirmation, set BE2
-    VehicleState_RUNNING, // Actively running, send torque request every 200ms. Wait for stop button
+    VehicleState_READY_TO_DRIVE, // Actively running, send torque request every 200ms. Wait for stop button
     VehicleState_SHUTDOWN // Turn off everything in sequence
 } VehicleState_e;
 

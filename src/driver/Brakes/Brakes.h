@@ -8,5 +8,5 @@
 
 void Brakes_init();
 void Brakes_Task_Update();
-bool Brakes_analog_pressed(bool *brake_pressed);
+bool Brakes_get_pressed(bool *brake_pressed, bool use_CAN);
 bool Brakes_CAN_pressed();

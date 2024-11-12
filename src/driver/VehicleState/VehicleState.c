@@ -109,10 +109,6 @@ void VehicleState_Task_Update()
             Inverters_set_torque_request(INV_RL, 0, 0, 0);
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
             Inverters_set_torque_request(INV_FL, 0, 0, 0);
-            Inverters_send_setpoints2(INV_RR);
-            Inverters_send_setpoints2(INV_RL);
-            Inverters_send_setpoints2(INV_FR);
-            Inverters_send_setpoints2(INV_FL);
             if (GPIO_enable_button_pressed())
             {
                 new_state(VehicleState_STANDBY);
@@ -153,11 +149,14 @@ void VehicleState_Task_Update()
             // X140 binary input BE2 = 1
             GPIO_set_activate_inv_relays(true);
 
-            new_state(VehicleState_RUNNING);
+            new_state(VehicleState_READY_TO_DRIVE);
+
+            // Trigger ready to drive sound
+            mainBus.rtds_request.vc_request_rtds = true;
             timer = 0;
             break;
 
-        case VehicleState_RUNNING:
+        case VehicleState_READY_TO_DRIVE:
             core_GPIO_set_heartbeat(true);
             Inverters_set_torque_request(INV, TORQUE_SETPOINT, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
 

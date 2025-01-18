@@ -29,7 +29,7 @@ bool GPIO_start_button_pressed() {return !core_GPIO_digital_read(START_BUTTON_PO
 
 bool GPIO_precharge_button_pressed() {return !core_GPIO_digital_read(PRECHARGE_BUTTON_PORT, PRECHARGE_BUTTON_PIN);}
 
-void GPIO_set_precharge_relay(bool on) {core_GPIO_digital_write(PRECHARGE_RELAY_PORT, PRECHARGE_RELAY_PIN, true);}
+void GPIO_set_precharge_relay(bool on) {core_GPIO_digital_write(PRECHARGE_RELAY_PORT, PRECHARGE_RELAY_PIN, on);}
 
 bool GPIO_precharge_done_button_pressed() {return !core_GPIO_digital_read(PRECHARGE_DONE_BUTTON_PORT, PRECHARGE_DONE_BUTTON_PIN);}
 

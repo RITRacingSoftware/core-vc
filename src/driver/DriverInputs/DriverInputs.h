@@ -6,5 +6,14 @@
 #define FAULT_BPS_IRRATIONAL 0x8      // 0b00001000
 #define FAULT_DOUBLE_PEDAL 0x10       // 0b00010000
 
-void APPS_init();
-void APPS_Task_Update();
+struct DriverInputs_s
+{
+    float brakePsi;
+    float accelPct;
+    float steerDeg;
+};
+
+void DriverInputs_init();
+void DriverInputs_Task_Update();
+void DriverInputs_update_steering_angle();
+void DriverInputs_get_driver_inputs(struct DriverInputs_s *inputs);

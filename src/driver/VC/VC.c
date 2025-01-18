@@ -12,10 +12,11 @@
 #include "CAN/driver_can.h"
 #include "GPIO/driver_GPIO.h"
 #include "VehicleState/VehicleState.h"
-#include "APPS/APPS.h"
+#include "DriverInputs//DriverInputs.h"
 #include "Accelerator/Accelerator.h"
 #include "DashInputs/DashInputs.h"
 #include "Brakes/Brakes.h"
+#include "ControlSystem/ControlSystem.h"
 
 
 bool VC_init()
@@ -31,9 +32,9 @@ bool VC_init()
     GPIO_init();
     VehicleState_init();
     Inverters_init();
-    APPS_init();
+    DriverInputs_init();
     Accelerator_init();
-    DashInputs_init();
+//    DashInputs_init();
 
     core_timeout_start_all();
 
@@ -44,8 +45,8 @@ void VC_Task_Update()
 {
     VehicleState_Task_Update();
     Inverters_Task_Update();
-    Brakes_Task_Update();
-    APPS_Task_Update();
+    DriverInputs_Task_Update();
+    ControlSystem_Task_Update();
     core_timeout_check_all();
 }
 

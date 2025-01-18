@@ -3,8 +3,10 @@
 
 #include "inverter_dbc.h"
 #include "can.h"
-#include "CAN/driver_can.h"
+#include "timeout.h"
 #include "gpio.h"
+#include "CAN/driver_can.h"
+#include "FaultManager/FaultManager.h"
 
 static Inverter_s invRR;
 static Inverter_s invRL;
@@ -14,6 +16,13 @@ static Inverter_s invFL;
 static Inverter_s *invArr[4] = {&invRR, &invRL, &invFR, &invFL};
 
 static int last_checkin_ms;
+
+static core_timeout_t rr_timeout;
+static core_timeout_t rl_timeout;
+static core_timeout_t fr_timeout;
+static core_timeout_t fl_timeout;
+
+static void timeout_callback(core_timeout_t *inv_timeout);
 
 void Inverters_init()
 {
@@ -32,6 +41,34 @@ void Inverters_init()
     inverter_dbc_fr_amk_actual_1_init(&invBus.fr_actual1);
     inverter_dbc_fl_amk_actual_1_init(&invBus.fl_actual1);
     Inverters_update();
+
+    // RR timeout init
+    rr_timeout.callback = timeout_callback;
+    rr_timeout.timeout = INV_CAN_TIMEOUT_MS;
+    rr_timeout.module = CAN_INV;
+    rr_timeout.ref = INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID;\
+    core_timeout_insert(&rr_timeout);
+
+    // RL timeout init
+    rl_timeout.callback = timeout_callback;
+    rl_timeout.timeout = INV_CAN_TIMEOUT_MS;
+    rl_timeout.module = CAN_INV;
+    rl_timeout.ref = INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID;
+    core_timeout_insert(&rl_timeout);
+
+    // FR timeout init
+    fr_timeout.callback = timeout_callback;
+    fr_timeout.timeout = INV_CAN_TIMEOUT_MS;
+    fr_timeout.module = CAN_INV;
+    fr_timeout.ref = INVERTER_DBC_FR_AMK_ACTUAL_1_FRAME_ID;
+    core_timeout_insert(&fr_timeout);
+
+    // FL timeout init
+    fl_timeout.callback = timeout_callback;
+    fl_timeout.timeout = INV_CAN_TIMEOUT_MS;
+    fl_timeout.module = CAN_INV;
+    fl_timeout.ref = INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID;
+    core_timeout_insert(&fl_timeout);
 
 }
 
@@ -160,4 +197,15 @@ void Inverters_send_setpoints(uint8_t invNum)
     {
         core_CAN_add_message_to_tx_queue(FDCAN2, id, 8, msg_data);
     }
+}
+
+static void timeout_callback(core_timeout_t *timeout)
+{
+    uint8_t faultList = 0;
+
+    if (timeout == &rr_timeout) faultList |= FAULT_RR_LOST;
+    else if (timeout == &rl_timeout) faultList |= FAULT_RL_LOST;
+    else if (timeout == &fr_timeout) faultList |= FAULT_FR_LOST;
+    else if (timeout == &fl_timeout) faultList |= FAULT_FL_LOST;
+    FaultManager_Inv(faultList);
 }

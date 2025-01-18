@@ -34,8 +34,8 @@ uint8_t Accelerator_get_avg_pos(float *avgPos)
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_voltage_a = main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_voltage_a_encode(accelAVoltage);
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_voltage_b = main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_voltage_b_encode(accelBVoltage);
 
-    float accelAPos = (MAX(accelAVoltage - ACCEL_A_OFFSET_V, 0.0) / ACCEL_A_RANGE_V) * 100.0;
-    float accelBPos = (MAX(accelBVoltage - ACCEL_B_OFFSET_V, 0.0) / ACCEL_B_RANGE_V) * 100.0;
+    float accelAPos = (MAX(accelAVoltage - ACCEL_A_OFFSET_V, 0.0) / ACCEL_A_RANGE_V);
+    float accelBPos = (MAX(accelBVoltage - ACCEL_B_OFFSET_V, 0.0) / ACCEL_B_RANGE_V);
 
     *avgPos = ((accelAPos + accelBPos) / 2.0);
 

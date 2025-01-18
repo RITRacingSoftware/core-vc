@@ -12,8 +12,8 @@
 #include "task.h"
 
 #define VC_100HZ_PRIORITY (tskIDLE_PRIORITY + 1)
-#define CAN_RX_PRIORITY (tskIDLE_PRIORITY + 4)
-#define CAN_TX_PRIORITY (tskIDLE_PRIORITY + 4)
+#define CAN_RX_PRIORITY (tskIDLE_PRIORITY + 2)
+#define CAN_TX_PRIORITY (tskIDLE_PRIORITY + 2)
 
 void hardfault_error_handler();
 

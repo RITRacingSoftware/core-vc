@@ -83,7 +83,6 @@ void Inverters_Task_Update()
 void Inverters_update()
 {
         // Update RR values
-//        invRR.isReady = canBus.rr_actual1.rr_status_system_ready;
         invRR.isReady = (bool) inverter_dbc_rr_amk_actual_1_rr_status_system_ready_decode(invBus.rr_actual1.rr_status_system_ready);
         invRR.dcOnEcho = (bool) inverter_dbc_rr_amk_actual_1_rr_status_dc_on_decode(invBus.rr_actual1.rr_status_dc_on);
         invRR.dcOn = (bool) inverter_dbc_rr_amk_actual_1_rr_status_quit_dc_on_decode(invBus.rr_actual1.rr_status_quit_dc_on);
@@ -91,7 +90,6 @@ void Inverters_update()
         invRR.isOn = (bool) inverter_dbc_rr_amk_actual_1_rr_status_quit_inverter_on_decode(invBus.rr_actual1.rr_status_quit_inverter_on);
 
         // Update RL values
-//        invRL.isReady = canBus.rl_actual1.rl_status_system_ready;
         invRL.isReady = (bool) inverter_dbc_rl_amk_actual_1_rl_status_system_ready_decode(invBus.rl_actual1.rl_status_system_ready);
         invRL.dcOnEcho = (bool) inverter_dbc_rl_amk_actual_1_rl_status_dc_on_decode(invBus.rl_actual1.rl_status_dc_on);
         invRL.dcOn = (bool) inverter_dbc_rl_amk_actual_1_rl_status_quit_dc_on_decode(invBus.rl_actual1.rl_status_quit_dc_on);
@@ -99,7 +97,6 @@ void Inverters_update()
         invRL.isOn = (bool) inverter_dbc_rl_amk_actual_1_rl_status_quit_inverter_on_decode(invBus.rl_actual1.rl_status_quit_inverter_on);
 
         // Update FR values
-//        invFR.isReady = invBus.fr_actual1.fr_status_system_ready;
         invFR.isReady = (bool) inverter_dbc_fr_amk_actual_1_fr_status_system_ready_decode(invBus.fr_actual1.fr_status_system_ready);
         invFR.dcOnEcho = (bool) inverter_dbc_fr_amk_actual_1_fr_status_dc_on_decode(invBus.fr_actual1.fr_status_dc_on);
         invFR.dcOn = (bool) inverter_dbc_fr_amk_actual_1_fr_status_quit_dc_on_decode(invBus.fr_actual1.fr_status_quit_dc_on);
@@ -107,7 +104,6 @@ void Inverters_update()
         invFR.isOn = (bool) inverter_dbc_fr_amk_actual_1_fr_status_quit_inverter_on_decode(invBus.fr_actual1.fr_status_quit_inverter_on);
 
         // Update FL values
-//        invFL.isReady = invBus.fl_actual1.fl_status_system_ready;
         invFL.isReady = (bool) inverter_dbc_fl_amk_actual_1_fl_status_system_ready_decode(invBus.fl_actual1.fl_status_system_ready);
         invFL.dcOnEcho = (bool) inverter_dbc_fl_amk_actual_1_fl_status_dc_on_decode(invBus.fl_actual1.fl_status_dc_on);
         invFL.dcOn = (bool) inverter_dbc_fl_amk_actual_1_fl_status_quit_dc_on_decode(invBus.fl_actual1.fl_status_quit_dc_on);
@@ -120,6 +116,22 @@ bool Inverters_get_dc_on_echo(uint8_t invNum) {return invArr[invNum]->dcOnEcho;}
 bool Inverters_get_dc_on(uint8_t invNum) {return invArr[invNum]->dcOn;}
 bool Inverters_get_inv_on_echo(uint8_t invNum) {return invArr[invNum]->isOnEcho;}
 bool Inverters_get_inv_on(uint8_t invNum) {return invArr[invNum]->isOn;}
+
+bool Inverters_get_precharged(uint8_t invNum)
+{
+
+    Inverter_s *invPtr;
+
+    switch (invNum)
+    {
+        case INV_RR: invPtr = &invRR; break;
+        case INV_RL: invPtr = &invRL; break;
+        case INV_FR: invPtr = &invFR; break;
+        case INV_FL: invPtr = &invFL; break;
+    }
+
+    return (invPtr->dcBusVoltage > invPtr->dcMonitor);
+}
 
 void Inverters_set_dc_on(bool val)
 {

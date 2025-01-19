@@ -1,10 +1,20 @@
 #pragma once
 
+#define VC_NOT_READY 1
+#define INVERTERS_POWERED 2
+#define PRECHARGING 3
+#define WAIT 4
+#define STANDBY 5
+#define RTD 6
+#define SHUTDOWN 7
+
+#define RTD_HOLD_TIME 1000
+
+
 typedef enum
 {
     VehicleState_VC_NOT_READY, // Doing nothing, default state
     VehicleState_INVERTERS_POWERED, // Reads for inverters saying they're ready
-    VehicleState_INVERTERS_READY, // Waits for precharge button to be pressed, activates precharge relay
     VehicleState_PRECHARGING, // When precharge done button is pressed, send it out,
     // receive echo and confirmation, flip interlock relay
     VehicleState_WAIT, // Wait for enable button to be pressed

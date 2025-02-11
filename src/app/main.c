@@ -17,20 +17,40 @@
 
 void hardfault_error_handler();
 
-void task_CAN_tx(void *pvParameters)
+void task_CAN_tx_main(void *pvParameters)
 {
     (void) pvParameters;
-    if (!CAN_tx()) hardfault_error_handler();
+    if (!CAN_tx_main()) hardfault_error_handler();
 }
 
-void task_CAN_rx(void *pvParameters)
+void task_CAN_tx_inv(void *pvParameters)
 {
     (void) pvParameters;
-    TickType_t next_wake_time = xTaskGetTickCount();
+    if (!CAN_tx_inv()) hardfault_error_handler();
+}
+
+void task_CAN_tx_sense(void *pvParameters)
+{
+    (void) pvParameters;
+    if (!CAN_tx_sense()) hardfault_error_handler();
+}
+
+
+void task_CAN_rx_main(void *pvParameters)
+{
+    (void) pvParameters;
     while(true)
     {
-        CAN_rx();
-        vTaskDelayUntil(&next_wake_time, 1);
+        CAN_rx_main();
+    }
+}
+
+void task_CAN_rx_inv(void *pvParameters)
+{
+    (void) pvParameters;
+    while(true)
+    {
+        CAN_rx_inv();
     }
 }
 
@@ -51,7 +71,7 @@ void task_heartbeat(void *pvParameters)
     TickType_t next_wake_time = xTaskGetTickCount();
     while(true)
     {
-//        toggle_heartbeat();
+        toggle_heartbeat();
         vTaskDelayUntil(&next_wake_time, 500);
     }
 }
@@ -62,7 +82,7 @@ int main(void)
 
     int err;
 
-    err = xTaskCreate(task_CAN_tx,
+    err = xTaskCreate(task_CAN_tx_main,
       "CAN_tx",
       1000,
       NULL,
@@ -70,12 +90,36 @@ int main(void)
       NULL);
     if (err != pdPASS) hardfault_error_handler();
 
-    err = xTaskCreate(task_CAN_rx,
+    err = xTaskCreate(task_CAN_tx_inv,
+      "CAN_tx",
+      1000,
+      NULL,
+      CAN_TX_PRIORITY,
+      NULL);
+    if (err != pdPASS) hardfault_error_handler();
+
+    err = xTaskCreate(task_CAN_tx_sense,
+      "CAN_tx",
+      1000,
+      NULL,
+      CAN_TX_PRIORITY,
+      NULL);
+    if (err != pdPASS) hardfault_error_handler();
+
+    err = xTaskCreate(task_CAN_rx_main,
       "CAN_rx",
       5000,
       NULL,
       CAN_RX_PRIORITY,
       NULL);
+    if (err != pdPASS) hardfault_error_handler();
+
+    err = xTaskCreate(task_CAN_rx_inv,
+                      "CAN_rx",
+                      5000,
+                      NULL,
+                      CAN_RX_PRIORITY,
+                      NULL);
     if (err != pdPASS) hardfault_error_handler();
 
     err = xTaskCreate(task_heartbeat,

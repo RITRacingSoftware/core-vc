@@ -3,18 +3,21 @@
 #include "CAN/driver_can.h"
 #include "FaultManager/FaultManager.h"
 #include "adc.h"
+#include "usart.h"
 
-float accelAVoltage;
-float accelBVoltage;
-float accelAPos;
-float accelBPos;
+static float accelAVoltage;
+static float accelBVoltage;
+static float accelAPos;
+static float accelBPos;
 
 static uint8_t error_check();
 
 void Accelerator_init()
 {
-    core_ADC_setup_pin(ACCEL_A_PORT, ACCEL_A_PIN, 1);
-    core_ADC_setup_pin(ACCEL_B_PORT, ACCEL_B_PIN, 1);
+    core_ADC_init(ADC1);
+    core_ADC_init(ADC2);
+    core_ADC_setup_pin(ACCEL_A_PORT, ACCEL_A_PIN, 0);
+    core_ADC_setup_pin(ACCEL_B_PORT, ACCEL_B_PIN, 0);
     accelAVoltage = 0;
     accelBVoltage = 0;
     accelAPos = 0;
@@ -36,6 +39,8 @@ uint8_t Accelerator_get_avg_pos(float *avgPos)
 
     float accelAPos = (MAX(accelAVoltage - ACCEL_A_OFFSET_V, 0.0) / ACCEL_A_RANGE_V);
     float accelBPos = (MAX(accelBVoltage - ACCEL_B_OFFSET_V, 0.0) / ACCEL_B_RANGE_V);
+
+    uprintf(USART3, "Accel B Val: %d\n", accelBVal);
 
     *avgPos = ((accelAPos + accelBPos) / 2.0);
 
@@ -65,4 +70,6 @@ static uint8_t error_check()
     {
         errorList |= ACCEL_DISAGREEMENT_ERROR;
     }
+
+    return errorList;
 }

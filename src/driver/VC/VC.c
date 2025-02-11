@@ -8,6 +8,7 @@
 #include "clock.h"
 #include "can.h"
 #include "timeout.h"
+#include "usart.h"
 #include "Inverters/Inverters.h"
 #include "CAN/driver_can.h"
 #include "GPIO/driver_GPIO.h"
@@ -29,10 +30,13 @@ bool VC_init()
     if (!core_clock_init()) return false;
 
     if (!CAN_init()) return false;
+
+    core_USART_init(USART3, 500000);
     GPIO_init();
     VehicleState_init();
     Inverters_init();
     DriverInputs_init();
+    Brakes_init();
     Accelerator_init();
 //    DashInputs_init();
 
@@ -47,6 +51,7 @@ void VC_Task_Update()
     Inverters_Task_Update();
     DriverInputs_Task_Update();
     ControlSystem_Task_Update();
+    CAN_echo_on_main();
     core_timeout_check_all();
 }
 

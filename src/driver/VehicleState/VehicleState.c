@@ -26,7 +26,7 @@ void VehicleState_init()
     RTD_cycles = 0;
 }
 
-void VehicleState_100Hz()
+void VehicleState_Task_Update()
 {
     switch(state)
     {

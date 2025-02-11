@@ -189,25 +189,31 @@ void Inverters_send_setpoints(uint8_t invNum)
 {
     uint64_t msg_data;
 
-    int id;
+    int inv_id;
+    int main_id;
     switch (invNum)
     {
         case INV_RR:
-            id = INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID; break;
+            inv_id = INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID;
+            main_id = MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID; break;
 
         case INV_RL:
-            id = INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID; break;
+            inv_id = INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID;
+            main_id = MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID; break;
 
         case INV_FR:
-            id = INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID; break;
+            inv_id = INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID;
+            main_id = MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID; break;
 
         case INV_FL:
-            id = INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID; break;
+            inv_id = INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID;
+            main_id = MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID; break;
     }
 
-    if (CAN_pack_message(id, (uint8_t *)&msg_data) != -1)
+    if (CAN_pack_message(inv_id, (uint8_t *)&msg_data) != -1)
     {
-        core_CAN_add_message_to_tx_queue(FDCAN2, id, 8, msg_data);
+        core_CAN_add_message_to_tx_queue(CAN_INV, inv_id, 8, msg_data); // Send on inv bus
+        core_CAN_add_message_to_tx_queue(CAN_MAIN, main_id, 8, msg_data); // Echo on main bus
     }
 }
 

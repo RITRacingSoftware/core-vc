@@ -21,7 +21,7 @@
 #define CORE_CAN_QUEUE_LENGTH 15
 
 // Timeout for waiting on RX queue
-#define CORE_CAN_RX_TIMEOUT 0
+#define CORE_CAN_RX_TIMEOUT 100
 
 // Ports and pins for CAN communication
 #define CORE_FDCAN1_TX_PORT GPIOA

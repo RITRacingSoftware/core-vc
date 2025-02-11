@@ -15,6 +15,7 @@ static int accel_disagree_ms;   // How long accelerator pots have disagreed for
 static int bps_irr_ms;        // How long brake sensor has been irrational for
 static bool brake_CAN;
 static int update_period_ms;
+static uint8_t faultList;
 
 static void irrational_check(bool use_brakes_CAN);
 static void double_pedal_check();
@@ -31,6 +32,7 @@ void DriverInputs_init()
     accel_B_irr_ms = 0;
     accel_disagree_ms = 0;
     bps_irr_ms = 0;
+    faultList = 0;
     driverInputs.accelPct = 0;
     driverInputs.brakePsi = CS_MIN_BRAKE_PSI;
     driverInputs.steerDeg = 0.5;
@@ -51,15 +53,14 @@ void DriverInputs_Task_Update()
     // RESET BPS TIMEOUT IF NEW RESULT
     irrational_check(brake_CAN);
     double_pedal_check();
-    uint8_t faultList = 0;
 
     // If any of the faults have been present for longer than the timeout, set them in the bitmask
-    if (accel_A_irr_ms >= DI_ACCEL_IRRATIONAL_TIMEOUT_MS) faultList |= FAULT_ACCEL_A_IRRATIONAL;
-    if (accel_B_irr_ms >= DI_ACCEL_IRRATIONAL_TIMEOUT_MS) faultList |= FAULT_ACCEL_B_IRRATIONAL;
+    if (accel_A_irr_ms >= DI_ACCEL_IRRATIONAL_TIMEOUT_MS) faultList |= FAULT_ACCEL_A_IRRA;
+    if (accel_B_irr_ms >= DI_ACCEL_IRRATIONAL_TIMEOUT_MS) faultList |= FAULT_ACCEL_B_IRRA;
     if (accel_disagree_ms >= DI_ACCEL_DISAGREE_TIMEOUT_MS) faultList |= FAULT_ACCEL_DISAGREE;
-    if (bps_irr_ms >= DI_BPS_IRRATIONAL_TIMEOUT_MS) faultList |= FAULT_BPS_IRRATIONAL;
+    if (bps_irr_ms >= DI_BPS_IRRATIONAL_TIMEOUT_MS) faultList |= (brake_CAN ? FAULT_FBPS_IRRA : FAULT_RBPS_IRRA);
     if (double_pedal_ms >= DI_DOUBLE_PEDAL_TIMEOUT_MS) faultList |= FAULT_DOUBLE_PEDAL;
-
+    CAN_send_driver_inputs();
     // If any faults are present call the fault manager
     if (faultList > 0) FaultManager_DriverInputs(faultList);
 }
@@ -117,4 +118,5 @@ static void double_pedal_check()
 static void brake_timeout_callback(core_timeout_t *timeout)
 {
     brake_CAN = false;
+    faultList |= FAULT_FBPS_LOST;
 }

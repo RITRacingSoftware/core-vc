@@ -42,8 +42,8 @@ int inv_id_arr[NUM_IDS_INV] = {
 bool CAN_init()
 {
     inc = 0;
-    if (!core_CAN_init(CAN_MAIN)) return false;
     if (!core_CAN_init(CAN_INV)) return false;
+    if (!core_CAN_init(CAN_MAIN)) return false;
     if (!CAN_add_filters()) return false;
     return true;
 }

@@ -48,6 +48,8 @@ void DriverInputs_init()
     accel_A_timeout.ref = FAULT_ACCEL_A_IRRA;
     accel_A_timeout.timeout = DI_ACCEL_IRRATIONAL_TIMEOUT_MS;
     accel_A_timeout.callback = timeout_callback;
+    accel_A_timeout.latching = 0;
+    accel_A_timeout.single_shot = 0;
     core_timeout_insert(&accel_A_timeout);
 
     /*** Accel B ***/
@@ -55,6 +57,8 @@ void DriverInputs_init()
     accel_B_timeout.ref = FAULT_ACCEL_B_IRRA;
     accel_B_timeout.timeout = DI_ACCEL_IRRATIONAL_TIMEOUT_MS;
     accel_B_timeout.callback = timeout_callback;
+    accel_B_timeout.latching = 0;
+    accel_B_timeout.single_shot = 0;
     core_timeout_insert(&accel_B_timeout);
 
     /*** Accel Disagree ***/
@@ -62,6 +66,8 @@ void DriverInputs_init()
     accel_disagree_timeout.ref = FAULT_APPS_DISAGREE;
     accel_disagree_timeout.timeout = DI_ACCEL_DISAGREE_TIMEOUT_MS;
     accel_disagree_timeout.callback = timeout_callback;
+    accel_disagree_timeout.latching = 0;
+    accel_disagree_timeout.single_shot = 0;
     core_timeout_insert(&accel_disagree_timeout);
 
     /*** Double Pedal ***/
@@ -69,6 +75,8 @@ void DriverInputs_init()
     double_pedal_timeout.ref = FAULT_DOUBLE_PEDAL;
     double_pedal_timeout.timeout = DI_DOUBLE_PEDAL_TIMEOUT_MS;
     double_pedal_timeout.callback = timeout_callback;
+    double_pedal_timeout.latching = 0;
+    double_pedal_timeout.single_shot = 0;
     core_timeout_insert(&double_pedal_timeout);
 
     /*** CAN BPS ***/
@@ -76,6 +84,8 @@ void DriverInputs_init()
     bps_CAN_timeout.ref = MAIN_DBC_SSDB_FRONT_FRAME_ID;
     bps_CAN_timeout.timeout = DI_BPS_IRRATIONAL_TIMEOUT_MS;
     bps_CAN_timeout.callback = brake_timeout_callback;
+    bps_CAN_timeout.latching = 0;
+    bps_CAN_timeout.single_shot = 0;
     core_timeout_insert(&bps_CAN_timeout);
 
     /*** FBPS Irrational ***/
@@ -83,6 +93,8 @@ void DriverInputs_init()
     fbps_irr_timeout.ref = FAULT_FBPS_IRRA;
     fbps_irr_timeout.timeout = DI_BPS_IRRATIONAL_TIMEOUT_MS;
     fbps_irr_timeout.callback = timeout_callback;
+    fbps_irr_timeout.latching = 0;
+    fbps_irr_timeout.single_shot = 0;
     core_timeout_insert(&fbps_irr_timeout);
 
     /*** RBPS Irrational ***/
@@ -90,6 +102,8 @@ void DriverInputs_init()
     rbps_irr_timeout.ref = FAULT_RBPS_IRRA;
     rbps_irr_timeout.timeout = DI_BPS_IRRATIONAL_TIMEOUT_MS;
     rbps_irr_timeout.callback = timeout_callback;
+    rbps_irr_timeout.latching = 0;
+    rbps_irr_timeout.single_shot = 0;
     core_timeout_insert(&rbps_irr_timeout);
     /************************************************/
 }
@@ -132,6 +146,7 @@ static void brake_timeout_callback(core_timeout_t *timeout)
 
 static void timeout_callback (core_timeout_t *timeout)
 {
+    //rprintf("TO: %d\n", timeout->ref);
     FaultManager_set(timeout->ref);
 }
 
@@ -177,22 +192,27 @@ static bool Accel_process(float *avgPos)
     mainBus.pedal_inputs.vc_pedal_inputs_accel_position_avg =
             main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_avg_encode(*avgPos * 100);
 
-    rprintf("APPS A: %d, APPS B: %d\n", (int) (accelAPos * 100), (int) (accelBPos * 100));
-    
+    //rprintf("APPS A: %d, APPS B: %d\n", (int) (accelAPos * 100), (int) (accelBPos * 100));
+    rprintf("AVoltage: %d, BVoltage: %d\n", (int)(accelAVoltage * 100), (int)(accelBVoltage * 100));
+    rprintf("AVoltageOffset: %d, BVoltageOffset: %d\n", (int)(ACCEL_A_OFFSET_V * 100), (int)(ACCEL_B_OFFSET_V * 100));
     // Irrationality check
     bool status = true;
+
     if (accelAVoltage <= ACCEL_A_MAX_V && accelAVoltage >= ACCEL_A_OFFSET_V)
     {
+        rprintf("GoodA");
         core_timeout_reset(&accel_A_timeout);
     } else status = false;
 
     if (accelBVoltage <= ACCEL_B_MAX_V && accelBVoltage >= ACCEL_B_OFFSET_V)
     {
+        rprintf("GoodB");
         core_timeout_reset(&accel_B_timeout);
     } else status = false;
 
     if (fabs(accelAPos - accelBPos) * 100 <= ACCEL_MAX_DISAGREEMENT)
     {
+        rprintf("GoodDis");
         core_timeout_reset(&accel_disagree_timeout);
     } else status = false;
 

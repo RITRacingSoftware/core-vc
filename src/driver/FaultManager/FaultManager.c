@@ -13,8 +13,9 @@ void FaultManager_set(uint16_t faultCode)
 {
     faultList |= faultCode;
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, 8, (uint64_t) faultList);
+
     if (faultCode != FAULT_FBPS_LOST) VehicleState_set_fault();
-//    VehicleState_set_fault();
+    //    VehicleState_set_fault();
 }
 
 void FaultManager_Task_Update()

@@ -46,6 +46,7 @@ void ControlSystem_Task_Update()
 
         Inverters_set_torque_request(i, invArr[i], negLimit, posLimit);
     }
+
 }
 
 static void setSplits()

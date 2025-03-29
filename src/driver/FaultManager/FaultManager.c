@@ -2,25 +2,24 @@
 #include "DriverInputs//DriverInputs.h"
 #include "Inverters/Inverters.h"
 #include "CAN/driver_can.h"
+#include "VehicleState/VehicleState.h"
+#include "can.h"
 
-void FaultManager_DriverInputs(uint8_t faultList)
+static bool faulted;
+
+static uint16_t faultList;
+
+void FaultManager_set(uint16_t faultCode)
 {
-    mainBus.vc_faults.vc_fault_vector_brake_irra = ((faultList & FAULT_FBPS_IRRA) ? 1 : 0);
-    mainBus.vc_faults.vc_fault_vector_accel_a_irra = ((faultList & FAULT_ACCEL_A_IRRA) ? 1 : 0);
-    mainBus.vc_faults.vc_fault_vector_accel_b_irra = ((faultList & FAULT_ACCEL_B_IRRA) ? 1 : 0);
-    mainBus.vc_faults.vc_fault_vector_apps_disag = ((faultList & FAULT_ACCEL_DISAGREE) ? 1 : 0);
-    mainBus.vc_faults.vc_fault_vector_apps_double_pedal = ((faultList & FAULT_DOUBLE_PEDAL) ? 1: 0);
-//    mainBus.vc_faults.vc_fault_vector_steer_angle_lost
-    mainBus.vc_faults.vc_fault_vector_rl_lost = ((faultList & FAULT_RL_LOST) ? 1 : 0);
-    mainBus.vc_faults.vc_fault_vector_rr_lost = ((faultList & FAULT_RR_LOST) ? 1 : 0);
-    mainBus.vc_faults.vc_fault_vector_fl_lost = ((faultList & FAULT_FL_LOST) ? 1 : 0);
-    mainBus.vc_faults.vc_fault_vector_fr_lost = ((faultList & FAULT_FR_LOST) ? 1 : 0);
-
-
-
+    faultList |= faultCode;
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, 8, (uint64_t) faultList);
+    if (faultCode != FAULT_FBPS_LOST) VehicleState_set_fault();
+//    VehicleState_set_fault();
 }
 
-void FaultManager_Inv(uint8_t faultList)
+void FaultManager_Task_Update()
 {
-
+   // uint64_t msg;
+   // uint8_t dlc = main_dbc_vc_fault_vector_pack((uint8_t *)&msg, &mainBus.vc_faults, 8);
+   // core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, dlc, msg);
 }

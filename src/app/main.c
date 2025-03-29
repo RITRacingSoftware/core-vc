@@ -20,38 +20,27 @@ void hardfault_error_handler();
 void task_CAN_tx_main(void *pvParameters)
 {
     (void) pvParameters;
+    CAN_tx_main();
     if (!CAN_tx_main()) hardfault_error_handler();
 }
 
 void task_CAN_tx_inv(void *pvParameters)
 {
     (void) pvParameters;
+    CAN_tx_inv();
     if (!CAN_tx_inv()) hardfault_error_handler();
 }
-
-void task_CAN_tx_sense(void *pvParameters)
-{
-    (void) pvParameters;
-    if (!CAN_tx_sense()) hardfault_error_handler();
-}
-
 
 void task_CAN_rx_main(void *pvParameters)
 {
     (void) pvParameters;
-    while(true)
-    {
-        CAN_rx_main();
-    }
+    while(true) {CAN_rx_main();}
 }
 
 void task_CAN_rx_inv(void *pvParameters)
 {
     (void) pvParameters;
-    while(true)
-    {
-        CAN_rx_inv();
-    }
+    while(true) {CAN_rx_inv();}
 }
 
 void task_100Hz(void *pvParameters)
@@ -98,14 +87,6 @@ int main(void)
       NULL);
     if (err != pdPASS) hardfault_error_handler();
 
-    err = xTaskCreate(task_CAN_tx_sense,
-      "CAN_tx",
-      1000,
-      NULL,
-      CAN_TX_PRIORITY,
-      NULL);
-    if (err != pdPASS) hardfault_error_handler();
-
     err = xTaskCreate(task_CAN_rx_main,
       "CAN_rx",
       5000,
@@ -115,11 +96,11 @@ int main(void)
     if (err != pdPASS) hardfault_error_handler();
 
     err = xTaskCreate(task_CAN_rx_inv,
-                      "CAN_rx",
-                      5000,
-                      NULL,
-                      CAN_RX_PRIORITY,
-                      NULL);
+      "CAN_rx",
+      5000,
+      NULL,
+      CAN_RX_PRIORITY,
+      NULL);
     if (err != pdPASS) hardfault_error_handler();
 
     err = xTaskCreate(task_heartbeat,
@@ -131,11 +112,11 @@ int main(void)
     if (err != pdPASS) hardfault_error_handler();
 
     err = xTaskCreate(task_100Hz,
-                      "100hz_task",
-                      1000,
-                      NULL,
-                      VC_100HZ_PRIORITY,
-                      NULL);
+      "100hz_task",
+      1000,
+      NULL,
+      VC_100HZ_PRIORITY,
+      NULL);
     if (err != pdPASS) hardfault_error_handler();
 
     NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);

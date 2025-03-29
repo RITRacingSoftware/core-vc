@@ -1,13 +1,15 @@
 #pragma once
 
-#define FAULT_ACCEL_A_IRRA        0b00000001
-#define FAULT_ACCEL_B_IRRA        0b00000010
-#define FAULT_ACCEL_DISAGREE      0b00000100
-#define FAULT_DOUBLE_PEDAL        0b00001000
-#define FAULT_FBPS_LOST           0b00010000
-#define FAULT_FBPS_IRRA           0b00100000
-#define FAULT_RBPS_IRRA           0b01000000
-#define FAULT_STEER_LOST          0b10000000
+#define BPS_IRRA_REF           0;
+
+#define BPS_PORT GPIOB
+#define BPS_PIN GPIO_PIN_1
+
+#define ACCEL_A_PORT GPIOA
+#define ACCEL_A_PIN GPIO_PIN_3
+
+#define ACCEL_B_PORT GPIOA
+#define ACCEL_B_PIN GPIO_PIN_4
 
 struct DriverInputs_s
 {

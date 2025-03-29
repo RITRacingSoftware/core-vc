@@ -11,20 +11,16 @@
 
 typedef struct
 {
-    struct sensor_dbc_vc_brake_pressure_rear_t rear_bps;
-} SENSE_BUS;
-
-typedef struct
-{
-    // Received by VC
-    struct main_dbc_ssdb_brake_pressure_front_t front_bps;
-    struct main_dbc_ssdb_steering_angle_t steering_angle;
+    // Received by VC 
+    struct main_dbc_bms_fault_vector_t bms_fault_vector;
+    struct main_dbc_ssdb_front_t ssdb_front;
+    struct main_dbc_ssdb_vector_nav6_t vn_vel;
 
     // Sent by VC
     struct main_dbc_vc_rtds_request_t rtds_request;
     struct main_dbc_vc_pedal_inputs_t pedal_inputs;
     struct main_dbc_vc_pedal_inputs_raw_t pedal_inputs_raw;
-    struct main_dbc_vc_fault_vector_t vc_faults;
+    struct main_dbc_vc_status_t vc_status;
 
     // Inv data sent by VC
     struct main_dbc_vc_rl_amk_setpoints_t rl_setpoints;
@@ -84,7 +80,6 @@ typedef struct
 
 extern INV_BUS invBus;
 extern MAIN_BUS mainBus;
-extern SENSE_BUS senseBus;
 
 bool CAN_init();
 bool CAN_tx_main();

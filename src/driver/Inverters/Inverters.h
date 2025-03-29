@@ -8,11 +8,6 @@
 #define INV_FR 2
 #define INV_FL 3
 
-#define FAULT_RR_LOST 0x1   // 0b00000001
-#define FAULT_RL_LOST 0x2   // 0b00000010
-#define FAULT_FR_LOST 0x4   // 0b00000100
-#define FAULT_FL_LOST 0x8   // 0b00001000
-
 typedef struct
 {
     bool isReady;
@@ -43,3 +38,5 @@ void Inverters_set_inv_on(bool val);
 void Inverters_set_torque_request(uint8_t invNum, double setpoint, double negLimit, double posLimit);
 
 void Inverters_send_setpoints(uint8_t invNum);
+void Inverters_suspend_timeouts();
+void Inverters_resume_timeouts();

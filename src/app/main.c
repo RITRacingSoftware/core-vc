@@ -3,10 +3,10 @@
 #include <stm32g4xx_hal.h>
 #include <stdbool.h>
 
-#include "VC/VC.h"
-#include "CAN/driver_can.h"
-#include "Inverters/Inverters.h"
-#include "GPIO/driver_GPIO.h"
+#include "VC.h"
+#include "driver_can.h"
+#include "Inverters.h"
+#include "driver_GPIO.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

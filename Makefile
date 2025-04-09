@@ -23,14 +23,16 @@ STM32_LD_FLAGS := $(STM32_COMMON_FLAGS) -static -Wl,--gc-sections -T $(STM32_LD_
 
 
 # Sources
-APP_DIR := src/app
+APP_DIR := ./src/app
 APP_SRCS := $(shell find $(APP_DIR) -type f -name "*.c")
 APP_INCLUDE := -I $(APP_DIR)
 STM32_APP_OBJS := $(APP_SRCS:$(APP_DIR)/%=$(STM32_BUILD_DIR)/obj/app/%.o)
 
-DRIVER_DIR := src/driver
+DRIVER_DIR := ./src/driver
 DRIVER_SRCS := $(shell find $(DRIVER_DIR) -type f -name "*.c")
-DRIVER_INCLUDE := -I $(DRIVER_DIR)
+DRIVER_INCLUDE_ORIG := $(foreach d, $(DRIVER_DIR), $(wildcard $(d)/*))
+$(info VAR is $(DRIVER_INCLUDE_ORIG))
+DRIVER_INCLUDE := $(addprefix -I, $(DRIVER_INCLUDE_ORIG))
 STM32_DRIVER_OBJS := $(DRIVER_SRCS:$(DRIVER_DIR)/%=$(STM32_BUILD_DIR)/obj/driver/%.o)
 
 # Libraries

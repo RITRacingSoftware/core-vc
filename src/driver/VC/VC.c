@@ -10,14 +10,16 @@
 #include "timeout.h"
 #include "usart.h"
 #include "rtt.h"
-#include "Inverters/Inverters.h"
-#include "CAN/driver_can.h"
-#include "GPIO/driver_GPIO.h"
-#include "VehicleState/VehicleState.h"
-#include "DriverInputs//DriverInputs.h"
-#include "DashInputs/DashInputs.h"
-#include "ControlSystem/ControlSystem.h"
-#include "FaultManager/FaultManager.h"
+#include "boot.h"
+
+#include "Inverters.h"
+#include "driver_can.h"
+#include "driver_GPIO.h"
+#include "VehicleState.h"
+#include "DriverInputs.h"
+#include "DashInputs.h"
+#include "ControlSystem.h"
+#include "FaultManager.h"
 
 #include "adc.h"
 #include "spi.h"
@@ -30,9 +32,8 @@ bool VC_init()
 
     if (!core_clock_init()) return false;
     if (!CAN_init()) return false;
+    core_boot_init();
     
-//    core_CAN_init(FDCAN1);
-//    core_CAN_init(FDCAN3);
     core_USART_init(USART2, 100000);
     core_USART_init(USART3, 500000);
     core_ADC_init(ADC1);
@@ -55,7 +56,6 @@ void VC_Task_Update()
     VehicleState_Task_Update();
     Inverters_Task_Update();
     DriverInputs_Task_Update();
-//    ControlSystem_Task_Update();
     CAN_echo_on_main();
     core_timeout_check_all();
     FaultManager_Task_Update();

@@ -35,7 +35,7 @@ bool Inverters_get_precharged(uint8_t invNum);
 void Inverters_set_dc_on(bool val);
 void Inverters_set_enable(bool val);
 void Inverters_set_inv_on(bool val);
-void Inverters_set_torque_request(uint8_t invNum, double setpoint, double negLimit, double posLimit);
+void Inverters_set_torque_request(uint8_t invNum, float setpoint, float negLimit, float posLimit);
 
 void Inverters_send_setpoints(uint8_t invNum);
 void Inverters_suspend_timeouts();

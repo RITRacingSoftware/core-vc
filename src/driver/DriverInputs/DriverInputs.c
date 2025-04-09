@@ -1,14 +1,17 @@
+#include <stdbool.h>
+
+#ifndef TEST
 #include "DriverInputs.h"
 #include "config.h"
 #include "main_dbc.h"
-#include <stdbool.h>
-#include "FaultManager/FaultManager.h"
-#include "CAN/driver_can.h"
+#include "FaultManager.h"
+#include "driver_can.h"
 #include "usart.h"
 #include "timeout.h"
 #include "adc.h"
 #include "common_macros.h"
 #include "rtt.h"
+#endif
 
 static bool brake_CAN;
 static uint8_t faultList;
@@ -147,6 +150,7 @@ static void brake_timeout_callback(core_timeout_t *timeout)
 static void timeout_callback (core_timeout_t *timeout)
 {
     //rprintf("TO: %d\n", timeout->ref);
+    // if (timeout->ref != FAULT_FBPS_IRRA && timeout->ref != FAULT_RBPS_IRRA && timeout->ref != FAULT_DOUBLE_PEDAL) FaultManager_set(timeout->ref);
     FaultManager_set(timeout->ref);
 }
 
@@ -175,12 +179,9 @@ static bool Accel_process(float *avgPos)
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_b_adc =
             main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_b_adc_encode(accelBVal);
 
-    // Convert to voltages
-    float accelAVoltage = ((float)accelAVal/ADC_MAX_VAL) * ADC_MAX_VOLTAGE;
-    float accelBVoltage = ((float)accelBVal/ADC_MAX_VAL) * ADC_MAX_VOLTAGE;
     // Convert to positions
-    float accelAPos = (MAX(accelAVoltage - ACCEL_A_OFFSET_V, 0.0) / ACCEL_A_RANGE_V);
-    float accelBPos = (MAX(accelBVoltage - ACCEL_B_OFFSET_V, 0.0) / ACCEL_B_RANGE_V);
+    float accelAPos = MIN((MAX(accelAVal - ACCEL_A_OFFSET_ADC, 0.0) / (float) ACCEL_A_RANGE_ADC), 1);
+    float accelBPos = MIN((MAX(accelBVal - ACCEL_B_OFFSET_ADC, 0.0) / (float) ACCEL_B_RANGE_ADC), 1);
 
     *avgPos = ((accelAPos + accelBPos) / 2.0);
     
@@ -192,19 +193,19 @@ static bool Accel_process(float *avgPos)
     mainBus.pedal_inputs.vc_pedal_inputs_accel_position_avg =
             main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_avg_encode(*avgPos * 100);
 
-    //rprintf("APPS A: %d, APPS B: %d\n", (int) (accelAPos * 100), (int) (accelBPos * 100));
-    rprintf("AVoltage: %d, BVoltage: %d\n", (int)(accelAVoltage * 100), (int)(accelBVoltage * 100));
-    rprintf("AVoltageOffset: %d, BVoltageOffset: %d\n", (int)(ACCEL_A_OFFSET_V * 100), (int)(ACCEL_B_OFFSET_V * 100));
+    rprintf("APPS A: %d, APPS B: %d\n", (int) ((MAX(accelAVal - ACCEL_A_OFFSET_ADC, 0.0)), (int) ((MAX(accelBVal - ACCEL_B_OFFSET_ADC, 0.0)))));
+    rprintf("AVal: %d, BVal: %d\n", (int)(accelAVal - ACCEL_A_OFFSET_ADC), (int)(accelBVal - ACCEL_B_OFFSET_ADC));
+    rprintf("APos: %d, BPos: %d\n", (int)(accelAPos * 100), (int)(accelBPos * 100));
     // Irrationality check
     bool status = true;
 
-    if (accelAVoltage <= ACCEL_A_MAX_V && accelAVoltage >= ACCEL_A_OFFSET_V)
+    if (accelAVal <= ACCEL_A_IRRATIONAL_HIGH_ADC && accelAVal >= ACCEL_A_IRRATIONAL_LOW_ADC)
     {
         rprintf("GoodA");
         core_timeout_reset(&accel_A_timeout);
     } else status = false;
 
-    if (accelBVoltage <= ACCEL_B_MAX_V && accelBVoltage >= ACCEL_B_OFFSET_V)
+    if (accelBVal <= ACCEL_B_IRRATIONAL_HIGH_ADC && accelBVal >= ACCEL_B_IRRATIONAL_LOW_ADC)
     {
         rprintf("GoodB");
         core_timeout_reset(&accel_B_timeout);
@@ -228,25 +229,24 @@ static bool Brakes_init()
 
 static bool Brakes_process(float *psi)
 {
-    uint16_t adcVal;
+    uint16_t rearVal;
     // Read RBPS analog
-    core_ADC_read_channel(BPS_PORT, BPS_PIN, &adcVal);
+    core_ADC_read_channel(BPS_PORT, BPS_PIN, &rearVal);
 
-    float voltageFront = ((float)adcVal / ADC_MAX_VAL) * 100;
-    float brake_psi_rear = (float)((voltageFront - BPS_MIN_V) * BPS_MAX_PRESSURE_PSI / (BPS_MAX_V - BPS_MIN_V));
+    float brake_psi_rear = (float)((rearVal - BPS_MIN_ADC) * BPS_MAX_PRESSURE_PSI / BPS_RANGE_ADC);
 
     // Send RBPS raw adc
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_brakes_rear_adc =
-            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_brakes_rear_adc_encode(adcVal);
+            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_brakes_rear_adc_encode(rearVal);
 
     // Send RBPS PSI
     mainBus.pedal_inputs.vc_pedal_inputs_brakes_rear_psi =
             main_dbc_vc_pedal_inputs_vc_pedal_inputs_brakes_rear_psi_encode(brake_psi_rear);
 
-    adcVal = mainBus.ssdb_front.ssdb_brake_pressure_front_raw;
+    uint16_t frontVal;
+    frontVal = mainBus.ssdb_front.ssdb_brake_pressure_front_raw;
 
-    float voltageRear = ((float)adcVal / ADC_MAX_VAL) * 100;
-    float brake_psi_front = (float)((voltageRear - BPS_MIN_V) * BPS_MAX_PRESSURE_PSI / (BPS_MAX_V - BPS_MIN_V));
+    float brake_psi_front = (float)((frontVal - BPS_MIN_ADC) * BPS_MAX_PRESSURE_PSI / BPS_RANGE_ADC);  
 
     // Send front PSI
     mainBus.pedal_inputs.vc_pedal_inputs_brakes_front_psi =
@@ -257,13 +257,16 @@ static bool Brakes_process(float *psi)
         !(fbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
     {
         *psi = brake_psi_front;
-        return (voltageFront > BPS_MIN_V && voltageFront < BPS_MAX_V);
+        core_timeout_reset(&fbps_irr_timeout);
+        return (frontVal > BPS_IRRATIONAL_LOW_ADC && frontVal < BPS_IRRATIONAL_HIGH_ADC);
     }
     // Else if rear isn't irrational
     else if (!(rbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
     {
         *psi = brake_psi_rear;
-        return (voltageRear > BPS_MIN_V && voltageRear < BPS_MAX_V);
+        core_timeout_reset(&rbps_irr_timeout);
+        return (rearVal> BPS_IRRATIONAL_LOW_ADC && rearVal < BPS_IRRATIONAL_HIGH_ADC);
     }
+    *psi = BPS_MAX_PRESSURE_PSI;
     return false;
 }

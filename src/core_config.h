@@ -1,7 +1,7 @@
 #ifndef CORE_CORE_CONFIG_H
 #define CORE_CORE_CONFIG_H
 
-#define PROGRAM_NAME_STRING "AMK Spin Test"
+#define PROGRAM_NAME_STRING "VC"
 
 /*** CLOCK CONFIG PARAMETERS ***/
 
@@ -77,7 +77,7 @@
 #define CORE_FDCAN3_AUTO_RETRANSMISSION 0
 
 // CAN FD config
-#define CORE_FDCAN1_USE_FD 0
+#define CORE_FDCAN1_USE_FD 1
 #define CORE_FDCAN2_USE_FD 0
 #define CORE_FDCAN3_USE_FD 0
 
@@ -157,7 +157,7 @@
 /**
   * @brief  FDCAN module over which the chip can be programmed via the bootloader
   */
-#define CORE_BOOT_FDCAN FDCAN2
+#define CORE_BOOT_FDCAN FDCAN1
 /**
   * @brief  Bootloader board ID
   */

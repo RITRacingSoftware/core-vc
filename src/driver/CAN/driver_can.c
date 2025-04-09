@@ -2,13 +2,13 @@
 #include "config.h"
 #include "can.h"
 #include "usart.h"
-#include "Inverters/Inverters.h"
+#include "Inverters.h"
 #include "inverter_dbc.h"
 #include "main_dbc.h"
 #include "rtt.h"
-#include "VC/VC.h"
-#include "DriverInputs/DriverInputs.h"
-#include "FaultManager/FaultManager.h"
+#include "VC.h"
+#include "DriverInputs.h"
+#include "FaultManager.h"
 
 MAIN_BUS mainBus;
 INV_BUS invBus;
@@ -44,6 +44,7 @@ bool CAN_init()
     inc = 0;
     if (!core_CAN_init(CAN_INV)) return false;
     if (!core_CAN_init(CAN_MAIN)) return false;
+    if (!core_CAN_init(CAN_SENSE)) return false;
     if (!CAN_add_filters()) return false;
     return true;
 }
@@ -99,6 +100,7 @@ void CAN_rx_inv()
             // RR
             case INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_rr_amk_actual_1_unpack(&invBus.rr_actual1, (uint8_t *) &canMessage.data, 8);
+                if (invBus.rr_actual1.rr_status_error) {FaultManager_set(FAULT_RR_ERROR); rprintf("RR Faulted");}
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID:
@@ -110,6 +112,7 @@ void CAN_rx_inv()
             // RL
             case INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_rl_amk_actual_1_unpack(&invBus.rl_actual1, (uint8_t *) &canMessage.data, 8);
+                if (invBus.rl_actual1.rl_status_error) FaultManager_set(FAULT_RL_ERROR);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_RL_AMK_RIT_SET1_FRAME_ID:
@@ -121,6 +124,7 @@ void CAN_rx_inv()
             // FR
             case INVERTER_DBC_FR_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_fr_amk_actual_1_unpack(&invBus.fr_actual1, (uint8_t *) &canMessage.data, 8);
+                if (invBus.fr_actual1.fr_status_error) FaultManager_set(FAULT_FR_ERROR);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FR_AMK_RIT_SET1_FRAME_ID:
@@ -132,6 +136,7 @@ void CAN_rx_inv()
             // FL
             case INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_fl_amk_actual_1_unpack(&invBus.fl_actual1, (uint8_t *) &canMessage.data, 8);
+                if (invBus.fl_actual1.fl_status_error) FaultManager_set(FAULT_FL_ERROR);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FL_AMK_RIT_SET1_FRAME_ID:

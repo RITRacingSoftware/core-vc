@@ -5,8 +5,8 @@
 #include "can.h"
 #include "timeout.h"
 #include "gpio.h"
-#include "CAN/driver_can.h"
-#include "FaultManager/FaultManager.h"
+#include "driver_can.h"
+#include "FaultManager.h"
 #include "usart.h"
 
 static Inverter_s invRR;
@@ -166,7 +166,7 @@ void Inverters_set_inv_on(bool val)
     invBus.fl_setpoints.fl_amk_b_inverter_on = inverter_dbc_fl_amk_setpoints_fl_amk_b_inverter_on_encode(val);
 }
 
-void Inverters_set_torque_request(uint8_t invNum, double setpoint, double negLimit, double posLimit)
+void Inverters_set_torque_request(uint8_t invNum, float setpoint, float negLimit, float posLimit)
 {
     switch (invNum)
     {
@@ -257,4 +257,3 @@ static void timeout_callback(core_timeout_t *timeout)
     
     FaultManager_set(faultList);
 }
-

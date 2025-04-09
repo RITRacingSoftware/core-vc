@@ -1,8 +1,8 @@
 #include "ControlSystem.h"
 #include "config.h"
 #include "common_macros.h"
-#include "Inverters/Inverters.h"
-#include "DriverInputs/DriverInputs.h"
+#include "Inverters.h"
+#include "DriverInputs.h"
 
 static struct DriverInputs_s inputs;
 static bool regenEnabled;

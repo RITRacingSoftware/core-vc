@@ -1,4 +1,3 @@
-make
+#make
 
-echo  "\n"
-./build/control_system_test.out
+./build/vc_test.out

@@ -248,12 +248,13 @@ void Inverters_resume_timeouts()
 
 static void timeout_callback(core_timeout_t *timeout)
 {
-    uint8_t faultList = 0;
+    uint64_t faultList = 0;
 
     if (timeout == &rr_timeout) faultList |= FAULT_RR_LOST;
     else if (timeout == &rl_timeout) faultList |= FAULT_RL_LOST;
     else if (timeout == &fr_timeout) faultList |= FAULT_FR_LOST;
     else if (timeout == &fl_timeout) faultList |= FAULT_FL_LOST;
-    
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 3, 8, 0xfa55);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 4, 8, faultList);
     FaultManager_set(faultList);
 }

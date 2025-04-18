@@ -9,6 +9,6 @@ bool Inverters_test()
 
 void Inverters_set_torque_request(uint8_t invNum, float setpoint, float negLimit, float posLimit)
 {
-    printf("From inverters test");
-    //printf("invNum: %d, setpoint: %d, negLimit: %d, posLimit: %d\n", invNum, );
+    // printf("From inverters test\n");
+    printf("invNum: %d, setpoint: %f, negLimit: %f, posLimit: %f\n", invNum, setpoint, negLimit, posLimit);
 }

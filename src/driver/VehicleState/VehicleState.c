@@ -51,7 +51,7 @@ void VehicleState_Task_Update()
     {
         case VehicleState_VC_NOT_READY:
             // If the button is pressed, move to next state
-            if (core_GPIO_digital_read(TSMS_PORT, TSMS_PIN))
+            if (GPIO_get_TSMS())
             {
                 new_state(VehicleState_INVERTERS_POWERED);
                 timer = 0;
@@ -129,10 +129,15 @@ void VehicleState_Task_Update()
 
             RTD_cycles = GPIO_get_RTD() ? RTD_cycles + 1 : 0;
 
-            if (RTD_cycles * VS_UPDATE_FREQ >= RTD_HOLD_TIME) new_state(VehicleState_STANDBY);
+            if (RTD_cycles * VS_UPDATE_FREQ >= RTD_HOLD_TIME)
+            {
+                new_state(VehicleState_STANDBY);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 1);
+            }
             break;
 
         case VehicleState_STANDBY:
+            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 0);
             // Set inverter enable and on
             Inverters_set_enable(true); // AMK_bEnable = 1
             Inverters_set_inv_on(true); // AMLK_bInverterOn = 1
@@ -164,10 +169,10 @@ void VehicleState_Task_Update()
 
         case VehicleState_RTD:
             // If the start button is pressed again, shutdown
-            Inverters_set_torque_request(INV_RR, (6 * inputs.accelPct), -7, 7);
-            Inverters_set_torque_request(INV_RL, (6 * inputs.accelPct), -7, 7);
-            Inverters_set_torque_request(INV_FR, (6 * inputs.accelPct), -7, 7);
-            Inverters_set_torque_request(INV_FL, (6 * inputs.accelPct), -7, 7);
+            Inverters_set_torque_request(INV_RR, (MAX_TORQUE * inputs.accelPct), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+            Inverters_set_torque_request(INV_RL, (MAX_TORQUE * inputs.accelPct), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+            Inverters_set_torque_request(INV_FR, (MAX_TORQUE * inputs.accelPct), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+            Inverters_set_torque_request(INV_FL, (MAX_TORQUE * inputs.accelPct), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
             //Inverters_set_torque_request(INV_FR, 6, -6, 6);
             //Inverters_set_torque_request(INV_FL, 6, -6, 6);
             //Inverters_set_torque_request(INV_RR, 6, -6, 6);

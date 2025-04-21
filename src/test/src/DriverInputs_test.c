@@ -10,17 +10,17 @@ bool DriverInputs_test()
     return true;
 }
 
-void DriverInputs_get_driver_inputs(struct DriverInputs_s *inputs)
-{
-    // 0 -> 1300
-    inputs->brakePct = 0; 
-    // 0 -> 100
-    inputs->accelPct = 0.5;
-    // 0 -> 1
-    inputs->steerPct = -1;
-
-    printf("Inputs Test: brakePct: %f, accelPct: %f, steerPct : %f\n", inputs->brakePct, inputs->accelPct, inputs->steerPct);
-}
+// void DriverInputs_get_driver_inputs(struct DriverInputs_s *inputs)
+// {
+//     // 0 -> 1300
+//     inputs->brakePct = 0; 
+//     // 0 -> 100
+//     inputs->accelPct = 0.5;
+//     // 0 -> 1
+//     inputs->steerPct = -1;
+//
+//     printf("Inputs Test: brakePct: %f, accelPct: %f, steerPct : %f\n", inputs->brakePct, inputs->accelPct, inputs->steerPct);
+// }
 
 bool Accel_test()
 {

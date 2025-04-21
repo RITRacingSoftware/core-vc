@@ -1,24 +1,34 @@
 #pragma once
 
 // USART
-typedef struct
-{
+typedef struct {
 } USART_InitTypeDef;
 
-typedef struct
-{
+typedef struct {
 } USART_TypeDef;
 
-
-typedef struct __USART_HandleTypeDef
-{
+typedef struct __USART_HandleTypeDef {
 } USART_HandleTypeDef;
 
+#define USART1              ((USART_TypeDef *) 1)
+#define USART2              ((USART_TypeDef *) 1)
+#define USART3              ((USART_TypeDef *) 1)
+
 // GPIO
-typedef struct
-{
+typedef struct {
 } GPIO_TypeDef;
 
+typedef enum
+{
+  GPIO_PIN_RESET = 0U,
+  GPIO_PIN_SET
+} GPIO_PinState;
+
+#define GPIO_MODE_INPUT     1
+#define GPIO_MODE_OUTPUT_PP 1
+#define GPIO_PULLDOWN       1
+#define GPIO_PULLUP         1
+#define GPIO_NOPULL         1
 
 #define GPIOA               ((GPIO_TypeDef *) 1)
 #define GPIOB               ((GPIO_TypeDef *) 1)
@@ -49,27 +59,35 @@ typedef struct
 
 
 // ADC
-typedef struct
-{
+typedef struct {
 } ADC_TypeDef;
 
 #define ADC1 ((ADC_TypeDef *) 2)
 #define ADC2 ((ADC_TypeDef *) 2)
 
 // OPAMP
-typedef struct
-{
+typedef struct {
 } OPAMP_TypeDef;
 
 
 // CAN
 
-typedef struct
-{
+typedef struct {
 } FDCAN_GlobalTypeDef;
 
+typedef struct {
+} FDCAN_HandleTypeDef;
+
+#define FDCAN1 ((FDCAN_GlobalTypeDef *) 1)
 #define FDCAN2 ((FDCAN_GlobalTypeDef *) 1)
+#define FDCAN3 ((FDCAN_GlobalTypeDef *) 1)
 
 
-// DMA
+// I2C
+typedef struct {
+} I2C_TypeDef;
 
+
+// SPI
+typedef struct {
+} SPI_TypeDef;

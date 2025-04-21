@@ -10,9 +10,7 @@
 #include "usart.h"
 #include "adc.h"
 #include "common_macros.h"
-#ifdef VC_TEST
 #include "rtt.h"
-#endif
 
 static bool brake_CAN;
 static uint8_t faultList;
@@ -162,7 +160,6 @@ static void brake_timeout_callback(core_timeout_t *timeout)
 
 static void timeout_callback (core_timeout_t *timeout)
 {
-    //rprintf("TO: %d\n", timeout->ref);
     // if (timeout->ref != FAULT_FBPS_IRRA && timeout->ref != FAULT_RBPS_IRRA && timeout->ref != FAULT_DOUBLE_PEDAL) FaultManager_set(timeout->ref);
     FaultManager_set(timeout->ref);
 }
@@ -206,27 +203,24 @@ static bool Accel_process(float *avgPos)
     mainBus.pedal_inputs.vc_pedal_inputs_accel_position_avg =
             main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_avg_encode(*avgPos * 100);
 
-    rprintf("APPS A: %d, APPS B: %d\n", (int) ((MAX(accelAVal - ACCEL_A_OFFSET_ADC, 0.0)), (int) ((MAX(accelBVal - ACCEL_B_OFFSET_ADC, 0.0)))));
-    rprintf("AVal: %d, BVal: %d\n", (int)(accelAVal - ACCEL_A_OFFSET_ADC), (int)(accelBVal - ACCEL_B_OFFSET_ADC));
-    rprintf("APos: %d, BPos: %d\n", (int)(accelAPos * 100), (int)(accelBPos * 100));
+    // rprintf("APPS A: %d, APPS B: %d\n", (int) ((MAX(accelAVal - ACCEL_A_OFFSET_ADC, 0.0)), (int) ((MAX(accelBVal - ACCEL_B_OFFSET_ADC, 0.0)))));
+    // rprintf("AVal: %d, BVal: %d\n", (int)(accelAVal - ACCEL_A_OFFSET_ADC), (int)(accelBVal - ACCEL_B_OFFSET_ADC));
+    // rprintf("APos: %d, BPos: %d\n", (int)(accelAPos * 100), (int)(accelBPos * 100));
     // Irrationality check
     bool status = true;
 
     if (accelAVal <= ACCEL_A_IRRATIONAL_HIGH_ADC && accelAVal >= ACCEL_A_IRRATIONAL_LOW_ADC)
     {
-        rprintf("GoodA");
         core_timeout_reset(&accel_A_timeout);
     } else status = false;
 
     if (accelBVal <= ACCEL_B_IRRATIONAL_HIGH_ADC && accelBVal >= ACCEL_B_IRRATIONAL_LOW_ADC)
     {
-        rprintf("GoodB");
         core_timeout_reset(&accel_B_timeout);
     } else status = false;
 
     if (fabs(accelAPos - accelBPos) * 100 <= ACCEL_MAX_DISAGREEMENT)
     {
-        rprintf("GoodDis");
         core_timeout_reset(&accel_disagree_timeout);
     } else status = false;
 
@@ -263,7 +257,7 @@ static bool Brakes_process(float *pct)
 
     // Send RBPS PSI
     mainBus.pedal_inputs.vc_pedal_inputs_brakes_rear_psi =
-            main_dbc_vc_pedal_inputs_vc_pedal_inputs_brakes_rear_psi_encode(rear_brake_pct * BPS_R_MAX_PSI);
+            main_dbc_vc_pedal_inputs_vc_pedal_inputs_brakes_rear_psi_encode((rearVal * 1.2) - 375);
 
     uint16_t frontVal;
     frontVal = mainBus.ssdb_front.ssdb_brake_pressure_front_raw;
@@ -273,7 +267,7 @@ static bool Brakes_process(float *pct)
 
     // Send front PSI
     mainBus.pedal_inputs.vc_pedal_inputs_brakes_front_psi =
-            main_dbc_vc_pedal_inputs_vc_pedal_inputs_brakes_front_psi_encode(front_brake_pct * BPS_F_MAX_PSI);
+            main_dbc_vc_pedal_inputs_vc_pedal_inputs_brakes_front_psi_encode((frontVal * 0.924) - 375);
 
     // If front isn't irrational and hasn't timed out
     if (!(bps_CAN_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT) &&

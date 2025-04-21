@@ -25,7 +25,6 @@
 #include "spi.h"
 bool VC_init()
 {
-    HAL_Init();
     // Inits
     core_heartbeat_init(GPIOB, GPIO_PIN_9);
     core_GPIO_set_heartbeat(GPIO_PIN_RESET);

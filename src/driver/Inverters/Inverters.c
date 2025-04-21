@@ -47,7 +47,7 @@ void Inverters_init()
     rr_timeout.callback = timeout_callback;
     rr_timeout.timeout = INV_CAN_TIMEOUT_MS;
     rr_timeout.module = CAN_INV;
-    rr_timeout.ref = INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID;\
+    rr_timeout.ref = INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID;
     core_timeout_insert(&rr_timeout);
 
     // RL timeout init

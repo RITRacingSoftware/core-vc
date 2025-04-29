@@ -19,7 +19,7 @@
 static VehicleState_e state;
 static int timer;
 
-static struct DriverInputs_s inputs;
+static DriverInputs_s inputs;
 
 static uint8_t RTD_cycles;
 
@@ -169,14 +169,11 @@ void VehicleState_Task_Update()
 
         case VehicleState_RTD:
             // If the start button is pressed again, shutdown
-            Inverters_set_torque_request(INV_RR, (MAX_TORQUE * inputs.accelPct), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-            Inverters_set_torque_request(INV_RL, (MAX_TORQUE * inputs.accelPct), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-            Inverters_set_torque_request(INV_FR, (MAX_TORQUE * inputs.accelPct), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-            Inverters_set_torque_request(INV_FL, (MAX_TORQUE * inputs.accelPct), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-            //Inverters_set_torque_request(INV_FR, 6, -6, 6);
-            //Inverters_set_torque_request(INV_FL, 6, -6, 6);
-            //Inverters_set_torque_request(INV_RR, 6, -6, 6);
-            //Inverters_set_torque_request(INV_RL, 6, -6, 6);
+            // Inverters_set_torque_request(INV_RR, (MAX_TORQUE * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            // Inverters_set_torque_request(INV_RL, (MAX_TORQUE * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            // Inverters_set_torque_request(INV_F8, (MAX_TORQUE * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            Inverters_set_torque_request(INV_FL, (MAX_TORQUE * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            
             if (!GPIO_get_TSMS())
             {
                 new_state(VehicleState_SHUTDOWN);

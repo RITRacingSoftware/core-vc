@@ -12,7 +12,7 @@
 #define CAN_MAIN FDCAN2
 #define CAN_INV FDCAN3
 #define NUM_IDS_MAIN 2
-#define NUM_IDS_INV 12
+#define NUM_IDS_INV 16
 
 /** CONTROLS **/
 #define CS_LAT_FACTOR_ACC 0.5

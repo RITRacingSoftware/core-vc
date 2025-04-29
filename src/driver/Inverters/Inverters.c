@@ -70,11 +70,17 @@ void Inverters_init()
     fl_timeout.module = CAN_INV;
     fl_timeout.ref = INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID;
     core_timeout_insert(&fl_timeout);
-
 }
 
 void Inverters_Task_Update()
 {
+    uint64_t msg = 0;
+    uint32_t t = HAL_GetTick();
+    msg |= ((uint64_t)(t - rr_timeout.last_event));
+    msg |= ((uint64_t)(t - rl_timeout.last_event) << 16); 
+    msg |= ((uint64_t)(t - fr_timeout.last_event) << 32); 
+    msg |= ((uint64_t)(t - fl_timeout.last_event) << 48); 
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 1, 8, msg);
     Inverters_send_setpoints(INV_RR);
     Inverters_send_setpoints(INV_RL);
     Inverters_send_setpoints(INV_FR);
@@ -180,7 +186,6 @@ void Inverters_set_torque_request(uint8_t invNum, float setpoint, float negLimit
             invBus.rl_setpoints.rl_amk_torque_setpoint = inverter_dbc_rl_amk_setpoints_rl_amk_torque_setpoint_encode(setpoint);
             invBus.rl_setpoints.rl_amk_torque_limit_negative = inverter_dbc_rl_amk_setpoints_rl_amk_torque_limit_negative_encode(negLimit);
             invBus.rl_setpoints.rl_amk_torque_limit_positive = inverter_dbc_rl_amk_setpoints_rl_amk_torque_limit_positive_encode(posLimit);
-            uprintf(USART3, "Setpoint: %d, invSP: %d\n", (int)(setpoint * 100), (int)(invBus.rl_setpoints.rl_amk_torque_setpoint));
             break;
 
         case INV_FR:
@@ -256,5 +261,5 @@ static void timeout_callback(core_timeout_t *timeout)
     else if (timeout == &fl_timeout) faultList |= FAULT_FL_LOST;
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 3, 8, 0xfa55);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 4, 8, faultList);
-    FaultManager_set(faultList);
+    // FaultManager_set(faultList);
 }

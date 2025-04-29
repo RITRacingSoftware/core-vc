@@ -1,17 +1,10 @@
 #include "ControlSystem.h"
 #include "config.h"
 #include "common_macros.h"
-
-#ifdef VC_TEST
-#include <stdio.h>
-#include "Inverters_test.h"
-#include "DriverInputs_test.h"
-#else
 #include "Inverters.h"
 #include "DriverInputs.h"
-#endif
 
-static struct DriverInputs_s inputs;
+static DriverInputs_s inputs;
 static bool regenEnabled;
 
 static float steerPct, accelPct, brakePct;
@@ -30,10 +23,6 @@ void ControlSystem_Task_Update()
     accelPct = inputs.accelPct;
     steerPct = inputs.steerPct;
     brakePct = inputs.brakePct;
-
-#ifdef TEST
-    printf("accelPct: %f, steerPct: %f, brakePct: %f\n", accelPct, steerPct, brakePct);
-#endif
 
     // Case: Acceleration with no braking
     if (accelPct > 0 && brakePct == 0)
@@ -67,10 +56,6 @@ void ControlSystem_Task_Update()
 
 static void setSplits()
 {
-
-#ifdef TEST
-    printf("totalPctLeft: %f, totalPctFront: %f\n", totalPctLeft, totalPctFront);
-#endif
     invArr[3] = totalPctLeft * totalPctFront;
     invArr[2] = (1 - totalPctLeft) * totalPctFront;
     invArr[1] = totalPctLeft * (1 - totalPctFront);

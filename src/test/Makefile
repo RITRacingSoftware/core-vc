@@ -16,7 +16,7 @@ DRIVER_OBJS := $(DRIVER_SRCS:$(DRIVER_DIR)/%=$(DRIVER_BUILD_DIR)/%.o)
 # Test
 TEST_DIR := ./src
 TEST_BUILD_DIR := $(BUILD_DIR)/test
-TEST_INCS := -I $(TEST_DIR)
+TEST_INCS := -I $(TEST_DIR) -I $(TEST_DIR)/core -I $(TEST_DIR)/tests
 TEST_SRCS := $(shell find $(TEST_DIR) -type f -name \*.c)
 TEST_OBJS := $(TEST_SRCS:$(TEST_DIR)/%=$(TEST_BUILD_DIR)/%.o)
 
@@ -42,12 +42,10 @@ DBC_OBJS := $(DBC_SRCS:$(DBC_DIR)/%=$(DBC_BUILD_DIR)/%.o)
 HAL_INCS := -I ../../../Core/src/mock
 
 
-INC_FLAGS := $(CORE_INCS) $(DBC_INCS) $(HAL_INCS) $(TEST_INCS) $(DRIVER_INCS) $(FREERTOS_INCS) -I ../
-C_FLAGS := $(INC_FLAGS) -D VC_TEST 
+INC_FLAGS := -I ../ $(CORE_INCS) $(DBC_INCS) $(HAL_INCS) $(FREERTOS_INCS)  $(DRIVER_INCS) $(TEST_INCS)
+C_FLAGS := $(INC_FLAGS) -D VC_TEST -lm
 
 OBJS := $(CORE_OBJS) $(DRIVER_OBJS) $(TEST_OBJS) $(DBC_OBJS)
-
-$(info OBJS is $(OBJS))
 
 all: $(BUILD_DIR)/$(PROJECT_NAME)
 

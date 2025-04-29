@@ -2,6 +2,11 @@
 #include <stdint.h>
 #include "DriverInputs.h"
 
+#ifdef VC_TEST
+#include "vc_test.h"
+#include <stdio.h>
+#endif
+
 #include "config.h"
 #include "main_dbc.h"
 #include "FaultManager.h"
@@ -18,9 +23,7 @@ static uint8_t faultList;
 static void brake_timeout_callback(core_timeout_t *timeout);
 static void timeout_callback (core_timeout_t *timeout);
 static bool Accel_init();
-static bool Accel_process(float *avgPos);
 static bool Brakes_init();
-static bool Brakes_process(float *pct);
 
 static core_timeout_t bps_CAN_timeout;          // Brake pressure sensor not on CAN timeout
 static core_timeout_t double_pedal_timeout;     // Double pedal timeout
@@ -33,7 +36,7 @@ static core_timeout_t steer_irr_timeout;
 static core_timeout_t steer_lost_timoeut;
 
 
-static struct DriverInputs_s driverInputs;
+static DriverInputs_s driverInputs;
 
 void DriverInputs_init()
 {
@@ -145,7 +148,7 @@ void DriverInputs_update_steering_angle()
     driverInputs.steerPct = (float)(((rawPos - STEER_OFFSET_ADC)/HALF_STEER_RANGE_ADC) - 1);
 }
 
-void DriverInputs_get_driver_inputs(struct DriverInputs_s *inputs)
+void DriverInputs_get_driver_inputs(DriverInputs_s *inputs)
 {
     inputs->brakePct = driverInputs.brakePct;
     inputs->accelPct = driverInputs.accelPct;
@@ -173,7 +176,7 @@ static bool Accel_init()
     return true;
 }
 
-static bool Accel_process(float *avgPos)
+bool Accel_process(float *avgPos)
 {
     uint16_t accelAVal;
     uint16_t accelBVal;
@@ -191,7 +194,8 @@ static bool Accel_process(float *avgPos)
 
     // Convert to positions
     float accelAPos, accelBPos;
-    Accel_to_pos(accelAVal, accelBVal, &accelAPos, &accelBPos);
+    accelAPos = MIN((MAX(accelAVal - ACCEL_A_OFFSET_ADC, 0.0) / (float) ACCEL_A_RANGE_ADC), 1);
+    accelBPos = MIN((MAX(accelBVal - ACCEL_B_OFFSET_ADC, 0.0) / (float) ACCEL_B_RANGE_ADC), 1);
 
     *avgPos = ((accelAPos + accelBPos) / 2.0);
     
@@ -224,15 +228,14 @@ static bool Accel_process(float *avgPos)
         core_timeout_reset(&accel_disagree_timeout);
     } else status = false;
 
+#ifdef VC_TEST
+    printf("aVal: %d, bVal: %d ", accelAVal, accelBVal);
+    printf("aPos: %f, bPos%f\n", accelAPos, accelBPos);
+    test((t_val) accelAPos);
+    test((t_val) accelBPos);
+#endif    
+    
     return status;
-}
-
-void Accel_to_pos(uint16_t accelAVal, uint16_t accelBVal, float *accelAPos, float *accelBPos)
-{
-
-    // Scale: 0 -> 1
-    *accelAPos = MIN((MAX(accelAVal - ACCEL_A_OFFSET_ADC, 0.0) / (float) ACCEL_A_RANGE_ADC), 1);
-    *accelBPos = MIN((MAX(accelBVal - ACCEL_B_OFFSET_ADC, 0.0) / (float) ACCEL_B_RANGE_ADC), 1);
 }
 
 static bool Brakes_init()
@@ -242,7 +245,7 @@ static bool Brakes_init()
     return true;
 }
 
-static bool Brakes_process(float *pct)
+bool Brakes_process(float *pct)
 {
     uint16_t rearVal;
     // Read RBPS analog

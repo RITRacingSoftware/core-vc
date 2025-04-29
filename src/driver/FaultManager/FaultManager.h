@@ -22,6 +22,11 @@
 #define FAULT_FL_ERROR            0x00020000
 #define FAULT_VN_LOST             0x00040000
 #define FAULT_PBX_SHUTDOWN        0x00080000
+#define FAULT_RL_OVERSPEED        0x00100000
+#define FAULT_RR_OVERSPEED        0x00200000
+#define FAULT_FL_OVERSPEED        0x00400000
+#define FAULT_FR_OVERSPEED        0x00800000
+
 
 void FaultManager_DriverInputs(uint8_t faultList);
 void FaultManager_Inv(uint8_t faultList);

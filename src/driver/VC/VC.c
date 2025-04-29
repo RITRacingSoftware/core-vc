@@ -37,6 +37,8 @@ bool VC_init()
     core_USART_init(USART3, 500000);
     core_ADC_init(ADC1);
     core_RTT_init();
+    rprintf("Test\n");
+
 
     core_USART_init(USART3, 500000);
     GPIO_init();

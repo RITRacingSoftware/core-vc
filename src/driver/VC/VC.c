@@ -39,7 +39,6 @@ bool VC_init()
     core_RTT_init();
     rprintf("Test\n");
 
-
     core_USART_init(USART3, 500000);
     GPIO_init();
     VehicleState_init();

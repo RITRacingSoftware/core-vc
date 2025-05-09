@@ -23,7 +23,12 @@ typedef struct
 void DriverInputs_init();
 void DriverInputs_Task_Update();
 void Accel_to_pos(uint16_t accelAVal, uint16_t accelBVal, float *accelAPos, float *accelBPos);
-void DriverInputs_update_steering_angle();
+void Steer_process();
 void DriverInputs_get_driver_inputs(DriverInputs_s *inputs);
-bool Accel_process(float *avgPos);
-bool Brakes_process(float *pct);
+void Accel_process();
+void Brakes_process();
+
+#ifdef VC_TEST
+void force_fbps_lost_timeout();
+void force_inputs(float accelPos, float brakePos, float steerPos);
+#endif

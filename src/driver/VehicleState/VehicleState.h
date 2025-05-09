@@ -1,7 +1,5 @@
 #pragma once
-
-#define RTD_HOLD_TIME 1000
-
+#include <stdbool.h>
 
 typedef enum
 {

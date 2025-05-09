@@ -4,8 +4,12 @@
 #include "Inverters.h"
 #include "DriverInputs.h"
 
+#ifdef VC_TEST
+#include <stdio.h>
+#include "vc_test.h"
+#endif 
+
 static DriverInputs_s inputs;
-static bool regenEnabled;
 
 static float steerPct, accelPct, brakePct;
 static float totalPctLeft, totalPctFront;
@@ -21,7 +25,7 @@ void ControlSystem_Task_Update()
     DriverInputs_get_driver_inputs(&inputs);
     // normalize(&steerPct, &accelPct, &brakePct);
     accelPct = inputs.accelPct;
-    steerPct = inputs.steerPct;
+    steerPct = -1 * inputs.steerPct;
     brakePct = inputs.brakePct;
 
     // Case: Acceleration with no braking
@@ -34,10 +38,10 @@ void ControlSystem_Task_Update()
         setSplits();
     }
     // Case: Regen braking
-    else if (accelPct == 0 && brakePct > 0 && regenEnabled)
+    else if (accelPct == 0 && brakePct > 0 && REGEN_ENABLED)
     {
         // printf("Brakes\n");
-        trqPctTotal = -brakePct;
+        trqPctTotal = brakePct * -1;
         totalPctLeft = 0.5f + (steerPct * CS_LAT_FACTOR_BRAKE);
         totalPctFront = CS_LONG_SPLIT_BRAKE + (brakePct * CS_LONG_FACTOR_BRAKE);
         setSplits();
@@ -46,12 +50,13 @@ void ControlSystem_Task_Update()
 
     for (int i = 0; i < 4; i++)
     {
-        double posLimit = (accelPct > 0) ? invArr[i] + INV_LIMIT_TOL : 0;
-        double negLimit = (brakePct > 0 && regenEnabled) ? invArr[i] - INV_LIMIT_TOL : 0;
-
-        Inverters_set_torque_request(i, invArr[i] * 100, negLimit, posLimit);
+        // float posLimit = (accelPct > 0) ? invArr[i] + INV_LIMIT_TOL : 0;
+        // float negLimit = (brakePct > 0 && REGEN_ENABLED) ? invArr[i] - INV_LIMIT_TOL : 0;
+        Inverters_set_torque_request(i, invArr[i] * 80, 0, 100);
+#ifdef VC_TEST
+        test((t_val) invArr[i]);
+#endif
     }
-
 }
 
 static void setSplits()
@@ -60,10 +65,10 @@ static void setSplits()
     invArr[2] = (1 - totalPctLeft) * totalPctFront;
     invArr[1] = totalPctLeft * (1 - totalPctFront);
     invArr[0] = (1 - totalPctLeft) * (1 - totalPctFront);
-//     float max = invArr[0];
-//     for (int i = 0; i < 4; i++) if (invArr[i] > max) max = invArr[i];
-//     float demandScale = trqPctTotal / max;
-//     for (int i = 0; i < 4; i++) invArr[i] *= demandScale;
+    float max = invArr[0];
+    for (int i = 0; i < 4; i++) if (invArr[i] > max) max = invArr[i];
+    float demandScale = trqPctTotal / max;
+    for (int i = 0; i < 4; i++) invArr[i] *= demandScale;
 }
 
 static void normalize(float *steerPt, float *accelPt, float *brakePt)

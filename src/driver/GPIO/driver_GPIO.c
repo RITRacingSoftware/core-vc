@@ -1,5 +1,5 @@
 #include "driver_GPIO.h"
-
+#include "Inverters.h"
 #include "GPIO.h"
 
 void GPIO_init()
@@ -48,7 +48,14 @@ void GPIO_init()
 }
 
 void GPIO_set_precharge_relay(bool on) {core_GPIO_digital_write(PRECHARGE_RELAY_PORT, PRECHARGE_RELAY_PIN, on);}
-void GPIO_set_interlock_relay(bool on) {core_GPIO_digital_write(AIR1_PORT, AIR1_PIN, on);}
+
+bool GPIO_set_interlock_relay(bool on) {
+    if (on) {
+        if (!Inverters_get_precharged_all()) return false;
+    }    
+    core_GPIO_digital_write(AIR1_PORT, AIR1_PIN, on);
+    return true;
+}
 
 bool GPIO_get_TSMS() {return core_GPIO_digital_read(TSMS_PORT, TSMS_PIN);}
 bool GPIO_get_RTD() {return core_GPIO_digital_read(RTD_PORT, RTD_PIN);}

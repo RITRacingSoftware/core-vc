@@ -55,7 +55,7 @@
 
 void GPIO_init();
 void GPIO_set_precharge_relay(bool on);
-void GPIO_set_interlock_relay(bool on);
+bool GPIO_set_interlock_relay(bool on);
 bool GPIO_get_TSMS();
 bool GPIO_get_RTD();
 void GPIO_set_activate_inv_relays(bool on);

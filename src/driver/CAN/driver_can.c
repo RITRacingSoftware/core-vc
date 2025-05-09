@@ -17,6 +17,8 @@ static bool CAN_add_filters();
 static void pack_and_send_main_echoes(int id);
 
 int main_id_arr[NUM_IDS_MAIN] = {
+        MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
+        MAIN_DBC_BMS_STATUS_FRAME_ID,
         MAIN_DBC_SSDB_FRONT_FRAME_ID,
         MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID
 };
@@ -74,12 +76,15 @@ void CAN_rx_main()
         {
             case MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID:
                 main_dbc_bms_fault_vector_unpack(&mainBus.bms_fault_vector, (uint8_t *) &canMessage.data, canMessage.dlc);
-                if ((uint8_t *) &canMessage.data) FaultManager_set(FAULT_BMS);
+                if (canMessage.data) FaultManager_set(FAULT_BMS);
                 break;
 
+            case MAIN_DBC_BMS_STATUS_FRAME_ID:
+                main_dbc_bms_status_unpack(&mainBus.bms_status, (uint8_t *) &canMessage.data, canMessage.dlc);
+                mainBus.bms_status.bms_status_pack_voltage *= 0.1; break;
+
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
-                main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, canMessage.dlc);
-                break;
+                main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID:
                 main_dbc_ssdb_vector_nav6_unpack(&mainBus.vn_vel, (uint8_t *) &canMessage.data, canMessage.dlc); break;
@@ -101,12 +106,13 @@ void CAN_rx_inv()
             // RR
             case INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_rr_amk_actual_1_unpack(&invBus.rr_actual1, (uint8_t *) &canMessage.data, 8);
-                invBus.rr_actual1.rr_feedback_velocity /= 10000;
-                if (invBus.rr_actual1.rr_status_error) FaultManager_set(FAULT_RR_ERROR);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
+                invBus.rr_actual1.rr_feedback_velocity *= 0.0001;
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;  // Echo over main bus
 
             case INVERTER_DBC_RR_AMK_ACTUAL_2_FRAME_ID:
-                inverter_dbc_rr_amk_actual_2_unpack(&invBus.rr_actual2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rr_amk_actual_2_unpack(&invBus.rr_actual2, (uint8_t *) &canMessage.data, 8);
+                if (invBus.rr_actual2.rr_error_info != 0) FaultManager_set_inv(INV_RR, invBus.rr_actual2.rr_error_info);
+                break;
 
             case INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID:
                 inverter_dbc_rr_amk_rit_set1_unpack(&invBus.rr_set1, (uint8_t *) &canMessage.data, 8); break;
@@ -114,15 +120,18 @@ void CAN_rx_inv()
             case INVERTER_DBC_RR_AMK_RIT_SET2_FRAME_ID:
                 inverter_dbc_rr_amk_rit_set2_unpack(&invBus.rr_set2, (uint8_t *) &canMessage.data, 8); break;
 
+
+
             // RL
             case INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_rl_amk_actual_1_unpack(&invBus.rl_actual1, (uint8_t *) &canMessage.data, 8);
-                invBus.rl_actual1.rl_feedback_velocity /= 10000;
-                if (invBus.rl_actual1.rl_status_error) FaultManager_set(FAULT_RL_ERROR);
+                invBus.rl_actual1.rl_feedback_velocity *= 0.0001;
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_RL_AMK_ACTUAL_2_FRAME_ID:
-                inverter_dbc_rl_amk_actual_2_unpack(&invBus.rl_actual2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rl_amk_actual_2_unpack(&invBus.rl_actual2, (uint8_t *) &canMessage.data, 8);
+                if (invBus.rl_actual2.rl_error_info != 0) FaultManager_set_inv(INV_RL, invBus.rl_actual2.rl_error_info);
+                break;
             
             case INVERTER_DBC_RL_AMK_RIT_SET1_FRAME_ID:
                 inverter_dbc_rl_amk_rit_set1_unpack(&invBus.rl_set1, (uint8_t *) &canMessage.data, 8); break;
@@ -130,15 +139,19 @@ void CAN_rx_inv()
             case INVERTER_DBC_RL_AMK_RIT_SET2_FRAME_ID:
                 inverter_dbc_rl_amk_rit_set2_unpack(&invBus.rl_set2, (uint8_t *) &canMessage.data, 8); break;
 
+
+
             // FR
             case INVERTER_DBC_FR_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_fr_amk_actual_1_unpack(&invBus.fr_actual1, (uint8_t *) &canMessage.data, 8);
-                invBus.fr_actual1.fr_feedback_velocity /= 10000;
-                if (invBus.fr_actual1.fr_status_error) FaultManager_set(FAULT_FR_ERROR);
+                invBus.fr_actual1.fr_feedback_velocity *= 0.0001;
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FR_AMK_ACTUAL_2_FRAME_ID:
-                inverter_dbc_fr_amk_actual_2_unpack(&invBus.fr_actual2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_fr_amk_actual_2_unpack(&invBus.fr_actual2, (uint8_t *) &canMessage.data, 8);
+                if (invBus.fr_actual2.fr_error_info != 0) FaultManager_set_inv(INV_FR, invBus.fr_actual2.fr_error_info);
+                break;
+
 
             case INVERTER_DBC_FR_AMK_RIT_SET1_FRAME_ID:
                 inverter_dbc_fr_amk_rit_set1_unpack(&invBus.fr_set1, (uint8_t *) &canMessage.data, 8); break;
@@ -146,15 +159,18 @@ void CAN_rx_inv()
             case INVERTER_DBC_FR_AMK_RIT_SET2_FRAME_ID:
                 inverter_dbc_fr_amk_rit_set2_unpack(&invBus.fr_set2, (uint8_t *) &canMessage.data, 8); break;
 
+
+
             // FL
             case INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_fl_amk_actual_1_unpack(&invBus.fl_actual1, (uint8_t *) &canMessage.data, 8);
-                invBus.fl_actual1.fl_feedback_velocity /= 10000;
-                if (invBus.fl_actual1.fl_status_error) FaultManager_set(FAULT_FL_ERROR);
+                invBus.fl_actual1.fl_feedback_velocity *= 0.0001;
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FL_AMK_ACTUAL_2_FRAME_ID:
-                inverter_dbc_fl_amk_actual_2_unpack(&invBus.fl_actual2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_fl_amk_actual_2_unpack(&invBus.fl_actual2, (uint8_t *) &canMessage.data, 8);
+                if (invBus.fl_actual2.fl_error_info != 0) FaultManager_set_inv(INV_FL, invBus.fl_actual2.fl_error_info);
+                break;
 
             case INVERTER_DBC_FL_AMK_RIT_SET1_FRAME_ID:
                 inverter_dbc_fl_amk_rit_set1_unpack(&invBus.fl_set1, (uint8_t *) &canMessage.data, 8); break;
@@ -185,6 +201,7 @@ int CAN_pack_message(int id, uint8_t *msg_data)
 
         case INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID:
             return inverter_dbc_fl_amk_setpoints_pack(msg_data, &invBus.fl_setpoints, 8);
+
     }
 
     return -1;
@@ -194,8 +211,8 @@ void CAN_send_driver_inputs()
 {
     uint64_t message;
 
-    main_dbc_vc_pedal_inputs_pack((uint8_t *)&message, &mainBus.pedal_inputs, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_FRAME_ID, 8, message);
+    main_dbc_vc_processed_inputs_pack((uint8_t *)&message, &mainBus.processed_inputs, 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PROCESSED_INPUTS_FRAME_ID, 8, message);
 
     main_dbc_vc_pedal_inputs_raw_pack((uint8_t *)&message, &mainBus.pedal_inputs_raw, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, message);

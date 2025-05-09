@@ -1,26 +1,28 @@
 #pragma once
 
 #include "config.h"
-
 #include <stdbool.h>
 #include <stdint.h>
-
 #include "inverter_dbc.h"
 #include "main_dbc.h"
 #include "sensor_dbc.h"
+
+#define INV_ERROR_RESET_BIT ((uint64_t)(1 << 11))
 
 typedef struct
 {
     // Received by VC 
     struct main_dbc_bms_fault_vector_t bms_fault_vector;
+    struct main_dbc_bms_status_t bms_status;
     struct main_dbc_ssdb_front_t ssdb_front;
     struct main_dbc_ssdb_vector_nav6_t vn_vel;
 
     // Sent by VC
     struct main_dbc_vc_rtds_request_t rtds_request;
-    struct main_dbc_vc_pedal_inputs_t pedal_inputs;
+    struct main_dbc_vc_processed_inputs_t processed_inputs;
     struct main_dbc_vc_pedal_inputs_raw_t pedal_inputs_raw;
     struct main_dbc_vc_status_t vc_status;
+    struct main_dbc_vc_inverter_status_t inverter_status;
 
     // Inv data sent by VC
     struct main_dbc_vc_rl_amk_setpoints_t rl_setpoints;

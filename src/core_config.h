@@ -178,6 +178,6 @@
 /**
  * @brief Number of timeouts used
  */
-#define CORE_TIMEOUT_NUM 14
+#define CORE_TIMEOUT_NUM 20
 
 #endif //CORE_CORE_CONFIG_H

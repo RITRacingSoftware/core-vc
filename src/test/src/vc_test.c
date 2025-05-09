@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "common_macros.h"
 #include "vc_test.h"
 
 #define MAX_TEST_VALS 10
 #define TOL 0.01
+
 
 t_val val_arr[MAX_TEST_VALS];
 
@@ -23,7 +25,7 @@ void test(t_val val)
         val_arr[write] = val;
         write = (++write) % MAX_TEST_VALS;
     }
-    else fprintf(stderr, "Error: Buffer full");
+    else fprintf(stderr, RED "Error: Buffer full" RESET);
 }
 
 void test_read(t_val *valPtr)
@@ -36,12 +38,6 @@ void test_read(t_val *valPtr)
 bool assert_float(float in, float exp)
 {
     bool result = FLOAT_EQ(in, exp, TOL);
-    if (!result) fprintf(stderr, "Test Failed. Expected: %f, yielded: %f\n", exp, in);
-    else
-    {
-        #if VERBOSE
-        printf("Test passed for: %f\n", in);
-        #endif
-    }
+    if (!result) fprintf(stderr, RED "ERROR: Test Failed. Expected: %.2f, yielded: %.2f\n" RESET, exp, in);
     return result;
 }

@@ -24,6 +24,7 @@ static void brake_timeout_callback(core_timeout_t *timeout);
 static void timeout_callback (core_timeout_t *timeout);
 static bool Accel_init();
 static bool Brakes_init();
+static void Brakes_convert_pct(uint16_t fVal, uint16_t rVal, float *fPct, float *rPct);
 
 static core_timeout_t bps_CAN_timeout;          // Brake pressure sensor not on CAN timeout
 static core_timeout_t double_pedal_timeout;     // Double pedal timeout
@@ -46,7 +47,7 @@ void DriverInputs_init()
     faultList = 0;
     driverInputs.accelPct = 0;
     driverInputs.brakePct = CS_MIN_BRAKE_PCT;
-    driverInputs.steerPct = 0.5;
+    driverInputs.steerPct = 0;
     brake_CAN = true;
 
     /******************* TIMEOUTS *******************/
@@ -127,25 +128,36 @@ void DriverInputs_init()
 
 void DriverInputs_Task_Update()
 {
-    float accelAvg, brakesPct;
-    if (Accel_process(&accelAvg)) driverInputs.accelPct = accelAvg;
-    if (Brakes_process(&brakesPct)) driverInputs.brakePct = brakesPct;
-    
+    Accel_process();
+    Brakes_process();
+    Steer_process();
+
     // Check double pedal
-    bool doublePedal = ((driverInputs.brakePct) >= BPS_PRESSED_PCT) && (driverInputs.accelPct > DI_ACCEL_DOUBLE_PEDAL_THRESHOLD);
+    bool doublePedal = ((driverInputs.brakePct) > BPS_PRESSED_PCT) && (driverInputs.accelPct > DI_ACCEL_DOUBLE_PEDAL_THRESHOLD);
     if (doublePedal) core_timeout_reset(&double_pedal_timeout);
 
     CAN_send_driver_inputs();
-    //FaultManager_set(faultList);
 }
 
-void DriverInputs_update_steering_angle()
+void Steer_process()
 {
-    uint16_t rawPos = (uint16_t) main_dbc_ssdb_front_ssdb_steering_angle_raw_decode(
-            mainBus.ssdb_front.ssdb_steering_angle_raw);
-    
-    //Scale: -1 -> 1
-    driverInputs.steerPct = (float)(((rawPos - STEER_OFFSET_ADC)/HALF_STEER_RANGE_ADC) - 1);
+    uint16_t rawPos = mainBus.ssdb_front.ssdb_steering_angle_raw;
+
+    // Check irrationality
+    if (rawPos < STEER_IRRATIONAL_MAX_ADC && rawPos > STEER_IRRATIONAL_MIN_ADC)
+    {
+        core_timeout_reset(&steer_irr_timeout);
+
+        uint16_t pos;
+        pos = SAT(rawPos, STEER_OFFSET_ADC, STEER_MAX_ADC);
+
+        //Scale: -1 -> 1
+        driverInputs.steerPct = (float)(((pos - STEER_OFFSET_ADC)/HALF_STEER_RANGE_ADC) - 1);
+    }
+
+#ifdef VC_TEST
+    test((t_val) driverInputs.steerPct);
+#endif
 }
 
 void DriverInputs_get_driver_inputs(DriverInputs_s *inputs)
@@ -176,10 +188,10 @@ static bool Accel_init()
     return true;
 }
 
-bool Accel_process(float *avgPos)
+void Accel_process()
 {
-    uint16_t accelAVal;
-    uint16_t accelBVal;
+    uint16_t accelAVal, accelBVal, aVal, bVal = 0;
+    float accelAPos, accelBPos, avgPos = 0; 
 
     // Read APPS signals
     core_ADC_read_channel(ACCEL_A_PORT, ACCEL_A_PIN, &accelAVal);
@@ -193,26 +205,22 @@ bool Accel_process(float *avgPos)
             main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_b_adc_encode(accelBVal);
 
     // Convert to positions
-    float accelAPos, accelBPos;
-    accelAPos = MIN((MAX(accelAVal - ACCEL_A_OFFSET_ADC, 0.0) / (float) ACCEL_A_RANGE_ADC), 1);
-    accelBPos = MIN((MAX(accelBVal - ACCEL_B_OFFSET_ADC, 0.0) / (float) ACCEL_B_RANGE_ADC), 1);
+    aVal = SAT(accelAVal, ACCEL_A_OFFSET_ADC, ACCEL_A_MAX_ADC);
+    bVal = SAT(accelBVal, ACCEL_B_OFFSET_ADC, ACCEL_B_MAX_ADC);
 
-    *avgPos = ((accelAPos + accelBPos) / 2.0);
-    
+    accelAPos = ((float) (aVal - ACCEL_A_OFFSET_ADC)) / ((float) ACCEL_A_RANGE_ADC);
+    accelBPos = ((float) (bVal - ACCEL_B_OFFSET_ADC)) / ((float) ACCEL_B_RANGE_ADC);
+
+    avgPos = ((accelAPos + accelBPos) / 2.0);
+
     // Echo A, B, and average positions on main bus
-    mainBus.pedal_inputs.vc_pedal_inputs_accel_position_a =
-            main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_a_encode(accelAPos * 100);
-    mainBus.pedal_inputs.vc_pedal_inputs_accel_position_b =
-            main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_b_encode(accelBPos * 100);
-    mainBus.pedal_inputs.vc_pedal_inputs_accel_position_avg =
-            main_dbc_vc_pedal_inputs_vc_pedal_inputs_accel_position_avg_encode(*avgPos * 100);
+    mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_a =
+            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_accel_position_a_encode(accelAPos * 100);
+    mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_b =
+            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_accel_position_b_encode(accelBPos * 100);
 
-    // rprintf("APPS A: %d, APPS B: %d\n", (int) ((MAX(accelAVal - ACCEL_A_OFFSET_ADC, 0.0)), (int) ((MAX(accelBVal - ACCEL_B_OFFSET_ADC, 0.0)))));
-    // rprintf("AVal: %d, BVal: %d\n", (int)(accelAVal - ACCEL_A_OFFSET_ADC), (int)(accelBVal - ACCEL_B_OFFSET_ADC));
-    // rprintf("APos: %d, BPos: %d\n", (int)(accelAPos * 100), (int)(accelBPos * 100));
     // Irrationality check
     bool status = true;
-
     if (accelAVal <= ACCEL_A_IRRATIONAL_HIGH_ADC && accelAVal >= ACCEL_A_IRRATIONAL_LOW_ADC)
     {
         core_timeout_reset(&accel_A_timeout);
@@ -228,14 +236,19 @@ bool Accel_process(float *avgPos)
         core_timeout_reset(&accel_disagree_timeout);
     } else status = false;
 
+    if (status) driverInputs.accelPct = avgPos;
+    
+    mainBus.processed_inputs.vc_p_inputs_accel_position =
+            main_dbc_vc_processed_inputs_vc_p_inputs_accel_position_encode(driverInputs.accelPct * 100);
+
 #ifdef VC_TEST
-    printf("aVal: %d, bVal: %d ", accelAVal, accelBVal);
-    printf("aPos: %f, bPos%f\n", accelAPos, accelBPos);
+    // printf("From inside: a: %d, b: %d\n", accelAVal, accelBVal);
+    // printf("aPos: %f, bPos: %f\n", accelAPos, accelBPos);
+    // printf("avgPos: %.2f\n", avgPos);
     test((t_val) accelAPos);
     test((t_val) accelBPos);
+    test((t_val) driverInputs.accelPct);
 #endif    
-    
-    return status;
 }
 
 static bool Brakes_init()
@@ -245,52 +258,80 @@ static bool Brakes_init()
     return true;
 }
 
-bool Brakes_process(float *pct)
+void Brakes_process()
 {
     uint16_t rearVal;
     // Read RBPS analog
     core_ADC_read_channel(BPS_PORT, BPS_PIN, &rearVal);
     
-    // Scale: 0 -> 1
-    float rear_brake_pct = (float)((rearVal - BPS_R_OFFSET_ADC)/BPS_R_RANGE_ADC); 
-
     // Send RBPS raw adc
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_brakes_rear_adc =
             main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_brakes_rear_adc_encode(rearVal);
 
     // Send RBPS PSI
-    mainBus.pedal_inputs.vc_pedal_inputs_brakes_rear_psi =
-            main_dbc_vc_pedal_inputs_vc_pedal_inputs_brakes_rear_psi_encode((rearVal * 1.2) - 375);
+    mainBus.processed_inputs.vc_p_inputs_brakes_rear_psi =
+            main_dbc_vc_processed_inputs_vc_p_inputs_brakes_rear_psi_encode((rearVal * 1.2) - 375);
 
     uint16_t frontVal;
     frontVal = mainBus.ssdb_front.ssdb_brake_pressure_front_raw;
     
-    // Scale: 0 -> 1
-    float front_brake_pct = (float)((frontVal - BPS_F_OFFSET_ADC)/BPS_F_RANGE_ADC);  
-
     // Send front PSI
-    mainBus.pedal_inputs.vc_pedal_inputs_brakes_front_psi =
-            main_dbc_vc_pedal_inputs_vc_pedal_inputs_brakes_front_psi_encode((frontVal * 0.924) - 375);
+    mainBus.processed_inputs.vc_p_inputs_brakes_front_psi =
+            main_dbc_vc_processed_inputs_vc_p_inputs_brakes_front_psi_encode((frontVal * 0.924) - 375);
+
+    // Convert to percentages
+    float frontPct, rearPct;
+    Brakes_convert_pct(frontVal, rearVal, &frontPct, &rearPct);
 
     // If front isn't irrational and hasn't timed out
     if (!(bps_CAN_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT) &&
         !(fbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
     {
-        *pct = front_brake_pct;
-        if (frontVal > BPS_F_IRRATIONAL_LOW_ADC && frontVal < BPS_F_IRRATIONAL_HIGH_ADC)
-        {
+        // If front isn't currently irrational
+        if (frontVal > BPS_F_IRRATIONAL_LOW_ADC && frontVal < BPS_F_IRRATIONAL_HIGH_ADC) {
             core_timeout_reset(&fbps_irr_timeout);
-            return true;
+            driverInputs.brakePct = frontPct;
         }
-        return false;
     }
-    // Else if rear isn't irrational
-    else if (!(rbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
+    else 
     {
-        *pct = rear_brake_pct;
-        core_timeout_reset(&rbps_irr_timeout);
-        return (rearVal> BPS_R_IRRATIONAL_LOW_ADC && rearVal < BPS_R_IRRATIONAL_HIGH_ADC);
+        /*
+        // If rear isn't timed out irrational
+        if (!(rbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
+        {   
+            // If rear isn't currently irrational
+            if (rearVal < BPS_R_IRRATIONAL_HIGH_ADC && rearVal > BPS_R_IRRATIONAL_LOW_ADC) {
+                core_timeout_reset(&rbps_irr_timeout);
+                driverInputs.brakePct = rearPct;
+            }
+        }
+        */
     }
-    *pct = 0.5;
-    return false;
+
+#ifdef VC_TEST
+    test((t_val) frontPct);
+    test((t_val) rearPct);
+    test((t_val) driverInputs.brakePct);
+#endif
 }
+
+static void Brakes_convert_pct(uint16_t fVal, uint16_t rVal, float *fPct, float *rPct)
+{
+    uint16_t val;
+    val = SAT(fVal, BPS_F_OFFSET_ADC, BPS_F_MAX_ADC);
+    *fPct = (((float) (val - BPS_F_OFFSET_ADC)) / ((float) BPS_F_RANGE_ADC));
+
+    val = SAT(rVal, BPS_R_OFFSET_ADC, BPS_R_MAX_ADC);
+    *rPct = (float)(((float) (val - BPS_R_OFFSET_ADC)) / ((float) BPS_R_RANGE_ADC));
+}
+
+#ifdef VC_TEST
+void force_fbps_lost_timeout() {bps_CAN_timeout.state &= CORE_TIMEOUT_STATE_TIMED_OUT;}
+
+void force_inputs(float accelPos, float brakePos, float steerPos)
+{
+    driverInputs.accelPct = accelPos;
+    driverInputs.brakePct = brakePos;
+    driverInputs.steerPct = steerPos;
+}
+#endif

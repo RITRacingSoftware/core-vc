@@ -9,15 +9,11 @@
 #include "DriverInputs.h"
 #include "usart.h"
 #include "rtt.h"
+#include "FaultManager.h"
 
-#define ONE_INV 1
-#define TARGET_INV INV_FR
-
-// TODO Add precharge timeout
-
+static unsigned long precharge_time;
 
 static VehicleState_e state;
-static int timer;
 
 static DriverInputs_s inputs;
 
@@ -26,6 +22,7 @@ static uint8_t RTD_cycles;
 
 static void new_state(uint8_t new)
 {
+    rprintf("From: %d to: %d\n", state, new);
     state = new;
 }
 
@@ -33,13 +30,14 @@ void VehicleState_init()
 {
     // Set default values
     state = VehicleState_VC_NOT_READY;
-    timer = 0;
     RTD_cycles = 0;
+    precharge_time = 0; 
     Inverters_suspend_timeouts();
 }
 
 void VehicleState_Task_Update()
 {
+    // Kill AIR1 if TSMS is hit
     if (state > VehicleState_VC_NOT_READY && state < VehicleState_SHUTDOWN && !GPIO_get_TSMS())
     {
         GPIO_set_interlock_relay(false);
@@ -50,74 +48,56 @@ void VehicleState_Task_Update()
     switch(state)
     {
         case VehicleState_VC_NOT_READY:
-            // If the button is pressed, move to next state
+            if (!Inverters_reset_charging_error()) break;
+
+            // If TSMS is switched, move to next state
             if (GPIO_get_TSMS())
             {
                 new_state(VehicleState_INVERTERS_POWERED);
-                timer = 0;
             }
             break;
 
         case VehicleState_INVERTERS_POWERED:
             // If all inverters are ready move to next state
         
-            core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, Inverters_get_ready(INV_RR));
-            core_GPIO_digital_write(RL_STATUS_PORT, RL_STATUS_PIN, Inverters_get_ready(INV_RL));
-            core_GPIO_digital_write(FR_STATUS_PORT, FR_STATUS_PIN, Inverters_get_ready(INV_FR));
-            core_GPIO_digital_write(FL_STATUS_PORT, FL_STATUS_PIN, Inverters_get_ready(INV_FL));
+            // core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, Inverters_get_ready_all(INV_RR));
+            // core_GPIO_digital_write(RL_STATUS_PORT, RL_STATUS_PIN, Inverters_get_ready_all(INV_RL));
+            // core_GPIO_digital_write(FR_STATUS_PORT, FR_STATUS_PIN, Inverters_get_ready_all(INV_FR));
+            // core_GPIO_digital_write(FL_STATUS_PORT, FL_STATUS_PIN, Inverters_get_ready_all(INV_FL));
 
             // AMK_bSystemReady = 1
-            if (Inverters_get_ready(INV_RR) &&
-                Inverters_get_ready(INV_RL) &&
-                Inverters_get_ready(INV_FR) &&
-                Inverters_get_ready(INV_FL))
+            if (Inverters_get_ready_all())
             {
                 Inverters_resume_timeouts();
                 new_state(VehicleState_PRECHARGING);
+                precharge_time = HAL_GetTick();
             }
-            timer = 0;
             break;
 
         case VehicleState_PRECHARGING:
-                GPIO_set_precharge_relay(true);
+            GPIO_set_precharge_relay(true);
+           
+            if ((HAL_GetTick() - precharge_time) > PRECHARGE_MAX_TIME_MS) FaultManager_set(FAULT_PRECHARGE_TIMEOUT);
 
             // If precharge is finished with all 4, confirm precharge done
-
-
-            if (!(
-                Inverters_get_precharged(INV_RR) &&
-                Inverters_get_precharged(INV_RL) &&
-                Inverters_get_precharged(INV_FR) &&
-                Inverters_get_precharged(INV_FL)
-                )) break;
-
-//            core_GPIO_digital_write(FL_STATUS_PORT, FL_STATUS_PIN, true);
+            if (!Inverters_get_precharged_all()) break;
 
             Inverters_set_dc_on(true); // AMK_bDcOn = 1
 
             // Receive echo for confirmation of precharge finishing
             // AMK_bDcOn = 1 MIRROR
-            if (!(
-                Inverters_get_dc_on_echo(INV_RR) &&
-                Inverters_get_dc_on_echo(INV_RL) &&
-                Inverters_get_dc_on_echo(INV_FR) &&
-                Inverters_get_dc_on_echo(INV_FL)
-                )) break;
+            if (!Inverters_get_dc_on_echo_all()) break;
 
             // Receive confirmation from inverters that they have been precharged
             // AMK_bQuitDcOn = 1
-            if (!(
-                Inverters_get_dc_on(INV_RR) &&
-                Inverters_get_dc_on(INV_RL) &&
-                Inverters_get_dc_on(INV_FR) &&
-                Inverters_get_dc_on(INV_FL)
-                )) break;
+            if (!Inverters_get_dc_on_all()) break;
 
-            // Complete interlock from VC side, allow full HV to go through
+            // Wait for minimum time before closing AIR 1
+            if ((HAL_GetTick() - precharge_time) < PRECHARGE_MIN_TIME_MS) break;
+            // Complete interlock from VC side, allow full HV to go through 
             GPIO_set_interlock_relay(true);
             GPIO_set_precharge_relay(false);
             new_state(VehicleState_WAIT);
-            timer = 0;
             break;
 
         case VehicleState_WAIT:
@@ -125,7 +105,6 @@ void VehicleState_Task_Update()
             Inverters_set_torque_request(INV_RL, 0, 0, 0);
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
             Inverters_set_torque_request(INV_FL, 0, 0, 0);
-
 
             RTD_cycles = GPIO_get_RTD() ? RTD_cycles + 1 : 0;
 
@@ -144,21 +123,11 @@ void VehicleState_Task_Update()
 
             // Receive echo for inverters commanded on
             // AMK_bInverterOn = 1 MIRROR
-            if (!(
-                Inverters_get_inv_on_echo(INV_RR) &&
-                Inverters_get_inv_on_echo(INV_RL) &&
-                Inverters_get_inv_on_echo(INV_FR) &&
-                Inverters_get_inv_on_echo(INV_FL)
-                )) break;
+            if (!Inverters_get_inv_on_echo_all()) break;
 
             // Receive confirmation that inverters are on
             // AMK_bQuitInverterOn = 1
-            if (!(
-                Inverters_get_inv_on(INV_RR) &&
-                Inverters_get_inv_on(INV_RL) &&
-                Inverters_get_inv_on(INV_FR) &&
-                Inverters_get_inv_on(INV_FL)
-                )) break;
+            if (!Inverters_get_inv_on_all()) break;
 
             // Switch relay allowing inverters to read real torque requests
             // X140 binary input BE2 = 1
@@ -169,19 +138,19 @@ void VehicleState_Task_Update()
 
         case VehicleState_RTD:
             // If the start button is pressed again, shutdown
-            // Inverters_set_torque_request(INV_RR, (MAX_TORQUE * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_RL, (MAX_TORQUE * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_F8, (MAX_TORQUE * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            Inverters_set_torque_request(INV_FL, (MAX_TORQUE * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            // Inverters_set_torque_request(INV_RR, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            // Inverters_set_torque_request(INV_RL, (MAX_TORQUE * 0.8 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            // Inverters_set_torque_request(INV_FR, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            // Inverters_set_torque_request(INV_FL, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
             
             if (!GPIO_get_TSMS())
             {
+                rprintf("Lost RTD\n");
                 new_state(VehicleState_SHUTDOWN);
             }
             break;
 
-        case VehicleState_SHUTDOWN:
-            core_GPIO_digital_write(SENSOR_LED_PORT, SENSOR_LED_PIN, false);
+        case VehicleState_SHUTDOWN: 
             // Send zeroes for torque requests, turn off activation relay, send inverter off message
             Inverters_set_torque_request(INV_RL,  0, 0, 0);
             Inverters_set_torque_request(INV_FL,  0, 0, 0);
@@ -193,40 +162,27 @@ void VehicleState_Task_Update()
             
             // Receive echo for inverters being commanded off
             // AMK_bInverterOn = 0 MIRROR
-            if (Inverters_get_inv_on_echo(INV_RR) ||
-                Inverters_get_inv_on_echo(INV_RL) ||
-                Inverters_get_inv_on_echo(INV_FR) ||
-                Inverters_get_inv_on_echo(INV_FL)) break;
+            if (Inverters_get_inv_on_echo_any()) break;
 
             // Set inverter enables off
             Inverters_set_enable(false); // AMK_bEnable = 0
 
             // Receive confirmation that inverters are off
             //AMK_bQuitInverterOn = 0
-            if (Inverters_get_inv_on(INV_RR) ||
-                Inverters_get_inv_on(INV_RL) ||
-                Inverters_get_inv_on(INV_FR) ||
-                Inverters_get_inv_on(INV_FL)) break;
+            if (Inverters_get_inv_on_any()) break;
 
             // Send DC bus off message
             Inverters_set_dc_on(false); // AMK_bDcOn = 0
 
             // Receive echo for DC bus being off
             // AMK_bDcOn = 0 MIRROR
-            if (Inverters_get_dc_on_echo(INV_RR) ||
-                Inverters_get_dc_on_echo(INV_RL) ||
-                Inverters_get_dc_on_echo(INV_FR) ||
-                Inverters_get_dc_on_echo(INV_FL)) break;
+            if (Inverters_get_dc_on_echo_any()) break;
 
             // Receive confirmation that DC bus is off
             // AMK_bQitDcOn = 0
-            if (Inverters_get_dc_on(INV_RR) ||
-                Inverters_get_dc_on(INV_RL) ||
-                Inverters_get_dc_on(INV_FR) ||
-                Inverters_get_dc_on(INV_FL)) break;
+            if (Inverters_get_dc_on_any()) break;
 
-            // Kill interlock
-            GPIO_set_interlock_relay(false);
+            new_state(VehicleState_VC_NOT_READY);
             break;
     }
 
@@ -234,8 +190,6 @@ void VehicleState_Task_Update()
     uint64_t msg;
     uint8_t dlc = main_dbc_vc_status_pack((uint8_t *)&msg, &mainBus.vc_status, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_STATUS_FRAME_ID, dlc, msg);
-
-    timer += 10;
 }
 
 void VehicleState_set_fault()

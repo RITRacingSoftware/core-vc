@@ -14,10 +14,10 @@
 #define FAULT_STEER_IRR           0x00000200
 #define FAULT_VN_LOST             0x00000400
 #define FAULT_PBX_SHUTDOWN        0x00000800
-#define FAULT_RL_ERROR            0x00001000
-#define FAULT_RR_ERROR            0x00002000
-#define FAULT_FL_ERROR            0x00004000
-#define FAULT_FR_ERROR            0x00008000
+#define FAULT_RR_ERROR            0x00001000
+#define FAULT_RL_ERROR            0x00002000
+#define FAULT_FR_ERROR            0x00004000
+#define FAULT_FL_ERROR            0x00008000
 #define FAULT_PRECHARGE_TIMEOUT   0x00010000
 
 

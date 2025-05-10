@@ -47,8 +47,8 @@ C_FLAGS := $(INC_FLAGS) -D VC_TEST -lm
 
 OBJS := $(CORE_OBJS) $(DRIVER_OBJS) $(TEST_OBJS) $(DBC_OBJS)
 
-all: $(BUILD_DIR)/$(PROJECT_NAME)
 
+all: $(BUILD_DIR)/$(PROJECT_NAME)
 
 $(BUILD_DIR)/$(PROJECT_NAME) : $(OBJS) 
 	$(CC) -o $@ $^

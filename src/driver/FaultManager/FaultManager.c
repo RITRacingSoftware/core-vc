@@ -29,14 +29,14 @@ void FaultManager_set(uint64_t faultCode)
 
 void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo)
 {
-    rprintf("Inv: %d, errorInfo: %d\n", invNum, errorInfo);
+    // rprintf("Inv: %d, errorInfo: %d\n", invNum, errorInfo);
     if (errorInfo == INV_DC_BUS_CHG_ERROR || errorInfo == INV_OVERSPEED_ERROR) {
         Inverters_set_state(invNum, InvState_SOFT_FAULT);
-        rprintf("Soft\n");
+        // rprintf("Soft\n");
     }
     else { 
         Inverters_set_state(invNum, InvState_HARD_FAULT);
-        rprintf("Hard\n");
+        // rprintf("Hard\n");
     }
 }
 

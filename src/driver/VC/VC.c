@@ -25,9 +25,12 @@
 #include "spi.h"
 bool VC_init()
 {
+
+    long j = 0;
+    for (int i = 0; i < 1000000; i++) {j ++;}
     // Inits
-    core_heartbeat_init(GPIOB, GPIO_PIN_9);
-    core_GPIO_set_heartbeat(GPIO_PIN_RESET);
+    core_heartbeat_init(GPIOC, GPIO_PIN_6);
+    core_GPIO_set_heartbeat(true);
 
     if (!core_clock_init()) return false;
     if (!CAN_init()) return false;
@@ -37,7 +40,7 @@ bool VC_init()
     core_USART_init(USART3, 500000);
     core_ADC_init(ADC1);
     core_RTT_init();
-    rprintf("Test\n");
+    rprintf("J: %d\n", j);
 
     core_USART_init(USART3, 500000);
     GPIO_init();
@@ -54,8 +57,9 @@ bool VC_init()
 void VC_Task_Update()
 {
     VehicleState_Task_Update();
-    Inverters_Task_Update();
     DriverInputs_Task_Update();
+    ControlSystem_Task_Update();
+    Inverters_Task_Update();
     CAN_echo_on_main();
     core_timeout_check_all();
     FaultManager_Task_Update();

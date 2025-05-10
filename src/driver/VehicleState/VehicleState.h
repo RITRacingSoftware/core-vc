@@ -16,3 +16,4 @@ typedef enum
 void VehicleState_init();
 void VehicleState_Task_Update();
 void VehicleState_set_fault();
+VehicleState_e VehicleState_get_state();

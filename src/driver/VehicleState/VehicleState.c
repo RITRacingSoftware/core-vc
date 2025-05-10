@@ -120,15 +120,17 @@ void VehicleState_Task_Update()
             // Set inverter enable and on
             Inverters_set_enable(true); // AMK_bEnable = 1
             Inverters_set_inv_on(true); // AMLK_bInverterOn = 1
+            rprintf("1");
 
             // Receive echo for inverters commanded on
             // AMK_bInverterOn = 1 MIRROR
             if (!Inverters_get_inv_on_echo_all()) break;
+            rprintf("2");
 
             // Receive confirmation that inverters are on
             // AMK_bQuitInverterOn = 1
             if (!Inverters_get_inv_on_all()) break;
-
+            rprintf("3");
             // Switch relay allowing inverters to read real torque requests
             // X140 binary input BE2 = 1
             GPIO_set_activate_inv_relays(true);
@@ -137,9 +139,10 @@ void VehicleState_Task_Update()
             break;
 
         case VehicleState_RTD:
+            // rprintf("From RTD\n");
             // If the start button is pressed again, shutdown
             // Inverters_set_torque_request(INV_RR, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_RL, (MAX_TORQUE * 0.8 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            // Inverters_set_torque_request(INV_RL, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
             // Inverters_set_torque_request(INV_FR, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
             // Inverters_set_torque_request(INV_FL, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
             
@@ -192,7 +195,10 @@ void VehicleState_Task_Update()
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_STATUS_FRAME_ID, dlc, msg);
 }
 
-void VehicleState_set_fault()
-{
+void VehicleState_set_fault() {
     new_state(VehicleState_SHUTDOWN);
+}
+
+VehicleState_e VehicleState_get_state() {
+    return state;
 }

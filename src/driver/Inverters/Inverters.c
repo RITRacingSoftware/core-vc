@@ -9,6 +9,7 @@
 #include "driver_can.h"
 #include "FaultManager.h"
 #include "usart.h"
+#include "VehicleState.h"
 
 static Inverter_s invRR;
 static Inverter_s invRL;
@@ -180,8 +181,21 @@ void Inverters_set_inv_on(bool val)
     invBus.fl_setpoints.fl_amk_b_inverter_on = inverter_dbc_fl_amk_setpoints_fl_amk_b_inverter_on_encode(val);
 }
 
-void Inverters_set_torque_request(uint8_t invNum, float setpoint, float negLimit, float posLimit)
+void Inverters_set_torque_request(uint8_t invNum, float _setpoint, float _negLimit, float _posLimit)
 {
+    float setpoint, negLimit, posLimit;
+
+    if (VehicleState_get_state() == VehicleState_RTD) {
+        setpoint = _setpoint;
+        negLimit = _negLimit;
+        posLimit = _posLimit;
+    }
+    else {
+        setpoint = 0;
+        negLimit = 0; 
+        posLimit = 0; 
+    }
+
     switch (invNum)
     {
         case INV_RR:

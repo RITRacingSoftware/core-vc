@@ -95,7 +95,7 @@ void DriverInputs_init()
     bps_CAN_timeout.callback = brake_timeout_callback;
     bps_CAN_timeout.latching = 0;
     bps_CAN_timeout.single_shot = 0;
-    core_timeout_insert(&bps_CAN_timeout);
+    // core_timeout_insert(&bps_CAN_timeout);
 
     /*** FBPS Irrational ***/
     fbps_irr_timeout.module = NULL;
@@ -103,7 +103,7 @@ void DriverInputs_init()
     fbps_irr_timeout.timeout = DI_BPS_IRRATIONAL_TIMEOUT_MS;
     fbps_irr_timeout.callback = timeout_callback;
     fbps_irr_timeout.latching = 0;
-    fbps_irr_timeout.single_shot = 0;
+    fbps_irr_timeout.single_shot = 1.0;
     core_timeout_insert(&fbps_irr_timeout);
 
     /*** RBPS Irrational ***/
@@ -151,8 +151,11 @@ void Steer_process()
         uint16_t pos;
         pos = SAT(rawPos, STEER_OFFSET_ADC, STEER_MAX_ADC);
 
+        float steerPct = (float)((((float)(pos - STEER_OFFSET_ADC)) / (float) HALF_STEER_RANGE_ADC) - 1);
+        mainBus.processed_inputs.vc_p_inputs_steer_pct = 
+            main_dbc_vc_processed_inputs_vc_p_inputs_steer_pct_encode(steerPct * 100);
         //Scale: -1 -> 1
-        driverInputs.steerPct = (float)(((pos - STEER_OFFSET_ADC)/HALF_STEER_RANGE_ADC) - 1);
+        driverInputs.steerPct = steerPct;
     }
 
 #ifdef VC_TEST
@@ -291,6 +294,9 @@ void Brakes_process()
         if (frontVal > BPS_F_IRRATIONAL_LOW_ADC && frontVal < BPS_F_IRRATIONAL_HIGH_ADC) {
             core_timeout_reset(&fbps_irr_timeout);
             driverInputs.brakePct = frontPct;
+
+            mainBus.processed_inputs.vc_p_inputs_brakes_pct = 
+                main_dbc_vc_processed_inputs_vc_p_inputs_brakes_pct_encode(frontPct * 100);
         }
     }
     else 

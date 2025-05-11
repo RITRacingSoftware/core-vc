@@ -84,6 +84,7 @@ extern INV_BUS invBus;
 extern MAIN_BUS mainBus;
 
 bool CAN_init();
+void CAN_Task_Update();
 bool CAN_tx_main();
 bool CAN_tx_inv();
 bool CAN_tx_sense();
@@ -91,4 +92,3 @@ void CAN_rx_main();
 void CAN_rx_inv();
 int CAN_pack_message(int id, uint8_t *msg_data);
 void CAN_send_driver_inputs();
-void CAN_echo_on_main();

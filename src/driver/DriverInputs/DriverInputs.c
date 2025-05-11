@@ -26,7 +26,7 @@ static bool Accel_init();
 static bool Brakes_init();
 static void Brakes_convert_pct(uint16_t fVal, uint16_t rVal, float *fPct, float *rPct);
 
-static core_timeout_t bps_CAN_timeout;          // Brake pressure sensor not on CAN timeout
+static core_timeout_t fssdb_lost_timeout;          // Brake pressure sensor not on CAN timeout
 static core_timeout_t double_pedal_timeout;     // Double pedal timeout
 static core_timeout_t accel_A_timeout;          // Accel A irrational timeout
 static core_timeout_t accel_B_timeout;          // Accel B irrational timeout
@@ -34,8 +34,6 @@ static core_timeout_t accel_disagree_timeout;   // Accel disagreement timeout
 static core_timeout_t fbps_irr_timeout;         // Front brake pressure sensor irrational timeout
 static core_timeout_t rbps_irr_timeout;         // Rear brake pressure sensor irrational timeout
 static core_timeout_t steer_irr_timeout;       
-static core_timeout_t steer_lost_timoeut;
-
 
 static DriverInputs_s driverInputs;
 
@@ -55,7 +53,7 @@ void DriverInputs_init()
     /*** Accel A ***/
     accel_A_timeout.module = NULL;
     accel_A_timeout.ref = FAULT_ACCEL_A_IRRA;
-    accel_A_timeout.timeout = DI_ACCEL_IRRATIONAL_TIMEOUT_MS;
+    accel_A_timeout.timeout = DI_TIMEOUT_MS;
     accel_A_timeout.callback = timeout_callback;
     accel_A_timeout.latching = 0;
     accel_A_timeout.single_shot = 0;
@@ -64,7 +62,7 @@ void DriverInputs_init()
     /*** Accel B ***/
     accel_B_timeout.module = NULL;
     accel_B_timeout.ref = FAULT_ACCEL_B_IRRA;
-    accel_B_timeout.timeout = DI_ACCEL_IRRATIONAL_TIMEOUT_MS;
+    accel_B_timeout.timeout = DI_TIMEOUT_MS;
     accel_B_timeout.callback = timeout_callback;
     accel_B_timeout.latching = 0;
     accel_B_timeout.single_shot = 0;
@@ -73,7 +71,7 @@ void DriverInputs_init()
     /*** Accel Disagree ***/
     accel_disagree_timeout.module = NULL;
     accel_disagree_timeout.ref = FAULT_APPS_DISAGREE;
-    accel_disagree_timeout.timeout = DI_ACCEL_DISAGREE_TIMEOUT_MS;
+    accel_disagree_timeout.timeout = DI_TIMEOUT_MS;
     accel_disagree_timeout.callback = timeout_callback;
     accel_disagree_timeout.latching = 0;
     accel_disagree_timeout.single_shot = 0;
@@ -82,25 +80,25 @@ void DriverInputs_init()
     /*** Double Pedal ***/
     double_pedal_timeout.module = NULL;
     double_pedal_timeout.ref = FAULT_DOUBLE_PEDAL;
-    double_pedal_timeout.timeout = DI_DOUBLE_PEDAL_TIMEOUT_MS;
+    double_pedal_timeout.timeout = DI_TIMEOUT_MS;
     double_pedal_timeout.callback = timeout_callback;
     double_pedal_timeout.latching = 0;
     double_pedal_timeout.single_shot = 0;
     core_timeout_insert(&double_pedal_timeout);
 
-    /*** CAN BPS ***/
-    bps_CAN_timeout.module = CAN_MAIN;
-    bps_CAN_timeout.ref = MAIN_DBC_SSDB_FRONT_FRAME_ID;
-    bps_CAN_timeout.timeout = DI_BPS_IRRATIONAL_TIMEOUT_MS;
-    bps_CAN_timeout.callback = brake_timeout_callback;
-    bps_CAN_timeout.latching = 0;
-    bps_CAN_timeout.single_shot = 0;
+    /*** FSSDB ***/
+    fssdb_lost_timeout.module = CAN_MAIN;
+    fssdb_lost_timeout.ref = MAIN_DBC_SSDB_FRONT_FRAME_ID;
+    fssdb_lost_timeout.timeout = DI_TIMEOUT_MS;
+    fssdb_lost_timeout.callback = brake_timeout_callback;
+    fssdb_lost_timeout.latching = 0;
+    fssdb_lost_timeout.single_shot = 0;
     // core_timeout_insert(&bps_CAN_timeout);
 
     /*** FBPS Irrational ***/
     fbps_irr_timeout.module = NULL;
     fbps_irr_timeout.ref = FAULT_FBPS_IRRA;
-    fbps_irr_timeout.timeout = DI_BPS_IRRATIONAL_TIMEOUT_MS;
+    fbps_irr_timeout.timeout = DI_TIMEOUT_MS;
     fbps_irr_timeout.callback = timeout_callback;
     fbps_irr_timeout.latching = 0;
     fbps_irr_timeout.single_shot = 1.0;
@@ -109,7 +107,7 @@ void DriverInputs_init()
     /*** RBPS Irrational ***/
     rbps_irr_timeout.module = NULL;
     rbps_irr_timeout.ref = FAULT_RBPS_IRRA;
-    rbps_irr_timeout.timeout = DI_BPS_IRRATIONAL_TIMEOUT_MS;
+    rbps_irr_timeout.timeout = DI_TIMEOUT_MS;
     rbps_irr_timeout.callback = timeout_callback;
     rbps_irr_timeout.latching = 0;
     rbps_irr_timeout.single_shot = 0;
@@ -117,8 +115,8 @@ void DriverInputs_init()
 
     /*** Steer Irrational ***/
     steer_irr_timeout.module = NULL;
-    steer_irr_timeout.ref = FAULT_STEER_IRR;
-    steer_irr_timeout.timeout = DI_BPS_IRRATIONAL_TIMEOUT_MS;
+    steer_irr_timeout.ref = FAULT_STEER_IRRA;
+    steer_irr_timeout.timeout = DI_TIMEOUT_MS;
     steer_irr_timeout.callback = timeout_callback;
     steer_irr_timeout.latching = 0;
     steer_irr_timeout.single_shot = 0;
@@ -135,8 +133,6 @@ void DriverInputs_Task_Update()
     // Check double pedal
     bool doublePedal = ((driverInputs.brakePct) > BPS_PRESSED_PCT) && (driverInputs.accelPct > DI_ACCEL_DOUBLE_PEDAL_THRESHOLD);
     if (doublePedal) core_timeout_reset(&double_pedal_timeout);
-
-    CAN_send_driver_inputs();
 }
 
 void Steer_process()
@@ -173,7 +169,7 @@ void DriverInputs_get_driver_inputs(DriverInputs_s *inputs)
 static void brake_timeout_callback(core_timeout_t *timeout)
 {
     brake_CAN = false;
-    FaultManager_set(FAULT_FBPS_LOST);
+    FaultManager_set(FAULT_FSSDB_LOST);
 }
 
 static void timeout_callback (core_timeout_t *timeout)
@@ -287,7 +283,7 @@ void Brakes_process()
     Brakes_convert_pct(frontVal, rearVal, &frontPct, &rearPct);
 
     // If front isn't irrational and hasn't timed out
-    if (!(bps_CAN_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT) &&
+    if (!(fssdb_lost_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT) &&
         !(fbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
     {
         // If front isn't currently irrational

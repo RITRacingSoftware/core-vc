@@ -26,8 +26,6 @@
 bool VC_init()
 {
 
-    long j = 0;
-    for (int i = 0; i < 1000000; i++) {j ++;}
     // Inits
     core_heartbeat_init(GPIOC, GPIO_PIN_6);
     core_GPIO_set_heartbeat(true);
@@ -40,14 +38,14 @@ bool VC_init()
     core_USART_init(USART3, 500000);
     core_ADC_init(ADC1);
     core_RTT_init();
-    rprintf("J: %d\n", j);
+    rprintf("Inits\n");
 
     core_USART_init(USART3, 500000);
     GPIO_init();
     VehicleState_init();
     Inverters_init();
     DriverInputs_init();
-
+    FaultManager_init();
 
     core_timeout_start_all();
 
@@ -60,7 +58,7 @@ void VC_Task_Update()
     DriverInputs_Task_Update();
     ControlSystem_Task_Update();
     Inverters_Task_Update();
-    CAN_echo_on_main();
+    CAN_Task_Update();
     core_timeout_check_all();
     FaultManager_Task_Update();
 }

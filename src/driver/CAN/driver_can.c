@@ -15,6 +15,7 @@ INV_BUS invBus = {0};
 
 static bool CAN_add_filters();
 static void pack_and_send_main_echoes(int id);
+static void CAN_echo_on_main();
 
 int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
@@ -207,18 +208,26 @@ int CAN_pack_message(int id, uint8_t *msg_data)
     return -1;
 }
 
-void CAN_send_driver_inputs()
-{
-    uint64_t message;
+void CAN_Task_Update()
+{ 
+    uint64_t msg;
 
-    main_dbc_vc_processed_inputs_pack((uint8_t *)&message, &mainBus.processed_inputs, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PROCESSED_INPUTS_FRAME_ID, 8, message);
+    Inverters_set_can_states();
+    main_dbc_vc_inverter_status_pack((uint8_t *)&msg, &mainBus.inverter_status, 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_INVERTER_STATUS_FRAME_ID, 8, msg);
 
-    main_dbc_vc_pedal_inputs_raw_pack((uint8_t *)&message, &mainBus.pedal_inputs_raw, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, message);
+    main_dbc_vc_processed_inputs_pack((uint8_t *)&msg, &mainBus.processed_inputs, 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PROCESSED_INPUTS_FRAME_ID, 8, msg);
+
+    main_dbc_vc_pedal_inputs_raw_pack((uint8_t *)&msg, &mainBus.pedal_inputs_raw, 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, msg);
+
+    Inverters_send_timeout_times();
+
+    CAN_echo_on_main();
 }
 
-void CAN_echo_on_main()
+static void CAN_echo_on_main()
 {
     // RR
     mainBus.rr_info1.vc_rr_error_list1 = invBus.rr_set1.rr_error_list1;

@@ -48,6 +48,8 @@ void VehicleState_Task_Update()
     switch(state)
     {
         case VehicleState_VC_NOT_READY:
+            // rprintf("Not Ready\n");
+            core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
             if (!Inverters_reset_charging_error()) break;
 
             // If TSMS is switched, move to next state
@@ -57,13 +59,10 @@ void VehicleState_Task_Update()
             }
             break;
 
-        case VehicleState_INVERTERS_POWERED:
-            // If all inverters are ready move to next state
-        
-            // core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, Inverters_get_ready_all(INV_RR));
-            // core_GPIO_digital_write(RL_STATUS_PORT, RL_STATUS_PIN, Inverters_get_ready_all(INV_RL));
-            // core_GPIO_digital_write(FR_STATUS_PORT, FR_STATUS_PIN, Inverters_get_ready_all(INV_FR));
-            // core_GPIO_digital_write(FL_STATUS_PORT, FL_STATUS_PIN, Inverters_get_ready_all(INV_FL));
+        case VehicleState_INVERTERS_POWERED: 
+            core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
+            core_GPIO_digital_write(AMK_LED_PORT, AMK_LED_PIN, false);
+            core_GPIO_digital_write(SENSOR_LED_PORT, SENSOR_LED_PIN, false);
 
             // AMK_bSystemReady = 1
             if (Inverters_get_ready_all())
@@ -139,16 +138,13 @@ void VehicleState_Task_Update()
             break;
 
         case VehicleState_RTD:
-            // rprintf("From RTD\n");
             // If the start button is pressed again, shutdown
             // Inverters_set_torque_request(INV_RR, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
             // Inverters_set_torque_request(INV_RL, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
             // Inverters_set_torque_request(INV_FR, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_FL, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            
-            if (!GPIO_get_TSMS())
-            {
-                rprintf("Lost RTD\n");
+            // Inverters_set_torque_request(INV_FL, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT); 
+
+            if (!GPIO_get_TSMS()) {
                 new_state(VehicleState_SHUTDOWN);
             }
             break;
@@ -185,7 +181,14 @@ void VehicleState_Task_Update()
             // AMK_bQitDcOn = 0
             if (Inverters_get_dc_on_any()) break;
 
-            new_state(VehicleState_VC_NOT_READY);
+            
+            if (Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
+                Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
+                Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
+                Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT) {
+                new_state(VehicleState_VC_NOT_READY);
+            }
+            // new_state(VehicleState_VC_NOT_READY);
             break;
     }
 

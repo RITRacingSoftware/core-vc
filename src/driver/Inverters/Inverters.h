@@ -9,23 +9,24 @@
 #define INV_FL 3
 
 // Aipex Errors
-#define INV_DC_BUS_CHG_ERROR 1049
-#define INV_ENCODER_COMMS_ERROR 2310
-#define INV_SPECIAL_SOFTWARE_MESSAGE_ERROR 3587
-#define INV_OVERSPEED_ERROR 2319
+#define INV_DC_BUS_CHG_ERROR (1049)
+#define INV_ENCODER_COMMS_ERROR (2310)
+#define INV_SPECIAL_SOFTWARE_MESSAGE_ERROR (3587)
+#define INV_OVERSPEED_ERROR (2319)
 
 typedef enum {
     InvState_NORMAL,
+    InvState_PAIRED_SOFT,
     InvState_SOFT_FAULT,
-    InvState_HARD_FAULT,
-    InvState_LOST,
-    InvState_PAIRED_SOFT
-} InvState_t;
+    InvState_RESETTING,
+    InvState_PAIRED_HARD,
+    InvState_HARD_FAULT
+} InvState_e;
 
 typedef struct
 {
     double dcBusVoltage;
-    InvState_t state;
+    InvState_e state;
     bool isReady;
     bool dcOnEcho;
     bool dcOn;
@@ -49,6 +50,7 @@ bool Inverters_get_inv_on_echo_any();
 bool Inverters_get_inv_on_all();
 bool Inverters_get_inv_on_any();
 bool Inverters_get_precharged_all();
+InvState_e Inverters_get_state(uint8_t invNum);
 
 // Setters for DBC struct values
 void Inverters_set_dc_on(bool val);
@@ -60,5 +62,7 @@ void Inverters_send_setpoints(uint8_t invNum);
 void Inverters_suspend_timeouts();
 void Inverters_resume_timeouts();
 bool Inverters_reset_charging_error();
-void Inverters_set_state(uint8_t invNum, InvState_t state);
+void Inverters_set_state(uint8_t invNum, InvState_e state);
+void Inverters_set_can_states();
 void Inverters_set_overspeed(uint8_t invNum);
+void Inverters_send_timeout_times();

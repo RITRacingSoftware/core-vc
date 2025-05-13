@@ -18,7 +18,7 @@
 #include "VehicleState.h"
 #include "DriverInputs.h"
 #include "DashInputs.h"
-#include "ControlSystem.h"
+#include "TorqueVectoring.h"
 #include "FaultManager.h"
 
 #include "adc.h"
@@ -56,7 +56,7 @@ void VC_Task_Update()
 {
     VehicleState_Task_Update();
     DriverInputs_Task_Update();
-    ControlSystem_Task_Update();
+    TorqueVectoring_Task_Update();
     Inverters_Task_Update();
     CAN_Task_Update();
     core_timeout_check_all();

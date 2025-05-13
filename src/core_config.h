@@ -34,7 +34,7 @@
 #define CORE_CAN_BITRATE 1000000
 
 // Number of CAN messages that can be stored in the CAN FreeRTOS queue
-#define CORE_CAN_QUEUE_LENGTH 15
+#define CORE_CAN_QUEUE_LENGTH 30
 
 // Timeout for waiting on RX queue
 #define CORE_CAN_RX_TIMEOUT 100

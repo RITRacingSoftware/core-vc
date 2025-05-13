@@ -43,7 +43,7 @@ void VehicleState_Task_Update()
         GPIO_set_interlock_relay(false);
         state = VehicleState_VC_NOT_READY;
     }
-
+    
     DriverInputs_get_driver_inputs(&inputs);
     switch(state)
     {
@@ -151,8 +151,8 @@ void VehicleState_Task_Update()
 
         case VehicleState_SHUTDOWN: 
             // Send zeroes for torque requests, turn off activation relay, send inverter off message
-            Inverters_set_torque_request(INV_RL,  0, 0, 0);
-            Inverters_set_torque_request(INV_FL,  0, 0, 0);
+            Inverters_set_torque_request(INV_RL, 0, 0, 0);
+            Inverters_set_torque_request(INV_FL, 0, 0, 0);
             Inverters_set_torque_request(INV_RR, 0, 0, 0);
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
             GPIO_set_activate_inv_relays(false); // X140 binary input BE2 = 0

@@ -10,6 +10,7 @@
 #include "config.h"
 #include "main_dbc.h"
 #include "FaultManager.h"
+#include "VehicleState.h"
 #include "driver_can.h"
 #include "timeout.h"
 #include "usart.h"
@@ -37,6 +38,12 @@ static core_timeout_t steer_irr_timeout;
 
 static DriverInputs_s driverInputs;
 
+#define FILTER_ORDER 20
+#define STEER_DIFF_FAULT (0.1f)
+
+static uint16_t steer_samples[FILTER_ORDER];
+static float lastSteer;
+
 void DriverInputs_init()
 {
     Accel_init();
@@ -47,7 +54,12 @@ void DriverInputs_init()
     driverInputs.brakePct = CS_MIN_BRAKE_PCT;
     driverInputs.steerPct = 0;
     brake_CAN = true;
+    lastSteer = 0; 
 
+    for (int i = 0; i < FILTER_ORDER; i++) {
+        steer_samples[i] = 0;
+    }
+    
     /******************* TIMEOUTS *******************/
 
     /*** Accel A ***/
@@ -147,7 +159,23 @@ void Steer_process()
         uint16_t pos;
         pos = SAT(rawPos, STEER_OFFSET_ADC, STEER_MAX_ADC);
 
-        float steerPct = (float)((((float)(pos - STEER_OFFSET_ADC)) / (float) HALF_STEER_RANGE_ADC) - 1);
+        
+
+        uint64_t avgSum = pos;
+        for (int i = (FILTER_ORDER - 1); i > 0; i--) {
+            steer_samples[i] = steer_samples[i - 1];
+            avgSum += steer_samples[i];
+        }
+        steer_samples[0] = pos;
+        uint16_t avgPos = (avgSum / ((float) FILTER_ORDER));
+        
+        avgPos = SAT(avgPos, STEER_OFFSET_ADC, STEER_MAX_ADC);
+
+
+        float steerPct = (float)((((float)(avgPos - STEER_OFFSET_ADC)) / (float) HALF_STEER_RANGE_ADC) - 1);
+
+        if ((fabs(steerPct - lastSteer) > STEER_DIFF_FAULT) && (VehicleState_get_state() > VehicleState_VC_NOT_READY)) FaultManager_set(FAULT_STEER_IRRA);
+        else lastSteer = steerPct;
         mainBus.processed_inputs.vc_p_inputs_steer_pct = 
             main_dbc_vc_processed_inputs_vc_p_inputs_steer_pct_encode(steerPct * 100);
         //Scale: -1 -> 1
@@ -328,7 +356,7 @@ static void Brakes_convert_pct(uint16_t fVal, uint16_t rVal, float *fPct, float 
 }
 
 #ifdef VC_TEST
-void force_fbps_lost_timeout() {bps_CAN_timeout.state &= CORE_TIMEOUT_STATE_TIMED_OUT;}
+void force_fbps_lost_timeout() {fssdb_lost_timeout.state &= CORE_TIMEOUT_STATE_TIMED_OUT;}
 
 void force_inputs(float accelPos, float brakePos, float steerPos)
 {

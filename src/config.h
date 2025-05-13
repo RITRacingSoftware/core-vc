@@ -22,12 +22,14 @@
 /** CONTROLS **/
 #define REGEN_ENABLED 0
 
-#define CS_LAT_FACTOR_ACC 0.2
-#define CS_LONG_FACTOR_ACC 0.1
-#define CS_LONG_SPLIT_ACC 0.4
-#define CS_LAT_FACTOR_BRAKE 0.5
-#define CS_LONG_FACTOR_BRAKE 0.1
-#define CS_LONG_SPLIT_BRAKE 0.65
+// Torque Vectoring
+#define CS_LAT_FACTOR_ACC 0.35f
+#define CS_LONG_FACTOR_ACC 0.0f
+#define CS_LONG_SPLIT_ACC 0.35f
+#define CS_LAT_FACTOR_BRAKE 0.5f
+#define CS_LONG_FACTOR_BRAKE 0.1f
+#define CS_LONG_SPLIT_BRAKE 0.65f
+#define CS_MUL 6
 
 #define CS_MIN_ACCEL_PCT 0
 #define CS_MAX_ACCEL_PCT 100
@@ -36,9 +38,14 @@
 #define CS_MIN_STEER_PCT 0
 #define CS_MAX_STEER_PCT 100
 
+// Traction Control
+#define TC_SPEED_DIFF_MAX 1000
+#define TC_SOFT_LIMIT 19500
+#define TC_GAIN 0.001f
+
 /** Inverters **/
-#define MAX_TORQUE 100
-#define POS_TORQUE_LIMIT 100
+#define MAX_TORQUE 200
+#define POS_TORQUE_LIMIT (MAX_TORQUE)
 #define NEG_TORQUE_LIMIT (-4)
 #define INV_CAN_TIMEOUT_MS 300
 #define INV_LIMIT_TOL 5

@@ -15,7 +15,8 @@ INV_BUS invBus = {0};
 
 static bool CAN_add_filters();
 static void pack_and_send_main_echoes(int id);
-static void CAN_echo_on_main();
+static void echo_on_main();
+static void send_CAN_errors();
 
 int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
@@ -223,11 +224,21 @@ void CAN_Task_Update()
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, msg);
 
     Inverters_send_timeout_times();
-
-    CAN_echo_on_main();
+    echo_on_main();
+    send_CAN_errors();
 }
 
-static void CAN_echo_on_main()
+static void send_CAN_errors() {
+#ifndef VC_TEST
+    uint64_t msg = 0;
+    ((uint16_t *)&msg)[0] = core_CAN_errors.arbitration_error;
+    ((uint16_t *)&msg)[1] = core_CAN_errors.data_error;
+
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CAN_ERRORS_FRAME_ID, 8, msg);
+#endif
+}
+
+static void echo_on_main()
 {
     // RR
     mainBus.rr_info1.vc_rr_error_list1 = invBus.rr_set1.rr_error_list1;

@@ -11,13 +11,14 @@
 #define PRECHARGE_MAX_TIME_MS 5000
 #define OVERSPEED_RPM 20000
 #define RTD_HOLD_TIME 1000
+#define PACK_IRR_V 380
 
 /** CAN **/
 #define CAN_SENSE FDCAN1
 #define CAN_MAIN FDCAN2
 #define CAN_INV FDCAN3
-#define NUM_IDS_MAIN 4
-#define NUM_IDS_INV 16
+#define NUM_IDS_MAIN 5
+#define NUM_IDS_INV 20
 
 /** CONTROLS **/
 #define REGEN_ENABLED 0
@@ -29,7 +30,7 @@
 #define CS_LAT_FACTOR_BRAKE 0.5f
 #define CS_LONG_FACTOR_BRAKE 0.1f
 #define CS_LONG_SPLIT_BRAKE 0.65f
-#define CS_MUL 6
+#define CS_MUL 4
 
 #define CS_MIN_ACCEL_PCT 0
 #define CS_MAX_ACCEL_PCT 100
@@ -40,8 +41,10 @@
 
 // Traction Control
 #define TC_SPEED_DIFF_MAX 1000
+#define TC_DER_DIFF_MAX 35
 #define TC_SOFT_LIMIT 19500
-#define TC_GAIN 0.001f
+#define TC_P_GAIN 0.000f
+#define TC_D_GAIN 0.1f
 
 /** Inverters **/
 #define MAX_TORQUE 200

@@ -59,13 +59,13 @@ void TorqueVectoring_Task_Update()
 
     for (int i = 0; i < 4; i++)
     {
-        Inverters_set_torque_request(i, invArr[i] * 100, 0, POS_TORQUE_LIMIT);
-
-#ifndef VC_TEST
-        // TractionControl(invArr);
-#else
-        Inverters_set_torque_request(i, invArr[i] * 100, 0, POS_TORQUE_LIMIT);
-#endif
+        // Inverters_set_torque_request(i, invArr[i] * 100, 0, POS_TORQUE_LIMIT);
+        TractionControl(invArr);
+// #ifndef VC_TEST
+//         TractionControl(invArr);
+// #else
+//         Inverters_set_torque_request(i, invArr[i] * 100, 0, POS_TORQUE_LIMIT);
+// #endif
     }
 }
 

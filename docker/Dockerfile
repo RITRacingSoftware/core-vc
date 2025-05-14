@@ -5,6 +5,7 @@ RUN --mount=type=cache,target=/var/lib/apt/lists \
 apt-get update && \
 apt-get install -y \
 cmake \
+vim \
 gcc-arm-none-eabi \
 gdb-multiarch \
 openocd

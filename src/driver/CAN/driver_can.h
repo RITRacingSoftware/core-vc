@@ -14,6 +14,7 @@ typedef struct
     // Received by VC 
     struct main_dbc_bms_fault_vector_t bms_fault_vector;
     struct main_dbc_bms_status_t bms_status;
+    struct main_dbc_bms_current_limit_t bms_current_limit;
     struct main_dbc_ssdb_front_t ssdb_front;
     struct main_dbc_ssdb_vector_nav6_t vn_vel;
 
@@ -57,21 +58,25 @@ typedef struct
     struct inverter_dbc_rr_amk_actual_2_t rr_actual2;
     struct inverter_dbc_rr_amk_rit_set1_t rr_set1;
     struct inverter_dbc_rr_amk_rit_set2_t rr_set2;
+    struct inverter_dbc_rr_amk_rit_set3_t rr_set3;
 
     struct inverter_dbc_rl_amk_actual_1_t rl_actual1;
     struct inverter_dbc_rl_amk_actual_2_t rl_actual2;
     struct inverter_dbc_rl_amk_rit_set1_t rl_set1;
     struct inverter_dbc_rl_amk_rit_set2_t rl_set2;
+    struct inverter_dbc_rl_amk_rit_set3_t rl_set3;
 
     struct inverter_dbc_fr_amk_actual_1_t fr_actual1;
     struct inverter_dbc_fr_amk_actual_2_t fr_actual2;
     struct inverter_dbc_fr_amk_rit_set1_t fr_set1;
     struct inverter_dbc_fr_amk_rit_set2_t fr_set2;
+    struct inverter_dbc_fr_amk_rit_set3_t fr_set3;
 
     struct inverter_dbc_fl_amk_actual_1_t fl_actual1;
     struct inverter_dbc_fl_amk_actual_2_t fl_actual2;
     struct inverter_dbc_fl_amk_rit_set1_t fl_set1;
     struct inverter_dbc_fl_amk_rit_set2_t fl_set2;
+    struct inverter_dbc_fl_amk_rit_set3_t fl_set3;
 
     // Sent by VC
     struct inverter_dbc_rr_amk_setpoints_t rr_setpoints;

@@ -21,6 +21,7 @@ static void send_CAN_errors();
 int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
         MAIN_DBC_BMS_STATUS_FRAME_ID,
+        MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID,
         MAIN_DBC_SSDB_FRONT_FRAME_ID,
         MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID
 };
@@ -30,18 +31,22 @@ int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_RR_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET2_FRAME_ID,
+        INVERTER_DBC_RR_AMK_RIT_SET3_FRAME_ID,
         INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_RL_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_RL_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_RL_AMK_RIT_SET2_FRAME_ID,
+        INVERTER_DBC_RL_AMK_RIT_SET3_FRAME_ID,
         INVERTER_DBC_FR_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_FR_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_FR_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_FR_AMK_RIT_SET2_FRAME_ID,
+        INVERTER_DBC_FR_AMK_RIT_SET3_FRAME_ID,
         INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_FL_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_FL_AMK_RIT_SET1_FRAME_ID,
-        INVERTER_DBC_FL_AMK_RIT_SET2_FRAME_ID
+        INVERTER_DBC_FL_AMK_RIT_SET2_FRAME_ID,
+        INVERTER_DBC_FL_AMK_RIT_SET3_FRAME_ID
 };
 
 
@@ -85,6 +90,9 @@ void CAN_rx_main()
                 main_dbc_bms_status_unpack(&mainBus.bms_status, (uint8_t *) &canMessage.data, canMessage.dlc);
                 mainBus.bms_status.bms_status_pack_voltage *= 0.1; break;
 
+            case MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID:
+                main_dbc_bms_current_limit_unpack(&mainBus.bms_current_limit, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
                 main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
@@ -109,6 +117,7 @@ void CAN_rx_inv()
             case INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_rr_amk_actual_1_unpack(&invBus.rr_actual1, (uint8_t *) &canMessage.data, 8);
                 invBus.rr_actual1.rr_feedback_velocity *= 0.0001;
+                if (Inverters_get_state(INV_RR) == InvState_RESETTING) Inverters_set_reset_flag(INV_RR);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;  // Echo over main bus
 
             case INVERTER_DBC_RR_AMK_ACTUAL_2_FRAME_ID:
@@ -122,12 +131,15 @@ void CAN_rx_inv()
             case INVERTER_DBC_RR_AMK_RIT_SET2_FRAME_ID:
                 inverter_dbc_rr_amk_rit_set2_unpack(&invBus.rr_set2, (uint8_t *) &canMessage.data, 8); break;
 
+            case INVERTER_DBC_RR_AMK_RIT_SET3_FRAME_ID:
+                inverter_dbc_rr_amk_rit_set3_unpack(&invBus.rr_set3, (uint8_t *) &canMessage.data, 8); break;
 
 
             // RL
             case INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_rl_amk_actual_1_unpack(&invBus.rl_actual1, (uint8_t *) &canMessage.data, 8);
                 invBus.rl_actual1.rl_feedback_velocity *= 0.0001;
+                if (Inverters_get_state(INV_RL) == InvState_RESETTING) Inverters_set_reset_flag(INV_RL);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_RL_AMK_ACTUAL_2_FRAME_ID:
@@ -141,12 +153,15 @@ void CAN_rx_inv()
             case INVERTER_DBC_RL_AMK_RIT_SET2_FRAME_ID:
                 inverter_dbc_rl_amk_rit_set2_unpack(&invBus.rl_set2, (uint8_t *) &canMessage.data, 8); break;
 
+            case INVERTER_DBC_RL_AMK_RIT_SET3_FRAME_ID:
+                inverter_dbc_rl_amk_rit_set3_unpack(&invBus.rl_set3, (uint8_t *) &canMessage.data, 8); break;
 
 
             // FR
             case INVERTER_DBC_FR_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_fr_amk_actual_1_unpack(&invBus.fr_actual1, (uint8_t *) &canMessage.data, 8);
                 invBus.fr_actual1.fr_feedback_velocity *= 0.0001;
+                if ((invBus.fr_actual1.fr_status_error == 0) && (Inverters_get_state(INV_FR) == InvState_RESETTING)) Inverters_set_reset_flag(INV_FR);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FR_AMK_ACTUAL_2_FRAME_ID:
@@ -161,12 +176,15 @@ void CAN_rx_inv()
             case INVERTER_DBC_FR_AMK_RIT_SET2_FRAME_ID:
                 inverter_dbc_fr_amk_rit_set2_unpack(&invBus.fr_set2, (uint8_t *) &canMessage.data, 8); break;
 
+            case INVERTER_DBC_FR_AMK_RIT_SET3_FRAME_ID:
+                inverter_dbc_fr_amk_rit_set3_unpack(&invBus.fr_set3, (uint8_t *) &canMessage.data, 8); break;
 
 
             // FL
             case INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_fl_amk_actual_1_unpack(&invBus.fl_actual1, (uint8_t *) &canMessage.data, 8);
                 invBus.fl_actual1.fl_feedback_velocity *= 0.0001;
+                if ((invBus.fl_actual1.fl_status_error == 0) && (Inverters_get_state(INV_FL) == InvState_RESETTING)) Inverters_set_reset_flag(INV_FL);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FL_AMK_ACTUAL_2_FRAME_ID:
@@ -179,6 +197,9 @@ void CAN_rx_inv()
 
             case INVERTER_DBC_FL_AMK_RIT_SET2_FRAME_ID:
                 inverter_dbc_fl_amk_rit_set2_unpack(&invBus.fl_set2, (uint8_t *) &canMessage.data, 8); break;
+
+            case INVERTER_DBC_FL_AMK_RIT_SET3_FRAME_ID:
+                inverter_dbc_fl_amk_rit_set3_unpack(&invBus.fl_set3, (uint8_t *) &canMessage.data, 8); break;
         }
         Inverters_update();
 

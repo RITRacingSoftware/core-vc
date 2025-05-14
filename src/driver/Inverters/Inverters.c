@@ -44,6 +44,7 @@ void Inverters_init()
         invPtr->isOnEcho = false;
         invPtr->isOn = false;
         invPtr->state = InvState_NORMAL;
+        invPtr->resetFlag = false;
     }
     Inverters_update();
 
@@ -178,9 +179,6 @@ void Inverters_set_torque_request(uint8_t invNum, float _setpoint, float _negLim
     if (1) {
 #endif
         setpoint = (_setpoint > MAX_TORQUE) ? MAX_TORQUE : _setpoint;
-        // if ((setpoint * 100) > MAX_TORQUE)) setpoint = MAX_TORQUE;
-        // else setpoint = _setpoint;
-        // setpoint = _setpoint;
         negLimit = _negLimit;
         posLimit = _posLimit;
     }
@@ -445,6 +443,10 @@ void Inverters_send_timeout_times()
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_INV_TIMES_FRAME_ID , 8, msg);
 }
 
+void Inverters_set_reset_flag(uint8_t invNum) {
+    invArr[invNum]->resetFlag = true;
+}
+
 static void timeout_callback(core_timeout_t *timeout)
 {
     if (timeout == &rr_timeout) mainBus.inverter_status.vc_rr_lost = 1;
@@ -461,10 +463,13 @@ static void state_machine()
     if (invRR.state == InvState_RESETTING) {
         if (invBus.rr_actual2.rr_error_info == 0) Inverters_set_state(INV_RR, InvState_NORMAL);
         else {
-            core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-            core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, (uint64_t) 0);
-            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, (uint64_t) 0);
+            if (invRR.resetFlag) {
+                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
+                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, 0);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, 0);
+                invRR.resetFlag = false;
+            }
         }
     } else {
         if (invRR.state != InvState_NORMAL) {
@@ -483,10 +488,13 @@ static void state_machine()
     if (invRL.state == InvState_RESETTING) {
         if (invBus.rl_actual2.rl_error_info == 0) Inverters_set_state(INV_RL, InvState_NORMAL);
         else {
-            core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-            core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, 0);
-            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, 0);
+            if (invRL.resetFlag) {
+                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
+                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, 0);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, 0);
+                invRL.resetFlag = false;
+            }
         }
     } else {
         if (invRL.state != InvState_NORMAL) {
@@ -505,10 +513,13 @@ static void state_machine()
     if (invFR.state == InvState_RESETTING) {
         if (invBus.fr_actual2.fr_error_info == 0) Inverters_set_state(INV_FR, InvState_NORMAL);
         else {
-            core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-            core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, 0);
-            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, 0);
+            if (invFR.resetFlag) {
+                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
+                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, 0);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, 0);
+                invFR.resetFlag = false;
+            }
         }
     } else {
         if (invFR.state != InvState_NORMAL) {
@@ -527,10 +538,13 @@ static void state_machine()
     if (invFL.state == InvState_RESETTING) {
         if (invBus.fl_actual2.fl_error_info == 0) Inverters_set_state(INV_FL, InvState_NORMAL);
         else {
-            core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-            core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, 0);
-            core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, 0);
+            if (invFL.resetFlag) {
+                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
+                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, 0);
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, 0);
+                invFL.resetFlag = false;
+            }
         }
     } else {
         if (invFL.state != InvState_NORMAL) {
@@ -569,4 +583,4 @@ static bool check_state_change(uint8_t invNum, InvState_e state)
         default:
             return false;
     }
-} 
+}

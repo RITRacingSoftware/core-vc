@@ -32,6 +32,7 @@ typedef struct
     bool dcOn;
     bool isOnEcho;
     bool isOn;
+    bool resetFlag;
 } Inverter_s;
 
 void Inverters_init();
@@ -66,3 +67,4 @@ void Inverters_set_state(uint8_t invNum, InvState_e state);
 void Inverters_set_can_states();
 void Inverters_set_overspeed(uint8_t invNum);
 void Inverters_send_timeout_times();
+void Inverters_set_reset_flag(uint8_t invNum);

@@ -1,6 +1,6 @@
 #include "driver_GPIO.h"
 #include "Inverters.h"
-#include "GPIO.h"
+#include "gpio.h"
 
 void GPIO_init()
 {

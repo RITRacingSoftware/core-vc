@@ -4,6 +4,7 @@
 #include "Inverters.h"
 #include "DriverInputs.h"
 #include "can.h"
+#include "driver_can.h"
 #include "TractionControl.h"
 
 #ifdef VC_TEST
@@ -21,7 +22,7 @@ static float invArr[4];
 
 
 static void setSplits();
-static void normalize(float *steerPct, float *accelPct, float *brakePct);
+static float powerLimit();
 
 void TorqueVectoring_Task_Update()
 {
@@ -32,7 +33,6 @@ void TorqueVectoring_Task_Update()
     ((uint16_t *) &mesg)[3] = ((uint16_t) (CS_MUL));
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 2, 8, mesg);
     DriverInputs_get_driver_inputs(&inputs);
-    // normalize(&steerPct, &accelPct, &brakePct);
     accelPct = inputs.accelPct;
     steerPct = -1 * inputs.steerPct;
     brakePct = inputs.brakePct;
@@ -70,11 +70,12 @@ void TorqueVectoring_Task_Update()
 }
 
 static void setSplits()
-{   
-    invArr[3] = CS_MUL * trqPctTotal * (totalPctLeft * totalPctFront);
-    invArr[2] = CS_MUL * trqPctTotal * ((1 - totalPctLeft) * totalPctFront);
-    invArr[1] = CS_MUL * trqPctTotal * (totalPctLeft * (1 - totalPctFront));
-    invArr[0] = CS_MUL * trqPctTotal * ((1 - totalPctLeft) * (1 - totalPctFront));
+{
+    float mul = powerLimit();
+    invArr[3] = mul * trqPctTotal * (totalPctLeft * totalPctFront);
+    invArr[2] = mul * trqPctTotal * ((1 - totalPctLeft) * totalPctFront);
+    invArr[1] = mul * trqPctTotal * (totalPctLeft * (1 - totalPctFront));
+    invArr[0] = mul * trqPctTotal * ((1 - totalPctLeft) * (1 - totalPctFront));
 
 /*
     float max = invArr[0];
@@ -82,4 +83,12 @@ static void setSplits()
     float demandScale = trqPctTotal / max;
     for (int i = 0; i < 4; i++) invArr[i] *= demandScale;
     */
+}
+
+static float powerLimit()
+{
+    float max_current = 165;
+    int current = mainBus.bms_current_limit.d1_max_discharge_current;
+    float mul = CS_MUL * (current/max_current);
+    return mul;
 }

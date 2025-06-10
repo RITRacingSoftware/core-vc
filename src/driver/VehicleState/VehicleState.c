@@ -12,13 +12,9 @@
 #include "FaultManager.h"
 
 static unsigned long precharge_time;
-
 static VehicleState_e state;
-
 static DriverInputs_s inputs;
-
 static uint8_t RTD_cycles;
-
 
 static void new_state(uint8_t new)
 {
@@ -48,8 +44,7 @@ void VehicleState_Task_Update()
     switch(state)
     {
         case VehicleState_VC_NOT_READY:
-            // rprintf("Not Ready\n");
-            core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
+            // core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
             if (!Inverters_reset_charging_error()) break;
 
             // If TSMS is switched, move to next state
@@ -60,7 +55,7 @@ void VehicleState_Task_Update()
             break;
 
         case VehicleState_INVERTERS_POWERED: 
-            core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
+            // core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
             core_GPIO_digital_write(AMK_LED_PORT, AMK_LED_PIN, false);
             core_GPIO_digital_write(SENSOR_LED_PORT, SENSOR_LED_PIN, false);
 
@@ -141,8 +136,8 @@ void VehicleState_Task_Update()
             // If the start button is pressed again, shutdown
             // Inverters_set_torque_request(INV_RR, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
             // Inverters_set_torque_request(INV_RL, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_FR, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_FL, (MAX_TORQUE * 0.65 * inputs.accelPct), 0, POS_TORQUE_LIMIT); 
+            // Inverters_set_torque_request(INV_FR, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
+            // Inverters_set_torque_request(INV_FL, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT); 
 
             if (!GPIO_get_TSMS()) {
                 new_state(VehicleState_SHUTDOWN);
@@ -183,12 +178,13 @@ void VehicleState_Task_Update()
 
             
             if (Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
-                Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
-                Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
-                Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT) {
+                Inverters_get_state(INV_RL) <= InvState_SOFT_FAULT &&
+                Inverters_get_state(INV_FR) <= InvState_SOFT_FAULT &&
+                Inverters_get_state(INV_FL) <= InvState_SOFT_FAULT)
+            {
+                Inverters_reset_setpoints();
                 new_state(VehicleState_VC_NOT_READY);
             }
-            // new_state(VehicleState_VC_NOT_READY);
             break;
     }
 

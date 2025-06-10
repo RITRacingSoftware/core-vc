@@ -1,4 +1,4 @@
-PROJECT_NAME := vc_test.out
+PROJECT_NAME := vc_test
 
 CC := gcc
 DEP_FLAGS := -MP -MD
@@ -42,13 +42,13 @@ DBC_OBJS := $(DBC_SRCS:$(DBC_DIR)/%=$(DBC_BUILD_DIR)/%.o)
 HAL_INCS := -I ../../../Core/src/mock
 
 
-INC_FLAGS := -I ../ $(CORE_INCS) $(DBC_INCS) $(HAL_INCS) $(FREERTOS_INCS)  $(DRIVER_INCS) $(TEST_INCS)
+INC_FLAGS := -I ../ $(CORE_INCS) $(DBC_INCS) $(HAL_INCS) $(FREERTOS_INCS) $(DRIVER_INCS) $(TEST_INCS)
 C_FLAGS := $(INC_FLAGS) -D VC_TEST -lm
 
 OBJS := $(CORE_OBJS) $(DRIVER_OBJS) $(TEST_OBJS) $(DBC_OBJS)
 
 
-all: $(BUILD_DIR)/$(PROJECT_NAME)
+all: $(BUILD_DIR)/$(PROJECT_NAME).out
 
 $(BUILD_DIR)/$(PROJECT_NAME) : $(OBJS) 
 	$(CC) -o $@ $^

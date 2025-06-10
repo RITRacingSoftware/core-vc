@@ -16,79 +16,59 @@ static DriverInputs_s inputs;
 
 static float steerPct, accelPct, brakePct;
 static float totalPctLeft, totalPctFront;
-static float trqPctTotal;
 
 static float invArr[4];
 
-
-static void setSplits();
+static void setSplits(float trqPctTotal);
 static float powerLimit();
+static void CAN_send_trqs();
 
-void TorqueVectoring_Task_Update()
+void TorqueVectoring(float maxTotalTorque, float *trqs)
 {
-    uint64_t mesg = 0;
-    ((uint16_t *) &mesg)[0] = ((uint16_t) (CS_LAT_FACTOR_ACC * 100));
-    ((uint16_t *) &mesg)[1] = ((uint16_t) (CS_LONG_FACTOR_ACC * 100));
-    ((uint16_t *) &mesg)[2] = ((uint16_t) (CS_LONG_SPLIT_ACC * 100));
-    ((uint16_t *) &mesg)[3] = ((uint16_t) (CS_MUL));
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 2, 8, mesg);
     DriverInputs_get_driver_inputs(&inputs);
     accelPct = inputs.accelPct;
-    steerPct = -1 * inputs.steerPct;
+    steerPct = inputs.steerPct;
     brakePct = inputs.brakePct;
 
     // Case: Acceleration with no braking
     if (accelPct > 0)
     {
-        // printf("Accel\n");
-        trqPctTotal = accelPct;
         totalPctLeft = 0.5f - (steerPct * CS_LAT_FACTOR_ACC);
         totalPctFront = CS_LONG_SPLIT_ACC - (accelPct * CS_LONG_FACTOR_ACC);
-        setSplits();
+        setSplits(maxTotalTorque);
     }
     // Case: Regen braking
     else if (accelPct == 0 && brakePct > 0 && REGEN_ENABLED)
     {
-        // printf("Brakes\n");
-        trqPctTotal = brakePct * -1;
+        float trqPctTotal = brakePct * -1;
         totalPctLeft = 0.5f + (steerPct * CS_LAT_FACTOR_BRAKE);
         totalPctFront = CS_LONG_SPLIT_BRAKE + (brakePct * CS_LONG_FACTOR_BRAKE);
-        setSplits();
+        setSplits(trqPctTotal);
     }
     else for (int i = 0; i < 4; i++) invArr[i] = 0;
-
-    for (int i = 0; i < 4; i++)
-    {
-        // Inverters_set_torque_request(i, invArr[i] * 100, 0, POS_TORQUE_LIMIT);
-        TractionControl(invArr);
-// #ifndef VC_TEST
-//         TractionControl(invArr);
-// #else
-//         Inverters_set_torque_request(i, invArr[i] * 100, 0, POS_TORQUE_LIMIT);
-// #endif
+    
+    for (int i = 0; i < 4; i++) { 
+        trqs[i] = invArr[i];
     }
+
+    CAN_send_trqs();
 }
 
-static void setSplits()
+static void setSplits(float trqPctTotal)
 {
-    float mul = powerLimit();
-    invArr[3] = mul * trqPctTotal * (totalPctLeft * totalPctFront);
-    invArr[2] = mul * trqPctTotal * ((1 - totalPctLeft) * totalPctFront);
-    invArr[1] = mul * trqPctTotal * (totalPctLeft * (1 - totalPctFront));
-    invArr[0] = mul * trqPctTotal * ((1 - totalPctLeft) * (1 - totalPctFront));
-
-/*
-    float max = invArr[0];
-    for (int i = 0; i < 4; i++) if (invArr[i] > max) max = invArr[i];
-    float demandScale = trqPctTotal / max;
-    for (int i = 0; i < 4; i++) invArr[i] *= demandScale;
-    */
+    invArr[3] = trqPctTotal * (totalPctLeft * totalPctFront);
+    invArr[2] = trqPctTotal * ((1 - totalPctLeft) * totalPctFront);
+    invArr[1] = trqPctTotal * (totalPctLeft * (1 - totalPctFront));
+    invArr[0] = trqPctTotal * ((1 - totalPctLeft) * (1 - totalPctFront));
 }
 
-static float powerLimit()
+
+static void CAN_send_trqs()
 {
-    float max_current = 165;
-    int current = mainBus.bms_current_limit.d1_max_discharge_current;
-    float mul = CS_MUL * (current/max_current);
-    return mul;
+    uint64_t msg;
+    for (int i = 0; i < 4; i++) {
+        ((uint16_t *)&msg)[i] = (invArr[i] * 100);
+    }
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_TV_OUT_FRAME_ID, 8, msg);
 }
+

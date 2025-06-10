@@ -31,7 +31,6 @@ STM32_APP_OBJS := $(APP_SRCS:$(APP_DIR)/%=$(STM32_BUILD_DIR)/obj/app/%.o)
 DRIVER_DIR := ./src/driver
 DRIVER_SRCS := $(shell find $(DRIVER_DIR) -type f -name "*.c")
 DRIVER_INCLUDE_ORIG := $(foreach d, $(DRIVER_DIR), $(wildcard $(d)/*))
-$(info VAR is $(DRIVER_INCLUDE_ORIG))
 DRIVER_INCLUDE := $(addprefix -I, $(DRIVER_INCLUDE_ORIG))
 STM32_DRIVER_OBJS := $(DRIVER_SRCS:$(DRIVER_DIR)/%=$(STM32_BUILD_DIR)/obj/driver/%.o)
 
@@ -76,11 +75,16 @@ CORE_OBJS :=  $(CORE_SRCS:$(CORE_DIR)/%=$(STM32_BUILD_DIR)/obj/core/%.o)
 OUTNAME := $(STM32_BUILD_DIR)/core-vc-$(PROJECT_VERSION)
 
 # Compilation targets
-.PHONY: all
-all: main
-	# $(MAKE) all -C ./src/test
+all: prog-test
 
-.PHONY: main
+prog-test :
+	$(MAKE) test
+	$(MAKE) main
+
+test :
+	cd src/test && make
+	src/test/build/vc_test.out
+
 main: $(OUTNAME).elf $(OUTNAME).bin $(OUTNAME).ihex
 
 # Main executable
@@ -138,9 +142,12 @@ $(STM32_BUILD_DIR)/obj/rtt/%.c.o: $(RTT_DIR)/%.c
 # Misc targets
 .PHONY: clean
 clean:
+	rm -r src/test/build
 	rm -r $(BUILD_DIR)
 
 .PHONY: clean-user
 clean-user:
+	rm -r src/test/build
 	rm -r $(BUILD_DIR)/stm32/obj/app
 	rm -r $(BUILD_DIR)/stm32/obj/core
+	$ find $(BUILD_DIR)/stm32/obj -mindepth 1 -delete

@@ -6,7 +6,7 @@
 #include "can.h"
 #include "rtt.h"
 
-#define IGNORE_LIST (FAULT_RBPS_IRRA | FAULT_RSSDB_LOST | FAULT_DOUBLE_PEDAL)
+#define IGNORE_LIST (FAULT_RBPS_IRRA | FAULT_RSSDB_LOST | FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL)
 
 static uint64_t faultList;
 static void check_overspeed();
@@ -31,6 +31,12 @@ void FaultManager_set(uint64_t faultCode)
         }
     }
 }
+
+bool FaultManager_read(uint64_t faultCode)
+{
+    return (faultList & faultCode);
+}
+
 
 void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo)
 {
@@ -60,7 +66,8 @@ static void check_overspeed()
     if (invBus.rr_actual1.rr_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_RR);
     else if (invBus.rl_actual1.rl_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_RL); 
     else if (invBus.fr_actual1.fr_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_FR);
-    else if (invBus.fl_actual1.fl_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_FL); 
+    else if (invBus.fl_actual1.fl_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_FL);
+    // if (invBus.fl_actual1.fl_feedback_velocity > 2000) Inverters_set_state(INV_FL, InvState_SOFT_FAULT);
 
     rprintf("FR: %d\n", invBus.rl_actual1.rl_feedback_velocity);
 }

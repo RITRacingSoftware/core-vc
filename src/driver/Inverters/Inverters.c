@@ -29,9 +29,12 @@ static core_timeout_t fr_timeout;
 static core_timeout_t fl_timeout;
 
 static void timeout_callback(core_timeout_t *inv_timeout);
-static void send_inverter_status();
 static void state_machine();
 static bool check_state_change(uint8_t invNum, InvState_e state);
+static void set_zero(uint8_t invNum);
+
+uint8_t num = 0;
+bool led = false;
 
 void Inverters_init()
 {
@@ -80,10 +83,6 @@ void Inverters_init()
 void Inverters_Task_Update()
 {
     state_machine();
-    // Inverters_send_setpoints(INV_RR);
-    // Inverters_send_setpoints(INV_RL);
-    // Inverters_send_setpoints(INV_FR);
-    // Inverters_send_setpoints(INV_FL);    
 }
 
 void Inverters_update()
@@ -214,10 +213,6 @@ void Inverters_set_torque_request(uint8_t invNum, float _setpoint, float _negLim
             invBus.fl_setpoints.fl_amk_torque_limit_positive = inverter_dbc_fl_amk_setpoints_fl_amk_torque_limit_positive_encode(posLimit);
             break;
     }
-
-#ifdef VC_TEST
-    test((t_val) setpoint);
-#endif
 }
 
 void Inverters_send_setpoints(uint8_t invNum)
@@ -231,47 +226,39 @@ void Inverters_send_setpoints(uint8_t invNum)
         case INV_RR:
             inv_id = INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID;
             main_id = MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID;
-            if (invRR.state > InvState_NORMAL) {
-                invBus.rr_setpoints.rr_amk_torque_setpoint = 0;
-                invBus.rr_setpoints.rr_amk_torque_limit_negative = 0;
-                invBus.rr_setpoints.rr_amk_torque_limit_positive = 0;
-            }
+            if (invRR.state > InvState_NORMAL) set_zero(INV_RR);
             break;
 
         case INV_RL:
             inv_id = INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID;
             main_id = MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID;
-            if (invRL.state > InvState_NORMAL) {
-                invBus.rl_setpoints.rl_amk_torque_setpoint = 0;
-                invBus.rl_setpoints.rl_amk_torque_limit_negative = 0;
-                invBus.rl_setpoints.rl_amk_torque_limit_positive = 0;
-            }
+            if (invRL.state > InvState_NORMAL) set_zero(INV_RL);
             break;
 
         case INV_FR:
             inv_id = INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID;
             main_id = MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID;
-            if (invFR.state > InvState_NORMAL) {
-                invBus.fr_setpoints.fr_amk_torque_setpoint = 0;
-                invBus.fr_setpoints.fr_amk_torque_limit_negative = 0;
-                invBus.fr_setpoints.fr_amk_torque_limit_positive = 0;
-            }
+            if (invFR.state > InvState_NORMAL) set_zero(INV_FR);
             break;
 
         case INV_FL:
             inv_id = INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID;
             main_id = MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID;
-            if (invFL.state > InvState_NORMAL) {
-                invBus.fl_setpoints.fl_amk_torque_setpoint = 0;
-                invBus.fl_setpoints.fl_amk_torque_limit_negative = 0;
-                invBus.fl_setpoints.fl_amk_torque_limit_positive = 0;
-            }
+            if (invFL.state > InvState_NORMAL) set_zero(INV_FL);
             break;
+    }
+   
+    // If in soft double pedal mode
+    if (FaultManager_read(FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL))
+    {
+        set_zero(INV_RR);
+        set_zero(INV_RL);
+        set_zero(INV_FR);
+        set_zero(INV_FL);
     }
 
     if (CAN_pack_message(inv_id, (uint8_t *)&msg_data) != -1)
     {
-//        uprintf(USART3, "ID: %d, MSG: %016llx\n", invNum, msg_data);
         core_CAN_add_message_to_tx_queue(CAN_INV, inv_id, 8, msg_data); // Send on inv bus
         core_CAN_add_message_to_tx_queue(CAN_MAIN, main_id, 8, msg_data); // Echo on main bus
     }
@@ -349,6 +336,7 @@ void Inverters_set_state(uint8_t invNum, InvState_e state)
             case INV_RR:
                 if (state == InvState_SOFT_FAULT) {
                     if (check_state_change(INV_RL, InvState_PAIRED_SOFT)) invRL.state = InvState_PAIRED_SOFT;
+                    invRR.state = InvState_RESETTING;
                 }
                 else if (state == InvState_NORMAL) {
                     if (invRL.state == InvState_PAIRED_SOFT) invRL.state = InvState_NORMAL;
@@ -358,11 +346,17 @@ void Inverters_set_state(uint8_t invNum, InvState_e state)
                     if (check_state_change(INV_FR, InvState_PAIRED_HARD)) invFR.state = InvState_PAIRED_HARD;
                     if (check_state_change(INV_FL, InvState_PAIRED_HARD)) invFL.state = InvState_PAIRED_HARD;
                 }
+                else if (state == InvState_RESETTING) {
+                    invBus.rr_setpoints.rr_amk_b_inverter_on = 0;
+                    invBus.rr_setpoints.rr_amk_b_dc_on = 0;
+                    invBus.rr_setpoints.rr_amk_b_enable = 0;
+                }
                 break;
 
             case INV_RL:
                 if (state == InvState_SOFT_FAULT) {
                     if (check_state_change(INV_RR, InvState_PAIRED_SOFT)) invRR.state = InvState_PAIRED_SOFT;
+                    invRL.state = InvState_RESETTING;
                 }
                 else if (state == InvState_NORMAL) {
                     if (invRR.state == InvState_PAIRED_SOFT) invRR.state = InvState_NORMAL;
@@ -372,11 +366,17 @@ void Inverters_set_state(uint8_t invNum, InvState_e state)
                     if (check_state_change(INV_FR, InvState_PAIRED_HARD)) invFR.state = InvState_PAIRED_HARD;
                     if (check_state_change(INV_FL, InvState_PAIRED_HARD)) invFL.state = InvState_PAIRED_HARD;
                 }
+                else if (state == InvState_RESETTING) {
+                    invBus.rl_setpoints.rl_amk_b_inverter_on = 0;
+                    invBus.rl_setpoints.rl_amk_b_dc_on = 0;
+                    invBus.rl_setpoints.rl_amk_b_enable = 0;
+                }
                 break;
 
             case INV_FR:
                 if (state == InvState_SOFT_FAULT) {
                     if (check_state_change(INV_FL, InvState_PAIRED_SOFT)) invFL.state = InvState_PAIRED_SOFT;
+                    invFR.state = InvState_RESETTING;
                 }
                 else if (state == InvState_NORMAL) {
                     if (invFL.state == InvState_PAIRED_SOFT) invFL.state = InvState_NORMAL;
@@ -386,11 +386,17 @@ void Inverters_set_state(uint8_t invNum, InvState_e state)
                     if (check_state_change(INV_RL, InvState_PAIRED_HARD)) invRL.state = InvState_PAIRED_HARD;
                     if (check_state_change(INV_FL, InvState_PAIRED_HARD)) invFL.state = InvState_PAIRED_HARD;
                 }
+                else if (state == InvState_RESETTING) {
+                    invBus.fr_setpoints.fr_amk_b_inverter_on = 0;
+                    invBus.fr_setpoints.fr_amk_b_dc_on = 0;
+                    invBus.fr_setpoints.fr_amk_b_enable = 0;
+                }
                 break;
 
             case INV_FL:
                 if (state == InvState_SOFT_FAULT) {
                     if (check_state_change(INV_FR, InvState_PAIRED_SOFT)) invFR.state = InvState_PAIRED_SOFT;
+                    invFL.state = InvState_RESETTING;
                 }
                 else if (state == InvState_NORMAL) {
                     if (invFR.state == InvState_PAIRED_SOFT) invFR.state = InvState_NORMAL;
@@ -399,6 +405,11 @@ void Inverters_set_state(uint8_t invNum, InvState_e state)
                     if (check_state_change(INV_RR, InvState_PAIRED_HARD)) invRR.state = InvState_PAIRED_HARD;
                     if (check_state_change(INV_RL, InvState_PAIRED_HARD)) invRL.state = InvState_PAIRED_HARD;
                     if (check_state_change(INV_FR, InvState_PAIRED_HARD)) invFR.state = InvState_PAIRED_HARD;
+                }
+                else if (state == InvState_RESETTING) {
+                    invBus.fl_setpoints.fl_amk_b_inverter_on = 0;
+                    invBus.fl_setpoints.fl_amk_b_dc_on = 0;
+                    invBus.fl_setpoints.fl_amk_b_enable = 0;
                 }
                 break;
         }
@@ -447,6 +458,30 @@ void Inverters_set_reset_flag(uint8_t invNum) {
     invArr[invNum]->resetFlag = true;
 }
 
+void Inverters_reset_setpoints()
+{
+    //RR
+    invBus.rr_setpoints.rr_amk_b_inverter_on = 0;
+    invBus.rr_setpoints.rr_amk_b_dc_on = 0;
+    invBus.rr_setpoints.rr_amk_b_enable = 0;
+
+    //RL
+    invBus.rl_setpoints.rl_amk_b_inverter_on = 0;
+    invBus.rl_setpoints.rl_amk_b_dc_on = 0;
+    invBus.rl_setpoints.rl_amk_b_enable = 0;
+    
+    //FR
+    invBus.fr_setpoints.fr_amk_b_inverter_on = 0;
+    invBus.fr_setpoints.fr_amk_b_dc_on = 0;
+    invBus.fr_setpoints.fr_amk_b_enable = 0;
+
+    //FL
+    invBus.fl_setpoints.fl_amk_b_inverter_on = 0;
+    invBus.fl_setpoints.fl_amk_b_dc_on = 0;
+    invBus.fl_setpoints.fl_amk_b_enable = 0;
+
+}
+
 static void timeout_callback(core_timeout_t *timeout)
 {
     if (timeout == &rr_timeout) mainBus.inverter_status.vc_rr_lost = 1;
@@ -461,15 +496,14 @@ static void state_machine()
 
     //RR
     if (invRR.state == InvState_RESETTING) {
-        if (invBus.rr_actual2.rr_error_info == 0) Inverters_set_state(INV_RR, InvState_NORMAL);
+        // if (invBus.rr_actual2.rr_error_info == 0) Inverters_set_state(INV_RR, InvState_NORMAL);
+        if (invBus.rr_actual1.rr_status_system_ready == 1) Inverters_set_state(INV_RR, InvState_NORMAL);
         else {
-            if (invRR.resetFlag) {
+            // if (invRR.resetFlag) {
                 core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, 0);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, 0);
                 invRR.resetFlag = false;
-            }
+            // }
         }
     } else {
         if (invRR.state != InvState_NORMAL) {
@@ -486,15 +520,14 @@ static void state_machine()
 
     //RL
     if (invRL.state == InvState_RESETTING) {
-        if (invBus.rl_actual2.rl_error_info == 0) Inverters_set_state(INV_RL, InvState_NORMAL);
+        // if (invBus.rl_actual2.rl_error_info == 0) Inverters_set_state(INV_RL, InvState_NORMAL);
+        if (invBus.rl_actual1.rl_status_system_ready == 1) Inverters_set_state(INV_RL, InvState_NORMAL);
         else {
-            if (invRL.resetFlag) {
+            // if (invRL.resetFlag) {
                 core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, 0);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, 0);
                 invRL.resetFlag = false;
-            }
+            // }
         }
     } else {
         if (invRL.state != InvState_NORMAL) {
@@ -511,15 +544,14 @@ static void state_machine()
 
     //FR
     if (invFR.state == InvState_RESETTING) {
-        if (invBus.fr_actual2.fr_error_info == 0) Inverters_set_state(INV_FR, InvState_NORMAL);
+        // if (invBus.fr_actual2.fr_error_info == 0) Inverters_set_state(INV_FR, InvState_NORMAL);
+        if (invBus.fr_actual1.fr_status_system_ready == 1) Inverters_set_state(INV_FR, InvState_NORMAL);
         else {
-            if (invFR.resetFlag) {
+            // if (invFR.resetFlag) {
                 core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, 0);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, 0);
                 invFR.resetFlag = false;
-            }
+            // }
         }
     } else {
         if (invFR.state != InvState_NORMAL) {
@@ -536,15 +568,14 @@ static void state_machine()
 
     //FL
     if (invFL.state == InvState_RESETTING) {
-        if (invBus.fl_actual2.fl_error_info == 0) Inverters_set_state(INV_FL, InvState_NORMAL);
+        // if (invBus.fl_actual2.fl_error_info == 0) Inverters_set_state(INV_FL, InvState_NORMAL);
+        if (invBus.fl_actual1.fl_status_system_ready == 1) Inverters_set_state(INV_FL, InvState_NORMAL);
         else {
-            if (invFL.resetFlag) {
+            // if (invFL.resetFlag) {
                 core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, INV_ERROR_RESET_BIT);
-                core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, 0);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, 0);
                 invFL.resetFlag = false;
-            }
+            // }
         }
     } else {
         if (invFL.state != InvState_NORMAL) {
@@ -557,6 +588,13 @@ static void state_machine()
             core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg); // Send on inv bus
             core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg); // Echo on main bus
         }
+    }
+
+    num++;
+    if (num % 20 == 0) {
+        if (led) core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
+        else core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
+        led = !led;
     }
 }
 
@@ -582,5 +620,35 @@ static bool check_state_change(uint8_t invNum, InvState_e state)
 
         default:
             return false;
+    }
+}
+
+static void set_zero(uint8_t invNum)
+{
+    switch (invNum)
+    {
+        case INV_RR:
+            invBus.rr_setpoints.rr_amk_torque_setpoint = 0;
+            invBus.rr_setpoints.rr_amk_torque_limit_negative = 0;
+            invBus.rr_setpoints.rr_amk_torque_limit_positive = 0;
+            break;
+        
+        case INV_RL:
+            invBus.rl_setpoints.rl_amk_torque_setpoint = 0;
+            invBus.rl_setpoints.rl_amk_torque_limit_negative = 0;
+            invBus.rl_setpoints.rl_amk_torque_limit_positive = 0;
+            break;
+
+        case INV_FR:
+            invBus.fr_setpoints.fr_amk_torque_setpoint = 0;
+            invBus.fr_setpoints.fr_amk_torque_limit_negative = 0;
+            invBus.fr_setpoints.fr_amk_torque_limit_positive = 0;
+            break;
+            
+        case INV_FL:
+            invBus.fl_setpoints.fl_amk_torque_setpoint = 0;
+            invBus.fl_setpoints.fl_amk_torque_limit_negative = 0;
+            invBus.fl_setpoints.fl_amk_torque_limit_positive = 0;
+            break;
     }
 }

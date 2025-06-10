@@ -68,3 +68,4 @@ void Inverters_set_can_states();
 void Inverters_set_overspeed(uint8_t invNum);
 void Inverters_send_timeout_times();
 void Inverters_set_reset_flag(uint8_t invNum);
+void Inverters_reset_setpoints();

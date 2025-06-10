@@ -1,3 +1,3 @@
 #pragma once
 
-void TorqueVectoring_Task_Update();
+void TorqueVectoring(float maxTotalTorque, float *trqs);

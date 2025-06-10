@@ -18,8 +18,9 @@
 #include "VehicleState.h"
 #include "DriverInputs.h"
 #include "DashInputs.h"
-#include "TorqueVectoring.h"
+#include "Controls.h"
 #include "FaultManager.h"
+#include "TractionControl.h"
 
 #include "adc.h"
 #include "spi.h"
@@ -46,6 +47,7 @@ bool VC_init()
     Inverters_init();
     DriverInputs_init();
     FaultManager_init();
+    TractionControl_init();
 
     core_timeout_start_all();
 
@@ -56,7 +58,7 @@ void VC_Task_Update()
 {
     VehicleState_Task_Update();
     DriverInputs_Task_Update();
-    TorqueVectoring_Task_Update();
+    Controls_Task_Update();
     Inverters_Task_Update();
     CAN_Task_Update();
     core_timeout_check_all();

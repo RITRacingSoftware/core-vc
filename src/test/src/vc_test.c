@@ -25,7 +25,7 @@ void test(t_val val)
         val_arr[write] = val;
         write = (++write) % MAX_TEST_VALS;
     }
-    else fprintf(stderr, RED "Error: Buffer full" RESET);
+    else fprintf(stderr, RED "Error: Buffer full\n" RESET);
 }
 
 void test_read(t_val *valPtr)

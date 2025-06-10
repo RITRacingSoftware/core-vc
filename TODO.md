@@ -1,11 +1,10 @@
 # Todo
-// - Precharge timeout
-- Soft double pedal
-- Project description
-- Convert PSI
-- States for inverters
-- Steer lost
-- Steer irrational
-- Soft inv lost faults
-- APPS state machine
-- Power limiting
+- [x] Precharge timeout
+- [x] Soft double pedal
+- [ ] Project description
+- [x] Convert PSI
+- [x] States for inverters
+- [ ] Steer lost with sine wave
+- [x] Steer irrational
+- [x] Soft inv lost faults
+- [ ] Power limiting

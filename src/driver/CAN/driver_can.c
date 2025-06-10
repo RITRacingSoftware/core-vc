@@ -17,16 +17,18 @@ static bool CAN_add_filters();
 static void pack_and_send_main_echoes(int id);
 static void echo_on_main();
 static void send_CAN_errors();
+static void send_controls_params();
 
-int main_id_arr[NUM_IDS_MAIN] = {
+int main_id_arr[] = {
         MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
         MAIN_DBC_BMS_STATUS_FRAME_ID,
         MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID,
         MAIN_DBC_SSDB_FRONT_FRAME_ID,
-        MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID
+        MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID,
+        MAIN_DBC_BMS_CURRENT_FRAME_ID
 };
 
-int inv_id_arr[NUM_IDS_INV] = {
+int inv_id_arr[] = {
         INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_RR_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID,
@@ -93,6 +95,12 @@ void CAN_rx_main()
             case MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID:
                 main_dbc_bms_current_limit_unpack(&mainBus.bms_current_limit, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
+            case MAIN_DBC_BMS_CURRENT_FRAME_ID:
+                main_dbc_bms_current_unpack(&mainBus.bms_current, (uint8_t *) &canMessage.data, canMessage.dlc);
+                mainBus.bms_current.bms_inst_current_filt *= 0.001;
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, 7, 8, mainBus.bms_current.bms_inst_current_filt);
+                break;
+
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
                 main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
@@ -109,14 +117,14 @@ void CAN_rx_inv()
     if (core_CAN_receive_from_queue(CAN_INV, &canMessage))
     {
         int id = canMessage.id;
-       // rprintf("Got inv: %d\n", id);
 
         switch (id)
         {
             // RR
             case INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_rr_amk_actual_1_unpack(&invBus.rr_actual1, (uint8_t *) &canMessage.data, 8);
-                invBus.rr_actual1.rr_feedback_velocity *= 0.0001;
+                invBus.rr_actual1.rr_feedback_velocity *= FEEDBACK_VEL_SCALE;
+                invBus.rr_actual1.rr_feedback_torque *= FEEDBACK_TRQ_SCALE;
                 if (Inverters_get_state(INV_RR) == InvState_RESETTING) Inverters_set_reset_flag(INV_RR);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;  // Echo over main bus
 
@@ -138,7 +146,8 @@ void CAN_rx_inv()
             // RL
             case INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_rl_amk_actual_1_unpack(&invBus.rl_actual1, (uint8_t *) &canMessage.data, 8);
-                invBus.rl_actual1.rl_feedback_velocity *= 0.0001;
+                invBus.rl_actual1.rl_feedback_velocity *= FEEDBACK_VEL_SCALE;
+                invBus.rl_actual1.rl_feedback_torque *= FEEDBACK_TRQ_SCALE;
                 if (Inverters_get_state(INV_RL) == InvState_RESETTING) Inverters_set_reset_flag(INV_RL);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
@@ -160,7 +169,8 @@ void CAN_rx_inv()
             // FR
             case INVERTER_DBC_FR_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_fr_amk_actual_1_unpack(&invBus.fr_actual1, (uint8_t *) &canMessage.data, 8);
-                invBus.fr_actual1.fr_feedback_velocity *= 0.0001;
+                invBus.fr_actual1.fr_feedback_velocity *= FEEDBACK_VEL_SCALE;
+                invBus.fr_actual1.fr_feedback_torque *= FEEDBACK_TRQ_SCALE;
                 if ((invBus.fr_actual1.fr_status_error == 0) && (Inverters_get_state(INV_FR) == InvState_RESETTING)) Inverters_set_reset_flag(INV_FR);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
@@ -183,7 +193,8 @@ void CAN_rx_inv()
             // FL
             case INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_fl_amk_actual_1_unpack(&invBus.fl_actual1, (uint8_t *) &canMessage.data, 8);
-                invBus.fl_actual1.fl_feedback_velocity *= 0.0001;
+                invBus.fl_actual1.fl_feedback_velocity *= FEEDBACK_VEL_SCALE;
+                invBus.fl_actual1.fl_feedback_torque *= FEEDBACK_TRQ_SCALE;
                 if ((invBus.fl_actual1.fl_status_error == 0) && (Inverters_get_state(INV_FL) == InvState_RESETTING)) Inverters_set_reset_flag(INV_FL);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
@@ -244,9 +255,10 @@ void CAN_Task_Update()
     main_dbc_vc_pedal_inputs_raw_pack((uint8_t *)&msg, &mainBus.pedal_inputs_raw, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, msg);
 
-    Inverters_send_timeout_times();
+    // Inverters_send_timeout_times();
     echo_on_main();
     send_CAN_errors();
+    send_controls_params();
 }
 
 static void send_CAN_errors() {
@@ -374,7 +386,8 @@ static bool CAN_add_filters()
         if (main_id_arr[i] < minFilter) minFilter = main_id_arr[i];
         if (main_id_arr[i] > maxFilter) maxFilter = main_id_arr[i];
     }
-    status = (status && core_CAN_add_filter(CAN_MAIN, false, minFilter, maxFilter));
+    // status = (status && core_CAN_add_filter(CAN_MAIN, false, minFilter, maxFilter));
+    status = (status && core_CAN_add_filter(CAN_MAIN, false, 1, 1000));
 
     minFilter = inv_id_arr[0];
     maxFilter = inv_id_arr[0];
@@ -386,4 +399,14 @@ static bool CAN_add_filters()
     status = (status && core_CAN_add_filter(CAN_INV, false, minFilter, maxFilter));
    
     return status;
+}
+
+static void send_controls_params()
+{        
+    uint64_t mesg = 0;
+    ((uint16_t *) &mesg)[0] = ((uint16_t) (CS_LAT_FACTOR_ACC * 100));
+    ((uint16_t *) &mesg)[1] = ((uint16_t) (CS_LONG_FACTOR_ACC * 100));
+    ((uint16_t *) &mesg)[2] = ((uint16_t) (CS_LONG_SPLIT_ACC * 100));
+    ((uint16_t *) &mesg)[3] = ((uint16_t) (CS_TOTAL_GAIN));
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 2, 8, mesg);
 }

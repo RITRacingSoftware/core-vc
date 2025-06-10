@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define FAULT_PBX_SHUTDOWN        0x00000001
 #define FAULT_BMS                 0x00000002
@@ -18,11 +19,13 @@
 #define FAULT_FR_ERROR            0x00002000
 #define FAULT_FL_ERROR            0x00004000
 #define FAULT_PRECHARGE_TIMEOUT   0x00008000
+#define FAULT_SOFT_DOUBLE_PEDAL   0x00010000
 
 
 void FaultManager_init();
 void FaultManager_Inv(uint8_t faultList);
 void FaultManager_Task_Update();
 void FaultManager_set(uint64_t faultCode);
-void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo);
 void FaultManager_reset(uint64_t faultCode);
+bool FaultManager_read(uint64_t faultCode);
+void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo);

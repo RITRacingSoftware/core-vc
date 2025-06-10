@@ -64,37 +64,68 @@ bool DriverInputs_test()
 bool Accel_test_full()
 {
     DriverInputs_init();
+
     // Test full throttle
     uint16_t aVal = ACCEL_A_MAX_ADC;
     uint16_t bVal = ACCEL_B_MAX_ADC;
     if (!Accel_test(aVal, bVal, 1, 1)) return false;
 
+    // Test over throttle
+    aVal = ACCEL_A_MAX_ADC + 100;
+    bVal = ACCEL_B_MAX_ADC + 100;
+    if (!Accel_test(aVal, bVal, 1, 1)) return false;
 
     // Test no throttle
     aVal = ACCEL_A_OFFSET_ADC;
     bVal = ACCEL_B_OFFSET_ADC;
     if (!Accel_test(aVal, bVal, 0, 0)) return false;
+
+    // Test no throttle
+    aVal = ACCEL_A_OFFSET_ADC - 100;
+    bVal = ACCEL_B_OFFSET_ADC - 100;
+    if (!Accel_test(aVal, bVal, 0, 0)) return false;
+
+    // Test half throttle
+    aVal = ( (ACCEL_A_RANGE_ADC / 2) + ACCEL_A_OFFSET_ADC );
+    bVal = ( (ACCEL_B_RANGE_ADC / 2) + ACCEL_B_OFFSET_ADC );
+    if (!Accel_test(aVal, bVal, 0.5, 0.5)) return false;
+
+    aVal = ( (ACCEL_A_RANGE_ADC / 4) + ACCEL_A_OFFSET_ADC );
+    bVal = ( (ACCEL_B_RANGE_ADC / 4) + ACCEL_B_OFFSET_ADC );
+    if (!Accel_test(aVal, bVal, 0.25, 0.25)) return false;
+
     return true;
 }
 
 bool Brakes_test_full()
 {
+    // Front
     if (!Brakes_test(BPS_F_MAX_ADC, BPS_R_OFFSET_ADC, 1, 0, BPS_TEST_FRONT)) return false;
     if (!Brakes_test(BPS_F_OFFSET_ADC, BPS_R_OFFSET_ADC, 0, 0, BPS_TEST_FRONT)) return false;
-    // force_fbps_lost_timeout();
-    // if (!Brakes_test(BPS_F_OFFSET_ADC, BPS_R_MAX_ADC, 0, 1, BPS_TEST_REAR)) return false;
-    
+    uint16_t bps = ( (BPS_F_RANGE_ADC / 3) + BPS_F_OFFSET_ADC);
+    if (!Brakes_test(bps, BPS_R_OFFSET_ADC, 0.33, 0, BPS_TEST_FRONT)) return false;
+
+    // Rear
+    force_fbps_lost_timeout();
+    if (!Brakes_test(BPS_F_OFFSET_ADC, BPS_R_MAX_ADC, 0, 1, BPS_TEST_REAR)) return false; 
+    if (!Brakes_test(BPS_F_MAX_ADC, BPS_R_OFFSET_ADC, 1, 0, BPS_TEST_REAR)) return false;
+    bps = ( (BPS_R_RANGE_ADC / 3) + BPS_R_OFFSET_ADC);
+    if (!Brakes_test(BPS_F_OFFSET_ADC, bps, 0, 0.33, BPS_TEST_REAR)) return false;
     return true;
 }
 
 bool Steer_test_full()
 {
-    if (!Steer_test(STEER_MAX_ADC, 1)) return false;
-    if (!Steer_test(STEER_MAX_ADC + 100, 1)) return false;
-    if (!Steer_test(STEER_OFFSET_ADC, -1)) return false;
-    if (!Steer_test(STEER_OFFSET_ADC - 100, -1)) return false;
-    uint16_t steerVal = ((STEER_MAX_ADC - STEER_OFFSET_ADC) / 2) + STEER_OFFSET_ADC;
+    if (!Steer_test(STEER_MAX_ADC, -1)) return false;
+    if (!Steer_test(STEER_MAX_ADC + 100, -1)) return false;
+    if (!Steer_test(STEER_OFFSET_ADC, 1)) return false;
+    if (!Steer_test(STEER_OFFSET_ADC - 100, 1)) return false;
+    uint16_t steerVal = ((STEER_RANGE_ADC / 2) + STEER_OFFSET_ADC);
     if (!Steer_test(steerVal, 0)) return false;
+    steerVal = ((STEER_RANGE_ADC / 4) + STEER_OFFSET_ADC);
+    if (!Steer_test(steerVal, 0.50)) return false;
+    steerVal = ((STEER_RANGE_ADC * 0.75) + STEER_OFFSET_ADC);
+    if (!Steer_test(steerVal, -0.50)) return false;
     return true;
 }
 

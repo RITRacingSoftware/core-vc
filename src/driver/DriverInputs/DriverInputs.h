@@ -13,11 +13,18 @@
 #define ACCEL_B_PORT GPIOA
 #define ACCEL_B_PIN GPIO_PIN_4
 
+typedef enum
+{
+    DP_State_NORMAL,
+    DP_State_SOFT,
+    DP_State_HARD
+} DP_State_e;
+
 typedef struct 
 {
-    float brakePct;
-    float accelPct;
-    float steerPct;
+    float brakePct; // 0 -> 1
+    float accelPct; // 0 -> 1
+    float steerPct; // -1 -> 1
 } DriverInputs_s;
 
 void DriverInputs_init();

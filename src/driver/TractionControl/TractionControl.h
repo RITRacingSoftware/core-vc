@@ -1,6 +1,7 @@
 #pragma once
 
-void TractionControl();
+void TractionControl_init();
+void TractionControl(float *inTrqs, float *fullOutTrqs, float *outTrqs);
 
 #ifdef VC_TEST
 void force_vels(float *inVel);

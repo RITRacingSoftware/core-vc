@@ -26,6 +26,7 @@ static void timeout_callback (core_timeout_t *timeout);
 static bool Accel_init();
 static bool Brakes_init();
 static void Brakes_convert_pct(uint16_t fVal, uint16_t rVal, float *fPct, float *rPct);
+static void DoublePedal_state_machine();
 
 static core_timeout_t fssdb_lost_timeout;          // Brake pressure sensor not on CAN timeout
 static core_timeout_t double_pedal_timeout;     // Double pedal timeout
@@ -37,11 +38,13 @@ static core_timeout_t rbps_irr_timeout;         // Rear brake pressure sensor ir
 static core_timeout_t steer_irr_timeout;       
 
 static DriverInputs_s driverInputs;
+static DP_State_e DP_State;
 
-#define FILTER_ORDER 20
 #define STEER_DIFF_FAULT (0.1f)
+#define DP_NORMAL 0
+#define DP_SOFT 1
+#define DP_HARD 2
 
-static uint16_t steer_samples[FILTER_ORDER];
 static float lastSteer;
 
 void DriverInputs_init()
@@ -55,10 +58,6 @@ void DriverInputs_init()
     driverInputs.steerPct = 0;
     brake_CAN = true;
     lastSteer = 0; 
-
-    for (int i = 0; i < FILTER_ORDER; i++) {
-        steer_samples[i] = 0;
-    }
     
     /******************* TIMEOUTS *******************/
 
@@ -96,7 +95,7 @@ void DriverInputs_init()
     double_pedal_timeout.callback = timeout_callback;
     double_pedal_timeout.latching = 0;
     double_pedal_timeout.single_shot = 0;
-    core_timeout_insert(&double_pedal_timeout);
+    // core_timeout_insert(&double_pedal_timeout);
 
     /*** FSSDB ***/
     fssdb_lost_timeout.module = CAN_MAIN;
@@ -141,10 +140,7 @@ void DriverInputs_Task_Update()
     Accel_process();
     Brakes_process();
     Steer_process();
-
-    // Check double pedal
-    bool doublePedal = ((driverInputs.brakePct) > BPS_PRESSED_PCT) && (driverInputs.accelPct > DI_ACCEL_DOUBLE_PEDAL_THRESHOLD);
-    if (doublePedal) core_timeout_reset(&double_pedal_timeout);
+    DoublePedal_state_machine();
 }
 
 void Steer_process()
@@ -159,23 +155,10 @@ void Steer_process()
         uint16_t pos;
         pos = SAT(rawPos, STEER_OFFSET_ADC, STEER_MAX_ADC);
 
-        
+        float steerPct = -(((pos - STEER_OFFSET_ADC) / HALF_STEER_RANGE_ADC) - 1);
 
-        uint64_t avgSum = pos;
-        for (int i = (FILTER_ORDER - 1); i > 0; i--) {
-            steer_samples[i] = steer_samples[i - 1];
-            avgSum += steer_samples[i];
-        }
-        steer_samples[0] = pos;
-        uint16_t avgPos = (avgSum / ((float) FILTER_ORDER));
-        
-        avgPos = SAT(avgPos, STEER_OFFSET_ADC, STEER_MAX_ADC);
-
-
-        float steerPct = (float)((((float)(avgPos - STEER_OFFSET_ADC)) / (float) HALF_STEER_RANGE_ADC) - 1);
-
-        if ((fabs(steerPct - lastSteer) > STEER_DIFF_FAULT) && (VehicleState_get_state() > VehicleState_VC_NOT_READY)) FaultManager_set(FAULT_STEER_IRRA);
-        else lastSteer = steerPct;
+        // if ((fabs(steerPct - lastSteer) > STEER_DIFF_FAULT) && (VehicleState_get_state() > VehicleState_VC_NOT_READY)) FaultManager_set(FAULT_STEER_IRRA);
+        // else lastSteer = steerPct;
         mainBus.processed_inputs.vc_p_inputs_steer_pct = 
             main_dbc_vc_processed_inputs_vc_p_inputs_steer_pct_encode(steerPct * 100);
         //Scale: -1 -> 1
@@ -202,7 +185,6 @@ static void brake_timeout_callback(core_timeout_t *timeout)
 
 static void timeout_callback (core_timeout_t *timeout)
 {
-    // if (timeout->ref != FAULT_FBPS_IRRA && timeout->ref != FAULT_RBPS_IRRA && timeout->ref != FAULT_DOUBLE_PEDAL) FaultManager_set(timeout->ref);
     FaultManager_set(timeout->ref);
 }
 
@@ -235,10 +217,10 @@ void Accel_process()
     aVal = SAT(accelAVal, ACCEL_A_OFFSET_ADC, ACCEL_A_MAX_ADC);
     bVal = SAT(accelBVal, ACCEL_B_OFFSET_ADC, ACCEL_B_MAX_ADC);
 
-    accelAPos = ((float) (aVal - ACCEL_A_OFFSET_ADC)) / ((float) ACCEL_A_RANGE_ADC);
-    accelBPos = ((float) (bVal - ACCEL_B_OFFSET_ADC)) / ((float) ACCEL_B_RANGE_ADC);
+    accelAPos = ((aVal - ACCEL_A_OFFSET_ADC) / ((float)ACCEL_A_RANGE_ADC));
+    accelBPos = ((bVal - ACCEL_B_OFFSET_ADC) / ((float)ACCEL_B_RANGE_ADC));
 
-    avgPos = ((accelAPos + accelBPos) / 2.0);
+    avgPos = ((accelAPos + accelBPos) / 2.0f);
 
     // Echo A, B, and average positions on main bus
     mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_a =
@@ -323,19 +305,14 @@ void Brakes_process()
                 main_dbc_vc_processed_inputs_vc_p_inputs_brakes_pct_encode(frontPct * 100);
         }
     }
-    else 
+    // If rear isn't timed out irrational
+    else if (!(rbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
     {
-        /*
-        // If rear isn't timed out irrational
-        if (!(rbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
-        {   
-            // If rear isn't currently irrational
-            if (rearVal < BPS_R_IRRATIONAL_HIGH_ADC && rearVal > BPS_R_IRRATIONAL_LOW_ADC) {
-                core_timeout_reset(&rbps_irr_timeout);
-                driverInputs.brakePct = rearPct;
-            }
+        // If rear isn't currently irrational
+        if (rearVal < BPS_R_IRRATIONAL_HIGH_ADC && rearVal > BPS_R_IRRATIONAL_LOW_ADC) {
+            core_timeout_reset(&rbps_irr_timeout);
+            driverInputs.brakePct = rearPct;
         }
-        */
     }
 
 #ifdef VC_TEST
@@ -355,8 +332,51 @@ static void Brakes_convert_pct(uint16_t fVal, uint16_t rVal, float *fPct, float 
     *rPct = (float)(((float) (val - BPS_R_OFFSET_ADC)) / ((float) BPS_R_RANGE_ADC));
 }
 
+static void DoublePedal_state_machine()
+{
+    // DP_State = DP_State_SOFT;
+    uint8_t curr_dp_state = DP_NORMAL;
+    bool dpSoft = ((driverInputs.brakePct) > BPS_SOFT_PRESSED_PCT) && (driverInputs.accelPct > DI_ACCEL_SOFT_DP_THRESHOLD);
+    if (dpSoft) curr_dp_state = DP_SOFT;
+    bool dpHard = ((driverInputs.brakePct) > BPS_HARD_PRESSED_PCT) && (driverInputs.accelPct > DI_ACCEL_HARD_DP_THRESHOLD);
+    if (dpHard) curr_dp_state = DP_HARD;
+
+    switch (DP_State)
+    {
+        case DP_State_NORMAL:
+            if (curr_dp_state == DP_SOFT) {
+                DP_State = DP_State_SOFT;
+                FaultManager_set(FAULT_SOFT_DOUBLE_PEDAL);
+            }
+            else if (curr_dp_state == DP_HARD) {
+                DP_State = DP_State_HARD;
+                FaultManager_set(FAULT_DOUBLE_PEDAL);
+            }
+            break;
+
+        case DP_State_SOFT:
+            if (curr_dp_state == DP_NORMAL) {
+                DP_State = DP_State_NORMAL;
+                FaultManager_reset(FAULT_SOFT_DOUBLE_PEDAL);
+            }
+            else if (curr_dp_state == DP_HARD) {
+                DP_State = DP_State_HARD;
+                FaultManager_reset(FAULT_SOFT_DOUBLE_PEDAL);
+                FaultManager_set(FAULT_DOUBLE_PEDAL);
+            }
+            break;
+
+        case DP_State_HARD:
+            if (driverInputs.accelPct < DI_DOUBLE_PEDAL_RESET_PCT) {
+                DP_State = DP_State_NORMAL;
+                FaultManager_reset(FAULT_DOUBLE_PEDAL);
+            }
+            break; 
+    }
+}
+
 #ifdef VC_TEST
-void force_fbps_lost_timeout() {fssdb_lost_timeout.state &= CORE_TIMEOUT_STATE_TIMED_OUT;}
+void force_fbps_lost_timeout() {fssdb_lost_timeout.state |= CORE_TIMEOUT_STATE_TIMED_OUT;}
 
 void force_inputs(float accelPos, float brakePos, float steerPos)
 {

@@ -4,56 +4,74 @@
 #include "DriverInputs_test.h"
 #include "TorqueVectoring.h"
 #include "TractionControl.h"
+#include "PowerLimit.h"
 #include "vc_test.h"
 
-static bool TorqueVectoring_test();
+static bool PowerLimit_test_all();
+static bool PowerLimit_test(float reqTrq, float prevMaxTrq);
+static bool TorqueVectoring_test_all();
+static bool TorqueVectoring_test(float maxTotalTrq);
 static bool TractionControl_test_all();
-static bool TractionControl_test(float *inTrq, float *inVel, float *prevVels);
+static bool TractionControl_test(float *inTrq, float *inVel);
 
 bool ControlSystem_test()
 {
+    // PowerLimit_test_all();
+    // TorqueVectoring_test_all();
     TractionControl_test_all();
     return true;
 }
 
-static bool TorqueVectoring_test()
+static bool PowerLimit_test_all()
 {
-    t_val invRR, invRL, invFR, invFL;
-    force_inputs(1.0, 0, 0.0);
-    TorqueVectoring_Task_Update();
+    PowerLimit_test(4, 0.4f);
+}
 
-    test_read(&invRR);
-    test_read(&invRL);
-    test_read(&invFR);
-    test_read(&invFL);
+static bool PowerLimit_test(float reqTrq, float prevMaxTrq)
+{
+    float outTrq;
+    PowerLimit_set_prev_trq(prevMaxTrq);
+    PowerLimit_set_vals(100, 97, 570);
+    PowerLimit(reqTrq, &outTrq);
+    printf("outTrq: %.2f\n", outTrq);
+}
+
+static bool TorqueVectoring_test_all()
+{
+    TorqueVectoring_test(4.0f);
+}
+
+static bool TorqueVectoring_test(float maxTotalTrq)
+{
+    float tvTrqs[4];
+    force_inputs(1.0, 0, 0.0);
+    TorqueVectoring(maxTotalTrq, tvTrqs); 
+
+    printf("RR: %f, RL: %f, FR: %f, FL: %f", tvTrqs[0], tvTrqs[1], tvTrqs[2], tvTrqs[3]);
     return true;
 }
 
 static bool TractionControl_test_all()
 {
-    float inTrq[4] = {0.4, 0.4, 0.4, 0.4};
-    float inVel[4] = {15000, 15000, 16500, 20000};
-    float prevVels[4 * 4] = {
-        17500, 17900, 18200, 18500, //RR
-        17500, 17650, 18100, 18160, //RL
-        17570, 17970, 18170, 18670, //FR
-        17400, 17750, 18040, 18260  //RL
-    };
+    TractionControl_init();
+    // printf("\n\n*************\n\n");
+    float inTrq[4] = {0.7, 0.7, 0.7, 0.7};
+    float inVel[4] = {19000, 19000, 19000, 19400};
+    for (int i = 0; i < 10; i++) TractionControl_test(inTrq, inVel);
+    printf("Purged\n");
+    inVel[0] = 19000; inVel[1] = 19000; inVel[2] = 19000; inVel[3] = 19600;
+    TractionControl_test(inTrq, inVel);
+    inVel[0] = 19000; inVel[1] = 19000; inVel[2] = 19000; inVel[3] = 19400;
+    for (int i = 0; i < 10; i++) TractionControl_test(inTrq, inVel);
 
-    TractionControl_test(inTrq, inVel, prevVels);
 }
 
-static bool TractionControl_test(float *inTrq, float *inVel, float *prevVels)
+static bool TractionControl_test(float *inTrq, float *inVel)
 {
+    float tcTrqs[4];
+    float totalTrqOut;
     force_vels(inVel);
-    force_prev_vels(prevVels);
-    TractionControl(inTrq, inVel);
+    TractionControl(inTrq, tcTrqs, &totalTrqOut);
 
-    t_val rr, rl, fr, fl;
-    test_read(&rr);
-    test_read(&rl);
-    test_read(&fr);
-    test_read(&fl);
-
-    printf("RR: %f, RL: %f, FR: %f, FL: %f", rr.f, rl.f, fr.f, fl.f);
+    printf("RR: %f, RL: %f, FR: %f, FL: %f\n", tcTrqs[0], tcTrqs[1], tcTrqs[2], tcTrqs[3]);
 }

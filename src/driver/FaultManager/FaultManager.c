@@ -5,6 +5,8 @@
 #include "VehicleState.h"
 #include "can.h"
 #include "rtt.h"
+#include "driver_GPIO.h"
+#include "gpio.h"
 
 #define IGNORE_LIST (FAULT_RBPS_IRRA | FAULT_RSSDB_LOST | FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL)
 
@@ -23,7 +25,7 @@ void FaultManager_set(uint64_t faultCode)
             faultList |= FAULT_PBX_SHUTDOWN; 
             VehicleState_set_fault();
             faultList |= faultCode;
-            rprintf("Faulted: %d, FaultList: %d\n", faultCode, faultList);
+            // rprintf("Faulted: %d, FaultList: %d\n", faultCode, faultList);
             core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, 8, faultList);
         }
         else {
@@ -40,14 +42,16 @@ bool FaultManager_read(uint64_t faultCode)
 
 void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo)
 {
-    // rprintf("Inv: %d, errorInfo: %d\n", invNum, errorInfo);
-    if (errorInfo == INV_DC_BUS_CHG_ERROR || errorInfo == INV_OVERSPEED_ERROR || errorInfo == INV_SPECIAL_SOFTWARE_MESSAGE_ERROR) { 
-        Inverters_set_state(invNum, InvState_SOFT_FAULT);
-        // rprintf("Soft\n");
+    core_GPIO_digital_write(RL_STATUS_PORT, RL_STATUS_PIN, true);
+    if (errorInfo == INV_DC_BUS_CHG_ERROR || 
+        errorInfo == INV_OVERSPEED_ERROR || 
+        errorInfo == INV_SPECIAL_SOFTWARE_MESSAGE_ERROR || 
+        errorInfo == INV_ENCODER_COMMS_ERROR) { 
+        core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, true);
+        Inverters_set_state(invNum, InvState_RESETTING);
     }
     else { 
         Inverters_set_state(invNum, InvState_HARD_FAULT);
-        // rprintf("Hard\n");
     }
 }
 
@@ -69,5 +73,5 @@ static void check_overspeed()
     else if (invBus.fl_actual1.fl_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_FL);
     // if (invBus.fl_actual1.fl_feedback_velocity > 2000) Inverters_set_state(INV_FL, InvState_SOFT_FAULT);
 
-    rprintf("FR: %d\n", invBus.rl_actual1.rl_feedback_velocity);
+    // rprintf("FR: %d\n", invBus.rl_actual1.rl_feedback_velocity);
 }

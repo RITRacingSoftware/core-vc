@@ -16,14 +16,20 @@ static bool TractionControl_test(float *inTrq, float *inVel);
 
 bool ControlSystem_test()
 {
-    // PowerLimit_test_all();
+    PowerLimit_test_all();
     // TorqueVectoring_test_all();
-    TractionControl_test_all();
+    // TractionControl_test_all();
     return true;
 }
 
 static bool PowerLimit_test_all()
 {
+    PowerLimit_init();
+    PowerLimit_set_vals(165, 150, 570);
+    PowerLimit_test(4, 0.4f);
+    PowerLimit_set_vals(165, 40, 570);
+    PowerLimit_test(4, 0.3f);
+    PowerLimit_test(4, 0.4f);
     PowerLimit_test(4, 0.4f);
 }
 
@@ -31,7 +37,7 @@ static bool PowerLimit_test(float reqTrq, float prevMaxTrq)
 {
     float outTrq;
     PowerLimit_set_prev_trq(prevMaxTrq);
-    PowerLimit_set_vals(100, 97, 570);
+    // PowerLimit_set_vals(165, 150, 570);
     PowerLimit(reqTrq, &outTrq);
     printf("outTrq: %.2f\n", outTrq);
 }

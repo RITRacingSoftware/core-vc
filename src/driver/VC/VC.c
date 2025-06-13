@@ -21,6 +21,7 @@
 #include "Controls.h"
 #include "FaultManager.h"
 #include "TractionControl.h"
+#include "PowerLimit.h"
 
 #include "adc.h"
 #include "spi.h"
@@ -48,6 +49,7 @@ bool VC_init()
     DriverInputs_init();
     FaultManager_init();
     TractionControl_init();
+    PowerLimit_init();
 
     core_timeout_start_all();
 

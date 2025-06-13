@@ -45,7 +45,11 @@ void VehicleState_Task_Update()
     {
         case VehicleState_VC_NOT_READY:
             // core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
-            if (!Inverters_reset_charging_error()) break;
+            // if (!Inverters_reset_charging_error()) break;
+            if ( !(Inverters_get_state(INV_RR) == InvState_NORMAL &&
+                   Inverters_get_state(INV_RL) == InvState_NORMAL &&
+                   Inverters_get_state(INV_FR) == InvState_NORMAL &&
+                   Inverters_get_state(INV_FL) == InvState_NORMAL) ) break;
 
             // If TSMS is switched, move to next state
             if (GPIO_get_TSMS())
@@ -114,17 +118,15 @@ void VehicleState_Task_Update()
             // Set inverter enable and on
             Inverters_set_enable(true); // AMK_bEnable = 1
             Inverters_set_inv_on(true); // AMLK_bInverterOn = 1
-            rprintf("1");
 
             // Receive echo for inverters commanded on
             // AMK_bInverterOn = 1 MIRROR
             if (!Inverters_get_inv_on_echo_all()) break;
-            rprintf("2");
 
             // Receive confirmation that inverters are on
             // AMK_bQuitInverterOn = 1
             if (!Inverters_get_inv_on_all()) break;
-            rprintf("3");
+
             // Switch relay allowing inverters to read real torque requests
             // X140 binary input BE2 = 1
             GPIO_set_activate_inv_relays(true);
@@ -150,6 +152,7 @@ void VehicleState_Task_Update()
             Inverters_set_torque_request(INV_FL, 0, 0, 0);
             Inverters_set_torque_request(INV_RR, 0, 0, 0);
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
+            Inverters_reset_setpoints();
             GPIO_set_activate_inv_relays(false); // X140 binary input BE2 = 0
             Inverters_set_inv_on(false); // AMK_bInverterOn = 0
             GPIO_set_interlock_relay(false); // Kill interlock
@@ -182,7 +185,6 @@ void VehicleState_Task_Update()
                 Inverters_get_state(INV_FR) <= InvState_SOFT_FAULT &&
                 Inverters_get_state(INV_FL) <= InvState_SOFT_FAULT)
             {
-                Inverters_reset_setpoints();
                 new_state(VehicleState_VC_NOT_READY);
             }
             break;

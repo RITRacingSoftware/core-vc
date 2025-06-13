@@ -6,6 +6,7 @@
 #include "Inverters.h"
 #include "DriverInputs.h"
 #include "driver_can.h"
+#include "can.h"
 
 DriverInputs_s inputs;
 
@@ -17,20 +18,22 @@ void Controls_Task_Update()
     
     float reqTrq = inputs.accelPct * CS_TOTAL_GAIN;
 
-    /*
+    
     float maxTotalTrq;
-    PowerLimit(reqTrq, &maxTotalTrq); */
+    PowerLimit(reqTrq, &maxTotalTrq);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 2, 8, ((uint64_t) (maxTotalTrq * 100)));
 
-    float maxTotalTrq = reqTrq * trq_power_limit();
     float tvTrqs[4];
     TorqueVectoring(maxTotalTrq, tvTrqs);
 
     float tcTrqs[4];
     float totalTrq;
+    for (int i = 0; i < 4; i++) {
     TractionControl(tvTrqs, tcTrqs, &totalTrq);
+    }
 
     for (int i = 0; i < 4; i++) {
-        Inverters_set_torque_request(i, (tvTrqs[i] * 100), -MAX_TORQUE, MAX_TORQUE);
+        Inverters_set_torque_request(i, (tcTrqs[i] * 100), -MAX_TORQUE, MAX_TORQUE);
     }
 
     PowerLimit_set_prev_trq(totalTrq);

@@ -19,16 +19,17 @@ static void echo_on_main();
 static void send_CAN_errors();
 static void send_controls_params();
 
-int main_id_arr[] = {
+int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
         MAIN_DBC_BMS_STATUS_FRAME_ID,
         MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID,
         MAIN_DBC_SSDB_FRONT_FRAME_ID,
         MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID,
-        MAIN_DBC_BMS_CURRENT_FRAME_ID
+        MAIN_DBC_BMS_CURRENT_FRAME_ID,
+        MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID 
 };
 
-int inv_id_arr[] = {
+int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_RR_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID,
@@ -90,14 +91,14 @@ void CAN_rx_main()
 
             case MAIN_DBC_BMS_STATUS_FRAME_ID:
                 main_dbc_bms_status_unpack(&mainBus.bms_status, (uint8_t *) &canMessage.data, canMessage.dlc);
-                mainBus.bms_status.bms_status_pack_voltage *= 0.1; break;
+                mainBus.bms_status.bms_status_pack_voltage *= PACK_VOLTAGE_SCALE; break;
 
             case MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID:
                 main_dbc_bms_current_limit_unpack(&mainBus.bms_current_limit, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_BMS_CURRENT_FRAME_ID:
                 main_dbc_bms_current_unpack(&mainBus.bms_current, (uint8_t *) &canMessage.data, canMessage.dlc);
-                mainBus.bms_current.bms_inst_current_filt *= 0.001;
+                mainBus.bms_current.bms_inst_current_filt *= INST_CURRENT_SCALE;
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, 7, 8, mainBus.bms_current.bms_inst_current_filt);
                 break;
 
@@ -106,6 +107,10 @@ void CAN_rx_main()
 
             case MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID:
                 main_dbc_ssdb_vector_nav6_unpack(&mainBus.vn_vel, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+
+            case MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID:
+                main_dbc_bms_cell_overview_unpack(&mainBus.bms_cells, (uint8_t *) &canMessage.data, canMessage.dlc);
+                break;
         }
     }
 }
@@ -403,10 +408,10 @@ static bool CAN_add_filters()
 
 static void send_controls_params()
 {        
-    uint64_t mesg = 0;
-    ((uint16_t *) &mesg)[0] = ((uint16_t) (CS_LAT_FACTOR_ACC * 100));
-    ((uint16_t *) &mesg)[1] = ((uint16_t) (CS_LONG_FACTOR_ACC * 100));
-    ((uint16_t *) &mesg)[2] = ((uint16_t) (CS_LONG_SPLIT_ACC * 100));
-    ((uint16_t *) &mesg)[3] = ((uint16_t) (CS_TOTAL_GAIN));
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 2, 8, mesg);
+    uint64_t msg = 0;
+    ((uint16_t *) &msg)[0] = ((uint16_t) (CS_LAT_FACTOR_ACC * 100));
+    ((uint16_t *) &msg)[1] = ((uint16_t) (CS_LONG_FACTOR_ACC * 100));
+    ((uint16_t *) &msg)[2] = ((uint16_t) (CS_LONG_SPLIT_ACC * 100));
+    ((uint16_t *) &msg)[3] = ((uint16_t) (CS_TOTAL_GAIN));
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 2, 8, msg);
 }

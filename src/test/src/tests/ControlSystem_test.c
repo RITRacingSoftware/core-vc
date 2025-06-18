@@ -24,13 +24,12 @@ bool ControlSystem_test()
 
 static bool PowerLimit_test_all()
 {
-    PowerLimit_init();
-    PowerLimit_set_vals(165, 150, 570);
-    PowerLimit_test(4, 0.4f);
-    PowerLimit_set_vals(165, 40, 570);
-    PowerLimit_test(4, 0.3f);
-    PowerLimit_test(4, 0.4f);
-    PowerLimit_test(4, 0.4f);
+    PowerLimit_set_cells(45.0f, 4.0f);
+    t_val maxI;
+    float maxTrq;
+    PowerLimit(1, &maxTrq);
+    test_read(&maxI);
+    printf("Current: %f\n", maxI.f);
 }
 
 static bool PowerLimit_test(float reqTrq, float prevMaxTrq)
@@ -44,13 +43,13 @@ static bool PowerLimit_test(float reqTrq, float prevMaxTrq)
 
 static bool TorqueVectoring_test_all()
 {
-    TorqueVectoring_test(4.0f);
+    TorqueVectoring_test(1.25f);
 }
 
 static bool TorqueVectoring_test(float maxTotalTrq)
 {
     float tvTrqs[4];
-    force_inputs(1.0, 0, 0.0);
+    force_inputs(1.0, 0, 0.7);
     TorqueVectoring(maxTotalTrq, tvTrqs); 
 
     printf("RR: %f, RL: %f, FR: %f, FL: %f", tvTrqs[0], tvTrqs[1], tvTrqs[2], tvTrqs[3]);

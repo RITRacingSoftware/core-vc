@@ -15,8 +15,8 @@
 
 /** POWER LIMIT **/
 #define PL_THRESHOLD 0.97f
-#define PL_MAX_POWER_W 74000
-#define ENDURANCE_CURRENT_LIMIT 1
+#define PL_MAX_POWER_W 78000
+#define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 
 /** CAN **/
@@ -30,9 +30,9 @@
 #define REGEN_ENABLED 0
 
 // Torque Vectoring
-#define CS_LAT_FACTOR_ACC 0.35f
+#define CS_LAT_FACTOR_ACC 0.0f
 #define CS_LONG_FACTOR_ACC 0.0f
-#define CS_LONG_SPLIT_ACC 0.35f
+#define CS_LONG_SPLIT_ACC 0.3f
 #define CS_LAT_FACTOR_BRAKE 0.5f
 #define CS_LONG_FACTOR_BRAKE 0.1f
 #define CS_LONG_SPLIT_BRAKE 0.65f
@@ -84,9 +84,9 @@
 
 /** Brakes **/
 // 0.5 - 4.5v maps to 0 - 3000 psi
-#define BPS_F_IRRATIONAL_HIGH_ADC 2000
-#define BPS_F_MAX_ADC 1600    // ~ 1100 psi
-#define BPS_F_OFFSET_ADC 400     // ~ 0 psi
+#define BPS_F_IRRATIONAL_HIGH_ADC 2700
+#define BPS_F_MAX_ADC 2150    // ~ 1100 psi
+#define BPS_F_OFFSET_ADC 500     // ~ 0 psi
 #define BPS_F_RANGE_ADC (BPS_F_MAX_ADC - BPS_F_OFFSET_ADC)
 #define BPS_F_IRRATIONAL_LOW_ADC 200
 #define BPS_F_MAX_PSI 1300

@@ -24,7 +24,7 @@ bool ControlSystem_test()
 
 static bool PowerLimit_test_all()
 {
-    PowerLimit_set_cells(45.0f, 4.0f);
+    PowerLimit_set_cells(45.0f, 3.7f);
     t_val maxI;
     float maxTrq;
     PowerLimit(1, &maxTrq);

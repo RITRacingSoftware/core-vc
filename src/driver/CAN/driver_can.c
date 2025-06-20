@@ -410,8 +410,8 @@ static void send_controls_params()
 {        
     uint64_t msg = 0;
     ((uint16_t *) &msg)[0] = ((uint16_t) (CS_LAT_FACTOR_ACC * 100));
-    ((uint16_t *) &msg)[1] = ((uint16_t) (CS_LONG_FACTOR_ACC * 100));
-    ((uint16_t *) &msg)[2] = ((uint16_t) (CS_LONG_SPLIT_ACC * 100));
-    ((uint16_t *) &msg)[3] = ((uint16_t) (CS_TOTAL_GAIN));
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 2, 8, msg);
+    ((uint16_t *) &msg)[1] = ((uint16_t) (PL_MAX_POWER_W * 100));
+    ((uint16_t *) &msg)[2] = ((uint16_t) (CS_TOTAL_GAIN * 100));
+    ((uint16_t *) &msg)[3] = ((uint16_t) (ENDURANCE_CURRENT_LIMIT));
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 3, 8, msg);
 }

@@ -57,9 +57,11 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     float currP = packV * mainBus.bms_current.bms_inst_current_filt; 
 
     uint64_t msg = 0;
-    
-    msg = (((uint64_t) (maxP * 100)));
-    msg |= (((uint64_t) (packV * mainBus.bms_current_limit.d1_max_discharge_current)) << 32);
+
+    msg = ((uint64_t)(maxP * 100));
+    ((uint16_t *) &msg)[2] = (min_V * 100);
+    ((uint16_t *) &msg)[3] = (max_T);
+
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_POWER_LIMIT_FRAME_ID, 8, msg);
      
     core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);

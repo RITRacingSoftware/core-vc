@@ -33,7 +33,7 @@ void Controls_Task_Update()
     }
 
     for (int i = 0; i < 4; i++) {
-        Inverters_set_torque_request(i, (tcTrqs[i] * 100), -MAX_TORQUE, MAX_TORQUE);
+        Inverters_set_torque_request(i, (tvTrqs[i] * 100), -MAX_TORQUE, MAX_TORQUE);
     }
 
     PowerLimit_set_prev_trq(totalTrq);

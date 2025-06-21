@@ -35,6 +35,8 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
 {
     float min_V = mainBus.bms_cells.bms_overview_volt_min * BMS_OVERVIEW_SCALE;
     float max_T = mainBus.bms_cells.bms_overview_temp_max;
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 11, 8, min_V);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 12, 8, max_T);
 
     // Calculate pack voltage
     float rrV = invBus.rr_set2.rr_dc_bus_voltage;
@@ -60,9 +62,11 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
 
     msg = ((uint64_t)(maxP * 100));
     ((uint16_t *) &msg)[2] = (min_V * 100);
-    ((uint16_t *) &msg)[3] = (max_T);
+    // ((uint16_t *) &msg)[3] = (max_T);
 
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_POWER_LIMIT_FRAME_ID, 8, msg);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 13, 8, max_T);
+
      
     core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
     
@@ -92,15 +96,27 @@ void PowerLimit_set_prev_trq(float trq)
 
 float PowerLimit_endurance_current_limit(float min_V, float max_T)
 {
+    float voltage_current_limit, temp_current_limit;
     // Voltage curve
-    float min_V_avg = VOLTAGE_AVERAGE_FACTOR * min_V + (1-VOLTAGE_AVERAGE_FACTOR) * min_V_avg;
-    float voltage_current_limit = (-35.431f*FOURTH(min_V)) + (563.33f*CUBE(min_V)) - (3359*SQ(min_V)) + (8907.7f*min_V) - (8832.2f);
+    // float min_V_avg = VOLTAGE_AVERAGE_FACTOR * min_V + (1-VOLTAGE_AVERAGE_FACTOR) * min_V_avg;
+
+    if (min_V < ENDUR_VOLT_CURRENT_LIMIT_CUTOFF) voltage_current_limit = VOLTAGE_STEADY_LIMIT;
+    else voltage_current_limit = (-35.431f*FOURTH(min_V)) + (563.33f*CUBE(min_V)) - (3359*SQ(min_V)) + (8907.7f*min_V) - (8832.2f);
+    // voltage_current_limit = (-35.431f*FOURTH(min_V)) + (563.33f*CUBE(min_V)) - (3359*SQ(min_V)) + (8907.7f*min_V) - (8832.2f);
+    
     
     // Temp curve
-    float temp_current_limit = (0.00004f*FOURTH(max_T)) - (0.0066f*CUBE(max_T)) + (0.3708f*SQ(max_T)) - (8.5571f*max_T) + (108.66f);
+    if (max_T > ENDUR_TEMP_CURRENT_LIMIT_CUTOFF) temp_current_limit = TEMP_STEADY_LIMIT; 
+    else temp_current_limit = (0.00004f*FOURTH(max_T)) - (0.0066f*CUBE(max_T)) + (0.3708f*SQ(max_T)) - (8.5571f*max_T) + (108.66f);
+    // temp_current_limit = (0.00004f*FOURTH(max_T)) - (0.0066f*CUBE(max_T)) + (0.3708f*SQ(max_T)) - (8.5571f*max_T) + (108.66f);
 
     float current_limit = MIN(voltage_current_limit, temp_current_limit);
     current_limit = ( (current_limit < 0) ? (0) : (current_limit) );
+
+    uint64_t msg = 0;
+    ((uint32_t *) &msg)[0] = (voltage_current_limit * 100);
+    ((uint32_t *) &msg)[1] = (temp_current_limit * 100);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 14, 8, msg);
 
     return current_limit;
 }

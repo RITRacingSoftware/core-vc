@@ -93,6 +93,7 @@
 #define CORE_SPI1_MOSI_AF   5
 #define CORE_SPI1_DIVIDER   7
 #define CORE_SPI1_DATA_SIZE 8
+#define CORE_SPI1_MASTER    1
 
 #define CORE_SPI2_SCK_PORT  GPIOB
 #define CORE_SPI2_SCK_PIN   GPIO_PIN_13
@@ -105,6 +106,7 @@
 #define CORE_SPI2_MOSI_AF   5
 #define CORE_SPI2_DIVIDER   7
 #define CORE_SPI2_DATA_SIZE 8
+#define CORE_SPI2_MASTER    1
 
 #define CORE_SPI3_SCK_PORT  GPIOC
 #define CORE_SPI3_SCK_PIN   GPIO_PIN_10
@@ -117,6 +119,7 @@
 #define CORE_SPI3_MOSI_AF   6
 #define CORE_SPI3_DIVIDER   7
 #define CORE_SPI3_DATA_SIZE 8
+#define CORE_SPI3_MASTER    1
 
 #define CORE_SPI4_SCK_PORT  GPIOE
 #define CORE_SPI4_SCK_PIN   GPIO_PIN_12
@@ -129,6 +132,7 @@
 #define CORE_SPI4_MOSI_AF   5
 #define CORE_SPI4_DIVIDER   7
 #define CORE_SPI4_DATA_SIZE 8
+#define CORE_SPI4_MASTER    1
 
 
 /*** USART CONFIG PARAMETERS ***/
@@ -179,5 +183,7 @@
  * @brief Number of timeouts used
  */
 #define CORE_TIMEOUT_NUM 20
+
+#define CORE_CAN_TIMESTAMP 1
 
 #endif //CORE_CORE_CONFIG_H

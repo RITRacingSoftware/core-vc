@@ -72,15 +72,6 @@ void TractionControl(float *inTrqs, float *outTrq, float *totalTrq)
 
     for (int i = 0; i < 4; i++)
     {
-        // Check reduction based on difference
-        // float diffMul = 0;
-        // float diff = vel[i] - minVel;
-        // if (diff > TC_SPEED_DIFF_MAX)
-        // {
-        //     float diffExcess = diff - TC_SPEED_DIFF_MAX;
-        //     diffMul = TC_P_GAIN * diffExcess;
-        // }
-
         // Check reduction based on derivative
         float derMul = 0;
         if (der[i] > TC_DER_DIFF_MAX)
@@ -90,9 +81,8 @@ void TractionControl(float *inTrqs, float *outTrq, float *totalTrq)
             derMul = TC_D_GAIN * derExcess;
         }
  
-        // Set torque to either difference or derivative
+        // Set torque based on derivative
         float target = inTrqs[i] - (inTrqs[i] * derMul);
-        // outTrq[i] = (target < 0 ? 0 : target);
         rampup_update((target < 0 ? 0 : target), &outTrq[i], rampArr[i]);
 
         if (vel[i] >= TC_SOFT_LIMIT) {

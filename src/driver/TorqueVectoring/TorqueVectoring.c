@@ -6,6 +6,8 @@
 #include "can.h"
 #include "driver_can.h"
 #include "TractionControl.h"
+#include "driver_GPIO.h"
+#include "gpio.h"
 
 #ifdef VC_TEST
 #include <stdio.h>
@@ -36,15 +38,18 @@ void TorqueVectoring(float maxTotalTorque, float *trqs)
         totalPctLeft = 0.5f - (steerPct * CS_LAT_FACTOR_ACC);
         totalPctFront = CS_LONG_SPLIT_ACC - (accelPct * CS_LONG_FACTOR_ACC);
         setSplits(maxTotalTorque);
+        core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
     }
+
     // Case: Regen braking
-    else if (accelPct == 0 && brakePct > 0 && REGEN_ENABLED)
+    else if (accelPct < 0 && REGEN_ENABLED)
     {
-        float trqPctTotal = brakePct * -1;
+        core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
         totalPctLeft = 0.5f + (steerPct * CS_LAT_FACTOR_BRAKE);
         totalPctFront = CS_LONG_SPLIT_BRAKE + (brakePct * CS_LONG_FACTOR_BRAKE);
-        setSplits(trqPctTotal);
+        setSplits(maxTotalTorque);
     }
+
     else for (int i = 0; i < 4; i++) invArr[i] = 0;
     
     for (int i = 0; i < 4; i++) { 

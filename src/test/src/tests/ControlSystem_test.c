@@ -16,8 +16,8 @@ static bool TractionControl_test(float *inTrq, float *inVel);
 
 bool ControlSystem_test()
 {
-    PowerLimit_test_all();
-    // TorqueVectoring_test_all();
+    // PowerLimit_test_all();
+    TorqueVectoring_test_all();
     // TractionControl_test_all();
     return true;
 }
@@ -43,13 +43,13 @@ static bool PowerLimit_test(float reqTrq, float prevMaxTrq)
 
 static bool TorqueVectoring_test_all()
 {
-    TorqueVectoring_test(1.25f);
+    TorqueVectoring_test(-2.0f);
 }
 
 static bool TorqueVectoring_test(float maxTotalTrq)
 {
     float tvTrqs[4];
-    force_inputs(1.0, 0, 0.7);
+    force_inputs(-0.2, 0, 0.0); // Accel, brake, steer
     TorqueVectoring(maxTotalTrq, tvTrqs); 
 
     printf("RR: %f, RL: %f, FR: %f, FL: %f", tvTrqs[0], tvTrqs[1], tvTrqs[2], tvTrqs[3]);

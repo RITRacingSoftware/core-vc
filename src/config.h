@@ -32,7 +32,7 @@
 #define NUM_IDS_INV 20
 
 /** CONTROLS **/
-#define REGEN_ENABLED 0
+#define REGEN_ENABLED 1
 
 // Torque Vectoring
 #define CS_LAT_FACTOR_ACC 0.3f
@@ -61,7 +61,7 @@
 /** Inverters **/
 #define MAX_TORQUE 200
 #define POS_TORQUE_LIMIT (MAX_TORQUE)
-#define NEG_TORQUE_LIMIT (-4)
+#define NEG_TORQUE_LIMIT (-100)
 #define INV_CAN_TIMEOUT_MS 300
 #define INV_LIMIT_TOL 5
 
@@ -82,10 +82,14 @@
 #define ACCEL_B_OFFSET_ADC 150
 #define ACCEL_B_RANGE_ADC (ACCEL_B_MAX_ADC - ACCEL_B_OFFSET_ADC)
 #define ACCEL_B_IRRATIONAL_LOW_ADC 20
-
-#define ACCEL_MAX_DISAGREEMENT 15
-
+#define ACCEL_MAX_DISAGREEMENT 10
 #define ACCEL_POS_TOL 1
+
+// Regen
+#define ACCEL_DEADZONE_HIGH_PCT 0.3f
+#define ACCEL_DEADZONE_LOW_PCT 0.2f
+#define MAX_REGEN_PCT -0.2f
+#define MIN_REGEN_MOTORSPEED_RPM 100.0f
 
 /** Brakes **/
 // 0.5 - 4.5v maps to 0 - 3000 psi

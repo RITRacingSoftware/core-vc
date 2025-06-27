@@ -60,11 +60,11 @@ void VC_Task_Update()
 {
     VehicleState_Task_Update();
     DriverInputs_Task_Update();
+    core_timeout_check_all();
     Controls_Task_Update();
+    FaultManager_Task_Update();
     Inverters_Task_Update();
     CAN_Task_Update();
-    core_timeout_check_all();
-    FaultManager_Task_Update();
 }
 
 void toggle_heartbeat()

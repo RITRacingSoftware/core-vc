@@ -64,10 +64,21 @@ bool DriverInputs_test()
 bool Accel_test_full()
 {
     DriverInputs_init();
+    uint16_t aVal, bVal;
 
+#if REGEN_ENABLED
+    aVal = ACCEL_A_MAX_ADC;
+    bVal = ACCEL_B_MAX_ADC;
+    if (!Accel_test(aVal, bVal, 1, 1)) return false;
+
+    aVal = ACCEL_A_OFFSET_ADC;
+    bVal = ACCEL_B_OFFSET_ADC;
+    if (!Accel_test(aVal, bVal, 0, -0.2)) return false;
+
+#else
     // Test full throttle
-    uint16_t aVal = ACCEL_A_MAX_ADC;
-    uint16_t bVal = ACCEL_B_MAX_ADC;
+    aVal = ACCEL_A_MAX_ADC;
+    bVal = ACCEL_B_MAX_ADC;
     if (!Accel_test(aVal, bVal, 1, 1)) return false;
 
     // Test over throttle
@@ -93,6 +104,7 @@ bool Accel_test_full()
     aVal = ( (ACCEL_A_RANGE_ADC / 4) + ACCEL_A_OFFSET_ADC );
     bVal = ( (ACCEL_B_RANGE_ADC / 4) + ACCEL_B_OFFSET_ADC );
     if (!Accel_test(aVal, bVal, 0.25, 0.25)) return false;
+#endif
 
     return true;
 }

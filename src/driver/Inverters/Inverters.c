@@ -33,6 +33,7 @@ static void state_machine();
 static bool check_state_change(uint8_t invNum, InvState_e state);
 static void set_zero(uint8_t invNum);
 static void send_setpoints();
+static void check_regen();
 
 uint8_t num = 0;
 bool led = false;
@@ -212,54 +213,6 @@ void Inverters_set_torque_request(uint8_t invNum, float _setpoint, float _negLim
     }
 }
 
-void Inverters_send_setpoints(uint8_t invNum)
-{
-    uint64_t msg_data;
-
-    int inv_id;
-    int main_id;
-    switch (invNum)
-    {
-        case INV_RR:
-            inv_id = INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID;
-            main_id = MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID;
-            if (invRR.state > InvState_NORMAL) set_zero(INV_RR);
-            break;
-
-        case INV_RL:
-            inv_id = INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID;
-            main_id = MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID;
-            if (invRL.state > InvState_NORMAL) set_zero(INV_RL);
-            break;
-
-        case INV_FR:
-            inv_id = INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID;
-            main_id = MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID;
-            if (invFR.state > InvState_NORMAL) set_zero(INV_FR);
-            break;
-
-        case INV_FL:
-            inv_id = INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID;
-            main_id = MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID;
-            if (invFL.state > InvState_NORMAL) set_zero(INV_FL);
-            break;
-    }
-   
-    // If in soft double pedal mode
-    if (FaultManager_read(FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL))
-    {
-        set_zero(INV_RR);
-        set_zero(INV_RL);
-        set_zero(INV_FR);
-        set_zero(INV_FL);
-    }
-
-    if (CAN_pack_message(inv_id, (uint8_t *)&msg_data) != -1)
-    {
-        core_CAN_add_message_to_tx_queue(CAN_INV, inv_id, 8, msg_data); // Send on inv bus
-        core_CAN_add_message_to_tx_queue(CAN_MAIN, main_id, 8, msg_data); // Echo on main bus
-    }
-}
 
 void Inverters_suspend_timeouts()
 {
@@ -276,49 +229,6 @@ void Inverters_resume_timeouts()
     core_timeout_resume(&fr_timeout);
     core_timeout_resume(&fl_timeout);
 }
-
-/*
-bool Inverters_reset_charging_error()
-{
-    core_GPIO_digital_write(AMK_LED_PORT, AMK_LED_PIN, true);
-    bool status = true;
-
-    if (invRR.state != InvState_NORMAL && invRR.state != InvState_RESETTING) {
-        if (invBus.rr_actual2.rr_error_info == INV_DC_BUS_CHG_ERROR) {
-            Inverters_set_state(INV_RR, InvState_RESETTING);
-            core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, true);
-        } else {core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, false);}
-        status = false;
-    }
-
-    if (invRL.state != InvState_NORMAL && invRL.state != InvState_RESETTING) {    
-        if (invBus.rl_actual2.rl_error_info == INV_DC_BUS_CHG_ERROR) {
-            Inverters_set_state(INV_RL, InvState_RESETTING);
-            core_GPIO_digital_write(RL_STATUS_PORT, RL_STATUS_PIN, true);
-        } else {core_GPIO_digital_write(RL_STATUS_PORT, RL_STATUS_PIN, false);}
-        status = false;
-    }
-
-    if (invFR.state != InvState_NORMAL && invFR.state != InvState_RESETTING) {
-        if (invBus.fr_actual2.fr_error_info == INV_DC_BUS_CHG_ERROR) {
-            Inverters_set_state(INV_FR, InvState_RESETTING);
-            core_GPIO_digital_write(FR_STATUS_PORT, FR_STATUS_PIN, true);
-        } else {core_GPIO_digital_write(FR_STATUS_PORT, FR_STATUS_PIN, false);}
-        status = false;
-    }
-
-    if (invFL.state != InvState_NORMAL && invFL.state != InvState_RESETTING) {
-        if (invBus.fl_actual2.fl_error_info == INV_DC_BUS_CHG_ERROR) {
-            Inverters_set_state(INV_FL, InvState_RESETTING);
-            core_GPIO_digital_write(FL_STATUS_PORT, FL_STATUS_PIN, true);
-        } else {core_GPIO_digital_write(FL_STATUS_PORT, FL_STATUS_PIN, false);}
-        status = false;
-    }
-
-   return status;
-}
-*/
-
 
 void Inverters_set_state(uint8_t invNum, InvState_e state)
 { 
@@ -551,6 +461,8 @@ static void state_machine()
         set_zero(INV_FL);
     }
 
+    check_regen();
+
     send_setpoints(); 
 }
 
@@ -634,4 +546,13 @@ static void send_setpoints()
         core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
         core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
     }
+}
+
+static void check_regen()
+{
+    // If regen requested, check if velocity is below necessary to regen
+    if (invBus.rr_setpoints.rr_amk_torque_setpoint < 0 && invBus.rr_actual1.rr_feedback_velocity < MIN_REGEN_MOTORSPEED_RPM) set_zero(INV_RR);
+    if (invBus.rl_setpoints.rl_amk_torque_setpoint < 0 && invBus.rl_actual1.rl_feedback_velocity < MIN_REGEN_MOTORSPEED_RPM) set_zero(INV_RL);
+    if (invBus.fr_setpoints.fr_amk_torque_setpoint < 0 && invBus.fr_actual1.fr_feedback_velocity < MIN_REGEN_MOTORSPEED_RPM) set_zero(INV_FR);
+    if (invBus.fl_setpoints.fl_amk_torque_setpoint < 0 && invBus.fl_actual1.fl_feedback_velocity < MIN_REGEN_MOTORSPEED_RPM) set_zero(INV_FL);
 }

@@ -17,23 +17,21 @@ void Controls_Task_Update()
     DriverInputs_get_driver_inputs(&inputs);
     
     float reqTrq = inputs.accelPct * CS_TOTAL_GAIN;
-
     
     float maxTotalTrq;
-    PowerLimit(reqTrq, &maxTotalTrq);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 2, 8, ((uint64_t) (maxTotalTrq * 100)));
+    if (reqTrq > 0) PowerLimit(reqTrq, &maxTotalTrq);
+    else maxTotalTrq = reqTrq;
 
     float tvTrqs[4];
     TorqueVectoring(maxTotalTrq, tvTrqs);
 
     float tcTrqs[4];
     float totalTrq;
-    for (int i = 0; i < 4; i++) {
-    TractionControl(tvTrqs, tcTrqs, &totalTrq);
-    }
+    // for (int i = 0; i < 4; i++) TractionControl(tvTrqs, tcTrqs, &totalTrq);
+    TractionControl(tvTrqs, tcTrqs, &totalTrq); 
 
     for (int i = 0; i < 4; i++) {
-        Inverters_set_torque_request(i, (tvTrqs[i] * 100), -MAX_TORQUE, MAX_TORQUE);
+        Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
 
     PowerLimit_set_prev_trq(totalTrq);

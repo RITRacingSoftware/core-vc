@@ -13,8 +13,6 @@
 #include "vc_test.h"
 #endif
 
-
-
 float prevTrq = 0;
 static rampup_t ramp;
 static core_filter_t tPerW;
@@ -35,8 +33,6 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
 {
     float min_V = mainBus.bms_cells.bms_overview_volt_min * BMS_OVERVIEW_SCALE;
     float max_T = mainBus.bms_cells.bms_overview_temp_max;
-    // core_CAN_add_message_to_tx_queue(CAN_MAIN, 11, 8, min_V);
-    // core_CAN_add_message_to_tx_queue(CAN_MAIN, 12, 8, max_T);
 
     // Calculate pack voltage
     float rrV = invBus.rr_set2.rr_dc_bus_voltage;
@@ -59,14 +55,6 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
 
     uint64_t msg = 0;
 
-    // msg = ((uint64_t)(maxP * 100));
-    // ((uint16_t *) &msg)[2] = (min_V * 100);
-    // ((uint16_t *) &msg)[3] = (max_T);
-
-    // core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_POWER_LIMIT_FRAME_ID, 8, msg);
-    // core_CAN_add_message_to_tx_queue(CAN_MAIN, 13, 8, max_T);
-
-     
     core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
     
     if (currP > (PL_THRESHOLD * maxP))

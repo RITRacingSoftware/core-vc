@@ -213,7 +213,6 @@ void Accel_process()
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_b_adc =
             main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_b_adc_encode(accelBVal);
 
-    // Convert to positions
     aVal = SAT(accelAVal, ACCEL_A_OFFSET_ADC, ACCEL_A_MAX_ADC);
     bVal = SAT(accelBVal, ACCEL_B_OFFSET_ADC, ACCEL_B_MAX_ADC);
 
@@ -221,6 +220,12 @@ void Accel_process()
     accelBPos = ((bVal - ACCEL_B_OFFSET_ADC) / ((float)ACCEL_B_RANGE_ADC));
 
     avgPos = ((accelAPos + accelBPos) / 2.0f);
+
+#if REGEN_ENABLED
+    if (avgPos > ACCEL_DEADZONE_HIGH_PCT) avgPos = SCALE(avgPos, ACCEL_DEADZONE_HIGH_PCT, 1.0f, 0.0f, 1.0f);
+    else if (avgPos < ACCEL_DEADZONE_HIGH_PCT && avgPos > ACCEL_DEADZONE_LOW_PCT) avgPos = 0;
+    else if (avgPos < ACCEL_DEADZONE_LOW_PCT) avgPos = SCALE(avgPos, 0.0f, ACCEL_DEADZONE_LOW_PCT, MAX_REGEN_PCT, 0.0f);
+#endif
 
     // Echo A, B, and average positions on main bus
     mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_a =
@@ -251,9 +256,6 @@ void Accel_process()
             main_dbc_vc_processed_inputs_vc_p_inputs_accel_position_encode(driverInputs.accelPct * 100);
 
 #ifdef VC_TEST
-    // printf("From inside: a: %d, b: %d\n", accelAVal, accelBVal);
-    // printf("aPos: %f, bPos: %f\n", accelAPos, accelBPos);
-    // printf("avgPos: %.2f\n", avgPos);
     test((t_val) accelAPos);
     test((t_val) accelBPos);
     test((t_val) driverInputs.accelPct);

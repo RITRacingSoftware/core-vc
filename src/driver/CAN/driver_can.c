@@ -55,9 +55,9 @@ int inv_id_arr[NUM_IDS_INV] = {
 
 bool CAN_init()
 {
-    if (!core_CAN_init(CAN_INV)) return false;
-    if (!core_CAN_init(CAN_MAIN)) return false;
-    if (!core_CAN_init(CAN_SENSE)) return false;
+    if (!core_CAN_init(CAN_INV, 1000000)) return false;
+    if (!core_CAN_init(CAN_MAIN, 1000000)) return false;
+    if (!core_CAN_init(CAN_SENSE, 1000000)) return false;
     if (!CAN_add_filters()) return false;
     return true;
 }
@@ -98,7 +98,6 @@ void CAN_rx_main()
 
             case MAIN_DBC_BMS_CURRENT_FRAME_ID:
                 main_dbc_bms_current_unpack(&mainBus.bms_current, (uint8_t *) &canMessage.data, canMessage.dlc);
-                mainBus.bms_current.bms_inst_current_filt *= INST_CURRENT_SCALE;
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, 7, 8, mainBus.bms_current.bms_inst_current_filt);
                 break;
 

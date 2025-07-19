@@ -9,8 +9,8 @@ static uint8_t check();
 
 int main()
 {
-    // if (!DriverInputs_test()) return 1;
-    if (!ControlSystem_test()) return 1;
+    if (!DriverInputs_test()) return 1;
+    // if (!ControlSystem_test()) return 1;
     // ControlSystem_test();
     // Inverters_test();
     // if (!check()) return 1;

@@ -14,6 +14,7 @@
 #endif
 
 float prevTrq = 0;
+float prevRgn = 0;
 static rampup_t ramp;
 static core_filter_t tPerW;
 
@@ -50,8 +51,10 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     float maxCurrent = PowerLimit_short_current_limit(min_V, max_T);
 #endif
 
-    float maxP = MIN((packV * maxCurrent), PL_MAX_POWER_W);
-    float currP = packV * mainBus.bms_current.bms_inst_current_filt; 
+    // float maxP = MIN((packV * maxCurrent), PL_MAX_POWER_W);
+    float maxP = PL_MAX_POWER_W;
+    float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
+    float currP = packV * amps; 
 
     uint64_t msg = 0;
 
@@ -121,6 +124,22 @@ float PowerLimit_short_current_limit(float min_V, float max_T)
     current_limit = ( (current_limit < 0) ? (0) : (current_limit) );
 
     return current_limit;
+}
+
+void RegenLimit(float reqRgn, float *limitedMaxRgn)
+{
+    float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
+    if (prevRgn < PL_THRESHOLD * MAX_REGEN_CURRENT_A)
+    {
+        float curr_tPerA = prevRgn/amps;
+        float conv_max = curr_tPerA * MAX_REGEN_CURRENT_A;
+        *limitedMaxRgn = MAX(reqRgn, conv_max);
+    }
+}
+
+void RegenLimit_set_prev_rgn(float rgn)
+{
+    prevRgn = rgn;
 }
 
 

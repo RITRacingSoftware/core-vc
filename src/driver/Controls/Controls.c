@@ -20,21 +20,22 @@ void Controls_Task_Update()
     
     float maxTotalTrq;
     if (reqTrq > 0) PowerLimit(reqTrq, &maxTotalTrq);
-    else maxTotalTrq = reqTrq;
+    else RegenLimit(reqTrq, &maxTotalTrq);
 
     float tvTrqs[4];
-    TorqueVectoring(maxTotalTrq, tvTrqs);
+    TorqueVectoring(reqTrq, tvTrqs);
 
     float tcTrqs[4];
     float totalTrq;
     // for (int i = 0; i < 4; i++) TractionControl(tvTrqs, tcTrqs, &totalTrq);
-    TractionControl(tvTrqs, tcTrqs, &totalTrq); 
+    // TractionControl(tvTrqs, tcTrqs, &totalTrq); 
 
     for (int i = 0; i < 4; i++) {
         Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
 
-    PowerLimit_set_prev_trq(totalTrq);
+    if (reqTrq > 0) PowerLimit_set_prev_trq(totalTrq);
+    else RegenLimit_set_prev_rgn(maxTotalTrq);
 }
 
 static float trq_power_limit()

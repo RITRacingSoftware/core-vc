@@ -23,6 +23,7 @@
 #define ENDUR_TEMP_CURRENT_LIMIT_CUTOFF 45.0f
 #define VOLTAGE_STEADY_LIMIT 34.56f
 #define TEMP_STEADY_LIMIT 37.06f
+#define MAX_REGEN_CURRENT_A -20.0f
 
 /** CAN **/
 #define CAN_SENSE FDCAN1
@@ -35,10 +36,10 @@
 #define REGEN_ENABLED 1
 
 // Torque Vectoring
-#define CS_LAT_FACTOR_ACC 0.3f
+#define CS_LAT_FACTOR_ACC 0.35f
 #define CS_LONG_FACTOR_ACC 0.0f
 #define CS_LONG_SPLIT_ACC 0.25f
-#define CS_LAT_FACTOR_BRAKE 0.5f
+#define CS_LAT_FACTOR_BRAKE 0.25f
 #define CS_LONG_FACTOR_BRAKE 0.1f
 #define CS_LONG_SPLIT_BRAKE 0.65f
 #define CS_TOTAL_GAIN 7.0f
@@ -86,10 +87,10 @@
 #define ACCEL_POS_TOL 1
 
 // Regen
-#define ACCEL_DEADZONE_HIGH_PCT 0.3f
-#define ACCEL_DEADZONE_LOW_PCT 0.2f
+#define ACCEL_DEADZONE_HIGH_PCT 0.40f
+#define ACCEL_DEADZONE_LOW_PCT 0.30f
 #define MAX_REGEN_PCT -0.2f
-#define MIN_REGEN_MOTORSPEED_RPM 100.0f
+#define MIN_REGEN_MOTORSPEED_RPM 300.0f
 
 /** Brakes **/
 // 0.5 - 4.5v maps to 0 - 3000 psi

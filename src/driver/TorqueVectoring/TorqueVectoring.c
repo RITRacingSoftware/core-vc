@@ -46,7 +46,8 @@ void TorqueVectoring(float maxTotalTorque, float *trqs)
     {
         core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
         totalPctLeft = 0.5f + (steerPct * CS_LAT_FACTOR_BRAKE);
-        totalPctFront = CS_LONG_SPLIT_BRAKE + (brakePct * CS_LONG_FACTOR_BRAKE);
+        float regenScale = SCALE(accelPct, 0.0f, MAX_REGEN_PCT, 0.0f, 1.0f);
+        totalPctFront = CS_LONG_SPLIT_BRAKE + (regenScale * CS_LONG_FACTOR_BRAKE);
         setSplits(maxTotalTorque);
     }
 

@@ -21,7 +21,7 @@
 #define FLOAT_GT_EQ(f1, f2, tol) (FLOAT_EQ(f1, f2, tol) || ((f1) > (f2)))
 #define FLOAT_LT(f1, f2, tol) (!FLOAT_EQ(f1, f2, tol) && ((f1) < (f2)))
 #define FLOAT_LT_EQ(f1, f2, tol) (FLOAT_EQ(f1, f2, tol) || ((f1) < (f2)))
-#define SCALE(in, inL, inH, outL, outH) ( (((in - inL)/(inH - inL))*(outH - outL)) + outL)
+#define SCALE(in, inL, inH, outL, outH) ( in < inL ? outL : (in > inH ? outH : ((((in - inL)/(inH - inL))*(outH - outL)) + outL)))
 
 // bitwise stuff
 #define BIT(x) (1 << (x))

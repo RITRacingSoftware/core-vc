@@ -24,7 +24,9 @@ int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_STATUS_FRAME_ID,
         MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID,
         MAIN_DBC_SSDB_FRONT_FRAME_ID,
-        MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID,
+        MAIN_DBC_VECTOR_NAV0_FRAME_ID,
+        MAIN_DBC_VECTOR_NAV2_FRAME_ID,
+        MAIN_DBC_VECTOR_NAV6_FRAME_ID,
         MAIN_DBC_BMS_CURRENT_FRAME_ID,
         MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID 
 };
@@ -55,9 +57,9 @@ int inv_id_arr[NUM_IDS_INV] = {
 
 bool CAN_init()
 {
-    if (!core_CAN_init(CAN_INV, 1000000)) return false;
-    if (!core_CAN_init(CAN_MAIN, 1000000)) return false;
-    if (!core_CAN_init(CAN_SENSE, 1000000)) return false;
+    if (!core_CAN_init(CAN_INV)) return false;
+    if (!core_CAN_init(CAN_MAIN)) return false;
+    if (!core_CAN_init(CAN_SENSE)) return false;
     if (!CAN_add_filters()) return false;
     return true;
 }
@@ -104,8 +106,14 @@ void CAN_rx_main()
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
                 main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
-            case MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID:
-                main_dbc_ssdb_vector_nav6_unpack(&mainBus.vn_vel, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+            case MAIN_DBC_VECTOR_NAV0_FRAME_ID:
+                main_dbc_vector_nav0_unpack(&mainBus.vn0, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+
+            case MAIN_DBC_VECTOR_NAV2_FRAME_ID:
+                main_dbc_vector_nav2_unpack(&mainBus.vn2, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+
+            case MAIN_DBC_VECTOR_NAV6_FRAME_ID:
+                main_dbc_vector_nav6_unpack(&mainBus.vn6, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID:
                 main_dbc_bms_cell_overview_unpack(&mainBus.bms_cells, (uint8_t *) &canMessage.data, canMessage.dlc);
@@ -390,8 +398,7 @@ static bool CAN_add_filters()
         if (main_id_arr[i] < minFilter) minFilter = main_id_arr[i];
         if (main_id_arr[i] > maxFilter) maxFilter = main_id_arr[i];
     }
-    // status = (status && core_CAN_add_filter(CAN_MAIN, false, minFilter, maxFilter));
-    status = (status && core_CAN_add_filter(CAN_MAIN, false, 1, 1000));
+    status = (status && core_CAN_add_filter(CAN_MAIN, false, minFilter, maxFilter));
 
     minFilter = inv_id_arr[0];
     maxFilter = inv_id_arr[0];
@@ -406,11 +413,32 @@ static bool CAN_add_filters()
 }
 
 static void send_controls_params()
-{        
+{
+    mainBus.controls_const1.vc_long_factor = main_dbc_vc_controls_constants1_vc_long_factor_encode(CG_LONG_FACTOR);
+    mainBus.controls_const1.vc_target_slip_ratio = main_dbc_vc_controls_constants1_vc_target_slip_ratio_encode(CG_TARGET_SLIP_RATIO);
+    mainBus.controls_const1.vc_k_p_slip_ratio = main_dbc_vc_controls_constants1_vc_k_p_slip_ratio_encode(CG_KP_SLIP_RATIO);
+    mainBus.controls_const1.vc_k_i_slip_ratio = main_dbc_vc_controls_constants1_vc_k_i_slip_ratio_encode(CG_KI_SLIP_RATIO);
+    mainBus.controls_const1.vc_tc_activation_threshold = main_dbc_vc_controls_constants1_vc_tc_activation_threshold_encode(CG_TC_ACTIVATION_THRESHOLD);
+    mainBus.controls_const1.vc_k_p_yaw_rate = main_dbc_vc_controls_constants1_vc_k_p_yaw_rate_encode(CG_KP_YAW_RATE);
+    mainBus.controls_const1.vc_k_i_yaw_rate = main_dbc_vc_controls_constants1_vc_k_i_yaw_rate_encode(CG_KI_YAW_RATE);
+    mainBus.controls_const2.vc_max_desired_yaw_rate = main_dbc_vc_controls_constants2_vc_max_desired_yaw_rate_encode(CG_MAX_DESIRED_YAW_RATE);
+    mainBus.controls_const2.vc_understeer_gradient = main_dbc_vc_controls_constants2_vc_understeer_gradient_encode(CG_UNDERSTEER_GRADIENT);
+
+    uint64_t msg;
+    main_dbc_vc_controls_constants1_pack((uint8_t *)&msg, &mainBus.controls_const1, 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_CONSTANTS1_FRAME_ID, 8, msg);
+
+    msg = 0;
+    main_dbc_vc_controls_constants2_pack((uint8_t *)&msg, &mainBus.controls_const2, 4);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_CONSTANTS2_FRAME_ID, 4, msg);
+
+
+    /*
     uint64_t msg = 0;
     ((uint16_t *) &msg)[0] = ((uint16_t) (CS_LAT_FACTOR_ACC * 100));
     ((uint16_t *) &msg)[1] = ((uint16_t) (PL_MAX_POWER_W * 100));
     ((uint16_t *) &msg)[2] = ((uint16_t) (CS_TOTAL_GAIN * 100));
     ((uint16_t *) &msg)[3] = ((uint16_t) (ENDURANCE_CURRENT_LIMIT));
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 3, 8, msg);
+    */
 }

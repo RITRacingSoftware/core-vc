@@ -54,7 +54,7 @@ void DriverInputs_init()
 
     faultList = 0;
     driverInputs.accelPct = 0;
-    driverInputs.brakePct = CS_MIN_BRAKE_PCT;
+    driverInputs.brakePct = 0;
     driverInputs.steerPct = 0;
     brake_CAN = true;
     lastSteer = 0; 

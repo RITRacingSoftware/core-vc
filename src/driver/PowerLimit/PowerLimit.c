@@ -18,13 +18,11 @@ float prevRgn = 0;
 static rampup_t ramp;
 static core_filter_t tPerW;
 
-#define VOLTAGE_AVERAGE_FACTOR 0.02
-
 void PowerLimit_init()
 {
     ramp.done = true;
-    ramp.step = 0.01;
-    tPerW.orderX = 2;
+    ramp.step = 0.3;
+    tPerW.orderX = 15;
     tPerW.orderY = 0;
     tPerW.type = Filter_ROLLING_AVG;
     core_filter_init(&tPerW);
@@ -87,9 +85,8 @@ void PowerLimit_set_prev_trq(float trq)
 float PowerLimit_endurance_current_limit(float min_V, float max_T)
 {
     float voltage_current_limit, temp_current_limit;
-    // Voltage curve
-    // float min_V_avg = VOLTAGE_AVERAGE_FACTOR * min_V + (1-VOLTAGE_AVERAGE_FACTOR) * min_V_avg;
 
+    // Voltage Curve
     if (min_V < ENDUR_VOLT_CURRENT_LIMIT_CUTOFF) voltage_current_limit = VOLTAGE_STEADY_LIMIT;
     else voltage_current_limit = (-35.431f*FOURTH(min_V)) + (563.33f*CUBE(min_V)) - (3359*SQ(min_V)) + (8907.7f*min_V) - (8832.2f);
     if (min_V < 2.8f || min_V > 4.4f) voltage_current_limit = VOLTAGE_STEADY_LIMIT;

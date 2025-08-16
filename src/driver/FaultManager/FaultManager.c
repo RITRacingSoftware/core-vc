@@ -25,7 +25,6 @@ void FaultManager_set(uint64_t faultCode)
             faultList |= FAULT_PBX_SHUTDOWN; 
             VehicleState_set_fault();
             faultList |= faultCode;
-            // rprintf("Faulted: %d, FaultList: %d\n", faultCode, faultList);
             core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, 8, faultList);
         }
         else {
@@ -46,11 +45,14 @@ void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo)
     if (errorInfo == INV_DC_BUS_CHG_ERROR || 
         errorInfo == INV_OVERSPEED_ERROR || 
         errorInfo == INV_SPECIAL_SOFTWARE_MESSAGE_ERROR || 
-        errorInfo == INV_ENCODER_COMMS_ERROR) { 
+        errorInfo == INV_ENCODER_COMMS_ERROR ||
+        errorInfo == INV_OVER_CURRENT_ERROR)
+    { 
         core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, true);
         Inverters_set_state(invNum, InvState_RESETTING);
     }
-    else { 
+    else
+    { 
         Inverters_set_state(invNum, InvState_HARD_FAULT);
     }
 }
@@ -67,7 +69,7 @@ void FaultManager_Task_Update()
 
 static void check_overspeed()
 {
-    if (invBus.rr_actual1.rr_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_RR);
+    if      (invBus.rr_actual1.rr_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_RR);
     else if (invBus.rl_actual1.rl_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_RL); 
     else if (invBus.fr_actual1.fr_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_FR);
     else if (invBus.fl_actual1.fl_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_FL);

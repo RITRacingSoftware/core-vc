@@ -15,11 +15,11 @@ STM32_OBJCOPY := $(STM32_PREFIX)-objcopy
 STM32_OBJDUMP := $(STM32_PREFIX)-objdump
 
 # Cross-compilation options
-STM32_COMMON_FLAGS := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -D USE_HAL_DRIVER -D STM32G473xx
-STM32_CC_FLAGS := $(STM32_COMMON_FLAGS) -ffreestanding -ffunction-sections -fdata-sections -Wall -Wextra -Werror=implicit-function-declaration -g -lm -lc
+STM32_COMMON_FLAGS := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fno-math-errno -D USE_HAL_DRIVER -D STM32G473xx
+STM32_CC_FLAGS := $(STM32_COMMON_FLAGS) --specs=nosys.specs -ffreestanding -ffunction-sections -fdata-sections -Wall -Wextra -Werror=implicit-function-declaration -g
 STM32_ASM_FLAGS := $(STM32_CC_FLAGS)
 STM32_LD_SCRIPT := STM32G473RETx_FLASH.ld
-STM32_LD_FLAGS := $(STM32_COMMON_FLAGS) -static -Wl,--gc-sections -T $(STM32_LD_SCRIPT) -specs=nano.specs -specs=nosys.specs
+STM32_LD_FLAGS := $(STM32_COMMON_FLAGS) -static -Wl,--gc-sections -specs=nano.specs -specs=nosys.specs -T $(STM32_LD_SCRIPT)
 
 
 # Sources
@@ -30,8 +30,10 @@ STM32_APP_OBJS := $(APP_SRCS:$(APP_DIR)/%=$(STM32_BUILD_DIR)/obj/app/%.o)
 
 DRIVER_DIR := ./src/driver
 DRIVER_SRCS := $(shell find $(DRIVER_DIR) -type f -name "*.c")
-DRIVER_INCLUDE_ORIG := $(foreach d, $(DRIVER_DIR), $(wildcard $(d)/*))
-DRIVER_INCLUDE := $(addprefix -I, $(DRIVER_INCLUDE_ORIG))
+DRIVER_INCLUDE := $(foreach d, $(DRIVER_DIR), $(wildcard $(d)/*))
+DRIVER_INCLUDE := $(addprefix -I, $(DRIVER_INCLUDE))
+CODEGEN_EXT_INCLUDE := -I $(DRIVER_DIR)/Codegen/external
+DRIVER_INCLUDE := $(DRIVER_INCLUDE) $(CODEGEN_EXT_INCLUDE)
 STM32_DRIVER_OBJS := $(DRIVER_SRCS:$(DRIVER_DIR)/%=$(STM32_BUILD_DIR)/obj/driver/%.o)
 
 # Libraries
@@ -78,7 +80,7 @@ OUTNAME := $(STM32_BUILD_DIR)/core-vc-$(PROJECT_VERSION)
 all: prog-test
 
 prog-test :
-	$(MAKE) test
+	# $(MAKE) test
 	$(MAKE) main
 
 test :
@@ -94,7 +96,7 @@ $(OUTNAME).bin: $(OUTNAME).elf
 
 $(OUTNAME).elf: $(STM32_APP_OBJS) $(STM32_DRIVER_OBJS) $(STM32CUBE_OBJS) $(FREERTOS_OBJS) $(CORE_OBJS) $(RTT_OBJS) $(DBC_OBJS)
 	@[ -d $(@D) ] || mkdir -p $(@D)
-	$(STM32_LD) $(STM32_LD_FLAGS) $^ -o $@
+	$(STM32_LD) $(STM32_LD_FLAGS) $^ -o $@ -lc -lm
 
 $(OUTNAME).ihex: $(OUTNAME).elf
 	@[ -d $(@D) ] || mkdir -p $(@D)
@@ -142,12 +144,12 @@ $(STM32_BUILD_DIR)/obj/rtt/%.c.o: $(RTT_DIR)/%.c
 # Misc targets
 .PHONY: clean
 clean:
-	rm -r src/test/build
+	# rm -r src/test/build
 	rm -r $(BUILD_DIR)
 
 .PHONY: clean-user
 clean-user:
-	rm -r src/test/build
+	# rm -r src/test/build
 	rm -r $(BUILD_DIR)/stm32/obj/app
 	rm -r $(BUILD_DIR)/stm32/obj/core
 	$ find $(BUILD_DIR)/stm32/obj -mindepth 1 -delete

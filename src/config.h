@@ -29,11 +29,25 @@
 #define CAN_SENSE FDCAN1
 #define CAN_MAIN FDCAN2
 #define CAN_INV FDCAN3
-#define NUM_IDS_MAIN 7
+#define NUM_IDS_MAIN 9
 #define NUM_IDS_INV 20
 
 /** CONTROLS **/
-#define REGEN_ENABLED 1
+#define REGEN_ENABLED 0
+
+#define CG_UNDERSTEER_GRADIENT 0.0f 
+#define CG_LONG_FACTOR 0.0f
+#define CG_TARGET_SLIP_RATIO 0.15f
+#define CG_KP_SLIP_RATIO 100.0f
+#define CG_KI_SLIP_RATIO 0.0f
+#define CG_TC_ACTIVATION_THRESHOLD 0.93f // Unit: Pct 0 -> 1
+#define CG_KP_YAW_RATE 2.21f
+#define CG_KI_YAW_RATE 0.0f
+#define CG_MAX_DESIRED_YAW_RATE 2.5f // Unit: Rad/sec
+
+#define CG_FULL_LEFT_STEER_DEG 0.0f
+#define CG_FULL_RIGHT_STEER_DEG 180.0f
+
 
 // Torque Vectoring
 #define CS_LAT_FACTOR_ACC 0.35f
@@ -43,13 +57,6 @@
 #define CS_LONG_FACTOR_BRAKE 0.1f
 #define CS_LONG_SPLIT_BRAKE 0.65f
 #define CS_TOTAL_GAIN 7.0f
-
-#define CS_MIN_ACCEL_PCT 0
-#define CS_MAX_ACCEL_PCT 100
-#define CS_MIN_BRAKE_PCT 100
-#define CS_MAX_BRAKE_PCT 750
-#define CS_MIN_STEER_PCT 0
-#define CS_MAX_STEER_PCT 100
 
 // Traction Control
 #define TC_SPEED_DIFF_MAX 1000

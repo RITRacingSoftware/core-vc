@@ -8,6 +8,7 @@ typedef struct rampup_s {
     float target;
 } rampup_t;
 
+void Controls_init();
 void Controls_Task_Update();
 
 void rampup_init(rampup_t *ramp);

@@ -22,7 +22,9 @@ typedef struct
     struct main_dbc_bms_status_t bms_status;
     struct main_dbc_bms_current_limit_t bms_current_limit;
     struct main_dbc_ssdb_front_t ssdb_front;
-    struct main_dbc_ssdb_vector_nav6_t vn_vel;
+    struct main_dbc_vector_nav0_t vn0;
+    struct main_dbc_vector_nav2_t vn2; 
+    struct main_dbc_vector_nav6_t vn6;
     struct main_dbc_bms_current_t bms_current;
     struct main_dbc_bms_cell_overview_t bms_cells;
 
@@ -32,6 +34,9 @@ typedef struct
     struct main_dbc_vc_pedal_inputs_raw_t pedal_inputs_raw;
     struct main_dbc_vc_status_t vc_status;
     struct main_dbc_vc_inverter_status_t inverter_status;
+    struct main_dbc_vc_controls_out_t controls_out;
+    struct main_dbc_vc_controls_constants1_t controls_const1;
+    struct main_dbc_vc_controls_constants2_t controls_const2;
 
     // Inv data sent by VC
     struct main_dbc_vc_rl_amk_setpoints_t rl_setpoints;

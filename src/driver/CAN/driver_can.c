@@ -55,9 +55,9 @@ int inv_id_arr[NUM_IDS_INV] = {
 
 bool CAN_init()
 {
-    if (!core_CAN_init(CAN_INV, 1000000)) return false;
-    if (!core_CAN_init(CAN_MAIN, 1000000)) return false;
-    if (!core_CAN_init(CAN_SENSE, 1000000)) return false;
+    if (!core_CAN_init(CAN_INV)) return false;
+    if (!core_CAN_init(CAN_MAIN)) return false;
+    if (!core_CAN_init(CAN_SENSE)) return false;
     if (!CAN_add_filters()) return false;
     return true;
 }

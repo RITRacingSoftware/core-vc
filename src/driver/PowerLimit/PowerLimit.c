@@ -23,8 +23,8 @@ static core_filter_t tPerW;
 void PowerLimit_init()
 {
     ramp.done = true;
-    ramp.step = 0.01;
-    tPerW.orderX = 2;
+    ramp.step = 0.4;
+    tPerW.orderX = 15;
     tPerW.orderY = 0;
     tPerW.type = Filter_ROLLING_AVG;
     core_filter_init(&tPerW);

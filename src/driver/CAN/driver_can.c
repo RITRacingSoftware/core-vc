@@ -27,6 +27,7 @@ int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_VECTOR_NAV0_FRAME_ID,
         MAIN_DBC_VECTOR_NAV2_FRAME_ID,
         MAIN_DBC_VECTOR_NAV6_FRAME_ID,
+        MAIN_DBC_VECTOR_NAV7_FRAME_ID,
         MAIN_DBC_BMS_CURRENT_FRAME_ID,
         MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID 
 };
@@ -114,6 +115,9 @@ void CAN_rx_main()
 
             case MAIN_DBC_VECTOR_NAV6_FRAME_ID:
                 main_dbc_vector_nav6_unpack(&mainBus.vn6, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+
+            case MAIN_DBC_VECTOR_NAV7_FRAME_ID:
+                main_dbc_vector_nav7_unpack(&mainBus.vn7, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID:
                 main_dbc_bms_cell_overview_unpack(&mainBus.bms_cells, (uint8_t *) &canMessage.data, canMessage.dlc);
@@ -423,6 +427,7 @@ static void send_controls_params()
     mainBus.controls_const1.vc_k_i_yaw_rate = main_dbc_vc_controls_constants1_vc_k_i_yaw_rate_encode(CG_KI_YAW_RATE);
     mainBus.controls_const2.vc_max_desired_yaw_rate = main_dbc_vc_controls_constants2_vc_max_desired_yaw_rate_encode(CG_MAX_DESIRED_YAW_RATE);
     mainBus.controls_const2.vc_understeer_gradient = main_dbc_vc_controls_constants2_vc_understeer_gradient_encode(CG_UNDERSTEER_GRADIENT);
+    mainBus.controls_const2.vc_static_long_split = main_dbc_vc_controls_constants2_vc_static_long_split_encode(CG_STATIC_LONG_SPLIT);
 
     uint64_t msg;
     main_dbc_vc_controls_constants1_pack((uint8_t *)&msg, &mainBus.controls_const1, 8);

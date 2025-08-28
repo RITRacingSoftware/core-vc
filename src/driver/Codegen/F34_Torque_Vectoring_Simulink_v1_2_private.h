@@ -1,5 +1,5 @@
 /*
- *  rtmodel.h:
+ * F34_Torque_Vectoring_Simulink_v1_2_private.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
@@ -18,13 +18,16 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_rtmodel_h_
-#define RTW_HEADER_rtmodel_h_
+#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_2_private_h_
+#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_2_private_h_
+#include "rtwtypes.h"
+#include "builtin_typeid_types.h"
+#include "multiword_types.h"
+#include "F34_Torque_Vectoring_Simulink_v1_2_types.h"
 #include "F34_Torque_Vectoring_Simulink_v1_2.h"
-#define GRTINTERFACE                   0
+#include "rtw_continuous.h"
+#include "rtw_solver.h"
 
-/* Macros generated for backwards compatibility  */
-#ifndef rtmGetStopRequested
-#define rtmGetStopRequested(rtm)       ((void*) 0)
-#endif
-#endif                                 /* RTW_HEADER_rtmodel_h_ */
+extern void F34_Torque_Ve_NoTorqueReduction(real32_T rtu_In1, real32_T *rty_Out1);
+
+#endif            /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_2_private_h_ */

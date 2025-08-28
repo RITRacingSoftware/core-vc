@@ -29,7 +29,7 @@
 #define CAN_SENSE FDCAN1
 #define CAN_MAIN FDCAN2
 #define CAN_INV FDCAN3
-#define NUM_IDS_MAIN 9
+#define NUM_IDS_MAIN 10
 #define NUM_IDS_INV 20
 
 /** CONTROLS **/
@@ -44,9 +44,10 @@
 #define CG_KP_YAW_RATE 2.21f
 #define CG_KI_YAW_RATE 0.0f
 #define CG_MAX_DESIRED_YAW_RATE 2.5f // Unit: Rad/sec
+#define CG_STATIC_LONG_SPLIT 0.5f
 
-#define CG_FULL_LEFT_STEER_DEG 0.0f
-#define CG_FULL_RIGHT_STEER_DEG 180.0f
+#define CG_FULL_LEFT_STEER_DEG -90.0f
+#define CG_FULL_RIGHT_STEER_DEG 90.0f
 
 
 // Torque Vectoring

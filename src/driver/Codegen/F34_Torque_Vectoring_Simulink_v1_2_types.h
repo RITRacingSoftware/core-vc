@@ -1,5 +1,5 @@
 /*
- *  rtmodel.h:
+ * F34_Torque_Vectoring_Simulink_v1_2_types.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
@@ -18,13 +18,17 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_rtmodel_h_
-#define RTW_HEADER_rtmodel_h_
-#include "F34_Torque_Vectoring_Simulink_v1_2.h"
-#define GRTINTERFACE                   0
-
-/* Macros generated for backwards compatibility  */
-#ifndef rtmGetStopRequested
-#define rtmGetStopRequested(rtm)       ((void*) 0)
+#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_2_types_h_
+#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_2_types_h_
+#ifndef SS_UINT64
+#define SS_UINT64                      17
 #endif
-#endif                                 /* RTW_HEADER_rtmodel_h_ */
+
+#ifndef SS_INT64
+#define SS_INT64                       18
+#endif
+
+/* Forward declaration for rtModel */
+typedef struct tag_RTM_F34_Torque_Vectoring__T RT_MODEL_F34_Torque_Vectoring_T;
+
+#endif              /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_2_types_h_ */

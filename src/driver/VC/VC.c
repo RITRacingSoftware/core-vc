@@ -50,6 +50,7 @@ bool VC_init()
     FaultManager_init();
     TractionControl_init();
     PowerLimit_init();
+    Controls_init();
 
     core_timeout_start_all();
 

@@ -191,6 +191,7 @@ void F34_Torque_Vectoring_Simulink_v1_2_step(void)
        */
       F34_Torque_Vectoring_Simulink_Y.DesiredYawRaterads = rtb_Divide;
     }
+    F34_Torque_Vectoring_Simulink_Y.debug2 = F34_Torque_Vectoring_Simulink_Y.DesiredYawRaterads;
 
     /* End of Switch: '<S61>/Switch2' */
 
@@ -199,6 +200,7 @@ void F34_Torque_Vectoring_Simulink_v1_2_step(void)
      *  Outport: '<Root>/Desired Yaw Rate [rad//s]'
      *  Sum: '<S5>/e'
      */
+    // positive if the car is turning left faster than it should
     F34_Torque_Vectoring_Simulink_Y.e_yaw_raterads =
       F34_Torque_Vectoring_Simulink_U.YawRaterads -
       F34_Torque_Vectoring_Simulink_Y.DesiredYawRaterads;
@@ -221,7 +223,7 @@ void F34_Torque_Vectoring_Simulink_v1_2_step(void)
      *  Product: '<S98>/PProd Out'
      *  Sum: '<S102>/Sum'
      */
-    rtb_DiscreteFilter = -(F34_Torque_Vectoring_Simulink_Y.e_yaw_raterads *
+    rtb_DiscreteFilter = (F34_Torque_Vectoring_Simulink_Y.e_yaw_raterads *
       F34_Torque_Vectoring_Simulink_U.kP_yaw_rate +
       F34_Torque_Vectoring_Simulin_DW.Integrator_DSTATE);
 
@@ -251,6 +253,8 @@ void F34_Torque_Vectoring_Simulink_v1_2_step(void)
 
   /* Gain: '<S4>/Gain1' */
   rtb_Negator = 0.5F * rtb_DiscreteFilter;
+  F34_Torque_Vectoring_Simulink_Y.debug1 = F34_Torque_Vectoring_Simulin_DW.Integrator_DSTATE;
+  F34_Torque_Vectoring_Simulink_Y.debug2 = rtb_Negator;
 
   /* Sum: '<S4>/Left Side Torque [Nm]' */
   rtb_LeftSideTorqueNm = rtb_Divide + rtb_Negator;
@@ -308,6 +312,7 @@ void F34_Torque_Vectoring_Simulink_v1_2_step(void)
   F34_Torque_Vectoring_Simulink_B.VectorConcatenate[3] = (1.0F - rtb_PctFront01)
     * rtb_Divide;
 
+#ifdef TC_ENABLED
   /* Outputs for Iterator SubSystem: '<S1>/Slip Ratio Controller (For Each)' incorporates:
    *  ForEach: '<S3>/For Each'
    */
@@ -391,6 +396,14 @@ void F34_Torque_Vectoring_Simulink_v1_2_step(void)
     /* ForEachSliceAssignment generated from: '<S3>/Slip Ratio' */
     rtb_ImpAsg_InsertedFor_SlipRati[ForEach_itr] = rtb_Divide;
   }
+#else
+  for (ForEach_itr = 0; ForEach_itr < 4; ForEach_itr++) {
+    /* ForEachSliceSelector generated from: '<S3>/Wheel Torque [Nm]' */
+    rtb_ImpAsg_InsertedFor_WheelTor[ForEach_itr] =
+      F34_Torque_Vectoring_Simulink_B.VectorConcatenate[ForEach_itr];
+  }
+#endif
+
 
   /* End of Outputs for SubSystem: '<S1>/Slip Ratio Controller (For Each)' */
   /* End of Outputs for SubSystem: '<Root>/Control System' */

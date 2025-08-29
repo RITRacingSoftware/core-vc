@@ -67,12 +67,12 @@
   * @brief If set, calls to core_CAN_send_message will block
   *        until the bus exits the bus-off state
   */
-#define CORE_CAN_BUS_OFF_BLOCK 1
+#define CORE_CAN_BUS_OFF_BLOCK 0
 
 /**
   * @brief  Use FreeRTOS message buffers instead of queues for received data
   */
-#define CORE_CAN_USE_MSGBUF 1
+#define CORE_CAN_USE_MSGBUF 0
 /**
   * @brief  Transmit timestamp messages in all message buffers when the CAN
   *         timestamp counter overflows.
@@ -86,7 +86,6 @@
   * @brief  Timer that stores the upper bits of the CAN timestamp
   */
 #define CORE_CAN_TIMER  TIM2
-#define CORE_TIMESTAMP_MSB 12
 
 #define CORE_CAN_MSGBUF1_SIZE 1024
 #define CORE_CAN_MSGBUF2_SIZE 0

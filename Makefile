@@ -15,7 +15,7 @@ STM32_OBJCOPY := $(STM32_PREFIX)-objcopy
 STM32_OBJDUMP := $(STM32_PREFIX)-objdump
 
 # Cross-compilation options
-STM32_COMMON_FLAGS := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fno-math-errno -D USE_HAL_DRIVER -D STM32G473xx
+STM32_COMMON_FLAGS := -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fno-math-errno -D USE_HAL_DRIVER -D STM32G473xx -Ofast
 STM32_CC_FLAGS := $(STM32_COMMON_FLAGS) --specs=nosys.specs -ffreestanding -ffunction-sections -fdata-sections -Wall -Wextra -Werror=implicit-function-declaration -g
 STM32_ASM_FLAGS := $(STM32_CC_FLAGS)
 STM32_LD_SCRIPT := STM32G473RETx_FLASH.ld

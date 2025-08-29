@@ -100,6 +100,8 @@ typedef struct {
   real32_T SlipRatios[4];              /* '<Root>/Slip Ratios [-]' */
   real32_T e_yaw_raterads;             /* '<Root>/e_yaw_rate [rad//s]' */
   real32_T LateralTorqueBiasNm;        /* '<Root>/Lateral Torque Bias [Nm]' */
+  real32_T debug1;
+  real32_T debug2;
 } ExtY_F34_Torque_Vectoring_Sim_T;
 
 /* Real-time Model Data Structure */

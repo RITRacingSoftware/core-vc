@@ -36,7 +36,7 @@
 #define REGEN_ENABLED 0
 
 // Torque Vectoring
-#define CS_LAT_FACTOR_ACC 0.3f
+#define CS_LAT_FACTOR_ACC 0.35f
 #define CS_LONG_FACTOR_ACC 0.0f
 #define CS_LONG_SPLIT_ACC 0.25f
 #define CS_LAT_FACTOR_BRAKE 0.25f

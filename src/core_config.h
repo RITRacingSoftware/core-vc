@@ -72,7 +72,7 @@
 /**
   * @brief  Use FreeRTOS message buffers instead of queues for received data
   */
-#define CORE_CAN_USE_MSGBUF 1
+#define CORE_CAN_USE_MSGBUF 0
 /**
   * @brief  Transmit timestamp messages in all message buffers when the CAN
   *         timestamp counter overflows.

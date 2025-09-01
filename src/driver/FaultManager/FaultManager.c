@@ -46,7 +46,8 @@ void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo)
     if (errorInfo == INV_DC_BUS_CHG_ERROR || 
         errorInfo == INV_OVERSPEED_ERROR || 
         errorInfo == INV_SPECIAL_SOFTWARE_MESSAGE_ERROR || 
-        errorInfo == INV_ENCODER_COMMS_ERROR) { 
+        errorInfo == INV_ENCODER_COMMS_ERROR ||
+        errorInfo == INV_OVER_CURRENT_ERROR) { 
         core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, true);
         Inverters_set_state(invNum, InvState_RESETTING);
     }

@@ -19,7 +19,7 @@ void Controls_Task_Update()
     float reqTrq = inputs.accelPct * CS_TOTAL_GAIN;
     
     float maxTotalTrq;
-    if (reqTrq > 0) PowerLimit(reqTrq, &maxTotalTrq);
+    if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
     else RegenLimit(reqTrq, &maxTotalTrq);
 
     float tvTrqs[4];
@@ -34,7 +34,7 @@ void Controls_Task_Update()
         Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
 
-    if (reqTrq > 0) PowerLimit_set_prev_trq(totalTrq);
+    if (reqTrq >= 0) PowerLimit_set_prev_trq(totalTrq);
     else RegenLimit_set_prev_rgn(maxTotalTrq);
 }
 

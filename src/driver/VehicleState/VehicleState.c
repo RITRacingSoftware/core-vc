@@ -19,7 +19,6 @@ static uint8_t TSMS_cycles;
 
 static void new_state(uint8_t new)
 {
-    rprintf("From: %d to: %d\n", state, new);
     state = new;
 }
 
@@ -74,10 +73,14 @@ void VehicleState_Task_Update()
             }
             break;
 
-        case VehicleState_PRECHARGING:
+        case VehicleState_PRECHARGING: 
+            if ((HAL_GetTick() - precharge_time) > PRECHARGE_MAX_TIME_MS) {
+                FaultManager_set(FAULT_PRECHARGE_TIMEOUT);
+                GPIO_set_precharge_relay(false);
+                break;
+            }
+
             GPIO_set_precharge_relay(true);
-           
-            if ((HAL_GetTick() - precharge_time) > PRECHARGE_MAX_TIME_MS) FaultManager_set(FAULT_PRECHARGE_TIMEOUT);
 
             // If precharge is finished with all 4, confirm precharge done
             if (!Inverters_get_precharged_all()) break;
@@ -119,7 +122,7 @@ void VehicleState_Task_Update()
             core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 0);
             // Set inverter enable and on
             Inverters_set_enable(true); // AMK_bEnable = 1
-            Inverters_set_inv_on(true); // AMLK_bInverterOn = 1
+            Inverters_set_inv_on(true); // AMK_bInverterOn = 1
 
             // Receive echo for inverters commanded on
             // AMK_bInverterOn = 1 MIRROR
@@ -179,7 +182,7 @@ void VehicleState_Task_Update()
             if (Inverters_get_dc_on_echo_any()) break;
 
             // Receive confirmation that DC bus is off
-            // AMK_bQitDcOn = 0
+            // AMK_bQuitDcOn = 0
             if (Inverters_get_dc_on_any()) break;
 
             

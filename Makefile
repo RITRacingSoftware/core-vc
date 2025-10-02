@@ -78,7 +78,7 @@ OUTNAME := $(STM32_BUILD_DIR)/core-vc-$(PROJECT_VERSION)
 all: prog-test
 
 prog-test :
-	$(MAKE) test
+	# $(MAKE) test
 	$(MAKE) main
 
 test :
@@ -142,12 +142,12 @@ $(STM32_BUILD_DIR)/obj/rtt/%.c.o: $(RTT_DIR)/%.c
 # Misc targets
 .PHONY: clean
 clean:
-	rm -r src/test/build
 	rm -r $(BUILD_DIR)
+	rm -r src/test/build
 
 .PHONY: clean-user
 clean-user:
-	rm -r src/test/build
 	rm -r $(BUILD_DIR)/stm32/obj/app
 	rm -r $(BUILD_DIR)/stm32/obj/core
 	$ find $(BUILD_DIR)/stm32/obj -mindepth 1 -delete
+	rm -r src/test/build

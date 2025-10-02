@@ -51,8 +51,8 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     float maxCurrent = PowerLimit_short_current_limit(min_V, max_T);
 #endif
 
-    // float maxP = MIN((packV * maxCurrent), PL_MAX_POWER_W);
-    float maxP = PL_MAX_POWER_W;
+    float maxP = MIN((packV * maxCurrent), PL_MAX_POWER_W);
+    // float maxP = PL_MAX_POWER_W;
     float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
     float currP = packV * amps; 
 

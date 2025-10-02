@@ -24,7 +24,7 @@ int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_STATUS_FRAME_ID,
         MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID,
         MAIN_DBC_SSDB_FRONT_FRAME_ID,
-        MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID,
+        // MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID,
         MAIN_DBC_BMS_CURRENT_FRAME_ID,
         MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID 
 };
@@ -104,8 +104,8 @@ void CAN_rx_main()
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
                 main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
-            case MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID:
-                main_dbc_ssdb_vector_nav6_unpack(&mainBus.vn_vel, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+            // case MAIN_DBC_SSDB_VECTOR_NAV6_FRAME_ID:
+                // main_dbc_ssdb_vector_nav6_unpack(&mainBus.vn_vel, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID:
                 main_dbc_bms_cell_overview_unpack(&mainBus.bms_cells, (uint8_t *) &canMessage.data, canMessage.dlc);
@@ -267,11 +267,7 @@ void CAN_Task_Update()
 
 static void send_CAN_errors() {
 #ifndef VC_TEST
-    uint64_t msg = 0;
-    ((uint16_t *)&msg)[0] = core_CAN_errors.arbitration_error;
-    ((uint16_t *)&msg)[1] = core_CAN_errors.data_error;
-
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CAN_ERRORS_FRAME_ID, 8, msg);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CAN_ERRORS_FRAME_ID, 8, *((uint64_t*)(&core_CAN_errors)));
 #endif
 }
 

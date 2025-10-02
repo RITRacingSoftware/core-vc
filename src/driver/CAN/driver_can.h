@@ -22,7 +22,7 @@ typedef struct
     struct main_dbc_bms_status_t bms_status;
     struct main_dbc_bms_current_limit_t bms_current_limit;
     struct main_dbc_ssdb_front_t ssdb_front;
-    struct main_dbc_ssdb_vector_nav6_t vn_vel;
+    // struct main_dbc_ssdb_vector_nav6_t vn_vel;
     struct main_dbc_bms_current_t bms_current;
     struct main_dbc_bms_cell_overview_t bms_cells;
 

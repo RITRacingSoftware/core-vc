@@ -20,7 +20,8 @@ void Controls_Task_Update()
     
     float maxTotalTrq;
     if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
-    else RegenLimit(reqTrq, &maxTotalTrq);
+    else maxTotalTrq = reqTrq;
+    // else RegenLimit(reqTrq, &maxTotalTrq);
 
     float tvTrqs[4];
     TorqueVectoring(reqTrq, tvTrqs);
@@ -35,7 +36,7 @@ void Controls_Task_Update()
     }
 
     if (reqTrq >= 0) PowerLimit_set_prev_trq(totalTrq);
-    else RegenLimit_set_prev_rgn(maxTotalTrq);
+    // else RegenLimit_set_prev_rgn(maxTotalTrq);
 }
 
 static float trq_power_limit()

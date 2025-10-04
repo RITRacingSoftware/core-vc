@@ -24,7 +24,7 @@ void Controls_Task_Update()
     // else RegenLimit(reqTrq, &maxTotalTrq);
 
     float tvTrqs[4];
-    TorqueVectoring(reqTrq, tvTrqs);
+    TorqueVectoring(maxTotalTrq, tvTrqs);
 
     float tcTrqs[4];
     float totalTrq;
@@ -35,7 +35,7 @@ void Controls_Task_Update()
         Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
 
-    if (reqTrq >= 0) PowerLimit_set_prev_trq(totalTrq);
+    if (reqTrq >= 0) PowerLimit_set_prev_trq(maxTotalTrq);
     // else RegenLimit_set_prev_rgn(maxTotalTrq);
 }
 

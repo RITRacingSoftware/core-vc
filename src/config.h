@@ -34,8 +34,10 @@
 
 /** CONTROLS **/
 #define REGEN_ENABLED 0
-#define CLASSIC_CONTROLS 1
-//#define TC_ENABLED
+#define CLASSIC_CONTROLS 0
+#define RUNAWAY_TIMEOUT_MS 100
+#define RUNAWAY_PCT 1.05f
+#define RUNAWAY_OFFSET 0.02
 
 #define CG_UNDERSTEER_GRADIENT 0.0f
 #define CG_LONG_FACTOR 0.0f
@@ -52,7 +54,7 @@
 #define CG_FULL_LEFT_STEER_DEG 90.0f
 #define CG_FULL_RIGHT_STEER_DEG -90.0f
 
-#define MAX_VN_IRR 20
+#define MAX_VN_IRR 10
 
 // Torque Vectoring
 #define CS_LAT_FACTOR_ACC 0.35f

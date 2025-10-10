@@ -9,6 +9,7 @@
 #include "Inverters.h"
 #include "DriverInputs.h"
 #include "FaultManager.h"
+#include "timeout.h"
 #include "driver_can.h"
 #include "F34_Torque_Vectoring_Simulink_v1_3.h"
 #include <math.h>
@@ -25,10 +26,12 @@ static void step_basic(float maxTrq);
 static void send_logging_outputs();
 static void vn_irrational_check();
 static float trq_power_limit();
+static void timeout_callback();
 
 typedef struct{
     float val;          // Previous rational value
     float *p_msg;       // Pointer to VN CAN message from RSSDB
+    float irrVal;       // Must not be higher than positive or lower than negative
     uint8_t irrCnt;     // Number of irrational values
 } vn_input_t;
 
@@ -39,8 +42,18 @@ vn_input_t accelX = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_x, .irrCnt=0};
 vn_input_t yaw = {.val=0, .p_msg=&mainBus.vn7.vector_nav_ypr_y, .irrCnt=0};
 vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &yaw};
 
+core_timeout_t runaway_timeout;
+
 void Controls_init()
 {
+    runaway_timeout.module = NULL;
+    runaway_timeout.ref = FAULT_RUNAWAY;
+    runaway_timeout.timeout = RUNAWAY_TIMEOUT_MS;
+    runaway_timeout.callback = timeout_callback;
+    runaway_timeout.latching = 0;
+    runaway_timeout.single_shot = 0;
+    core_timeout_insert(&runaway_timeout);
+
     F34_Torque_Vectoring_Simulink_v1_3_initialize();
     
     ControlsLevel = ControlsLevel_ADVANCED;
@@ -80,6 +93,8 @@ void Controls_Task_Update()
             Inverters_set_torque_request(INV_FR, (maxTotalTrq * 0.5 * CS_LONG_SPLIT_ACC) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
             Inverters_set_torque_request(INV_FL, (maxTotalTrq * 0.5 * CS_LONG_SPLIT_ACC) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
+
+    mainBus.vc_status.vc_controls_level = ControlsLevel;
 }
 
 static void step_basic(float maxTrq)
@@ -119,16 +134,16 @@ static void step_advanced(float maxTrq)
     rprintf("totalTrq: %d\n", (int)(totalTrq * 100));
     rprintf("%d %d %d %d\n", (int)(rrReqMn * 100), (int)(rlReqMn * 100), (int)(frReqMn * 100), (int)(flReqMn * 100));
 
-    if (totalTrq <= maxTrq*1.05 + 0.02) {
+    if (totalTrq <= maxTrq * RUNAWAY_PCT + RUNAWAY_OFFSET) {
         Inverters_set_torque_request(INV_FL, flReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
         Inverters_set_torque_request(INV_RL, rlReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
         Inverters_set_torque_request(INV_FR, frReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
         Inverters_set_torque_request(INV_RR, rrReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+        core_timeout_reset(&runaway_timeout);
     }
     else {
         fault_total = totalTrq;
         fault_max = maxTrq;
-        FaultManager_set(FAULT_RUNAWAY);
     }
     float debug[2] = {fault_total, fault_max};
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
@@ -138,8 +153,8 @@ static void update_controls_params()
 {
     vn_irrational_check();
 
-    F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = mainBus.vn6.vector_nav_vel_body_x;
-    F34_Torque_Vectoring_Simulink_U.YBodyVelocityms = mainBus.vn6.vector_nav_vel_body_y;
+    F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = velX.val;
+    F34_Torque_Vectoring_Simulink_U.YBodyVelocityms = velY.val;
     // Fake velocity for bench testing
     F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;
     F34_Torque_Vectoring_Simulink_U.ThrottleInput01 = inputs.accelPct;
@@ -147,21 +162,23 @@ static void update_controls_params()
 
     // In the steering angle, -1 = full right, +1 = full left because that's what Jared wanted for some reason.
     F34_Torque_Vectoring_Simulink_U.SteeringAngledeg = SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
-    F34_Torque_Vectoring_Simulink_U.YawRaterads = -mainBus.vn2.vector_nav_angular_rate_z;
+    F34_Torque_Vectoring_Simulink_U.YawRaterads = angRateZ.val;
     F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[0] = invBus.fl_actual1.fl_feedback_velocity;
     F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[1] = invBus.rl_actual1.rl_feedback_velocity;
     F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[2] = invBus.fr_actual1.fr_feedback_velocity;
     F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[3] = invBus.rr_actual1.rr_feedback_velocity;
-    F34_Torque_Vectoring_Simulink_U.LongAccelms2 = mainBus.vn0.vector_nav_accel_x;
-    F34_Torque_Vectoring_Simulink_U.YawRaterads = mainBus.vn7.vector_nav_ypr_y;
-    F34_Torque_Vectoring_Simulink_U.BodySideslipAngle = atan2f(F34_Torque_Vectoring_Simulink_U.YBodyVelocityms, F34_Torque_Vectoring_Simulink_U.XBodyVelocityms);
+    F34_Torque_Vectoring_Simulink_U.LongAccelms2 = accelX.val;
+    float slipRads = atan2f(F34_Torque_Vectoring_Simulink_U.YBodyVelocityms, F34_Torque_Vectoring_Simulink_U.XBodyVelocityms);
+    F34_Torque_Vectoring_Simulink_U.BodySideslipAngle = slipRads * (180.0f / M_PI);
 }
 
 static void vn_irrational_check()
 {
     for (int i = 0; i < NUM_VN_INPUTS; i++)
     {
-        if ((*(vnIns[i]->p_msg) == vnIns[i]->val) && (*(vnIns[i]->p_msg) != 0))
+        float inVal = *(vnIns[i]->p_msg);
+        if ( ((inVal == vnIns[i]->val) && (inVal != 0)) || // If the value is the same from the last time and it isn't 0
+             (inVal >= vnIns[i]->irrVal) || (inVal <= (-1 * vnIns[i]->irrVal)) ) // If value is greater than irr or less than negative irr
         {
             vnIns[i]->irrCnt++;
             if (vnIns[i]->irrCnt >= MAX_VN_IRR)
@@ -188,6 +205,10 @@ static void send_logging_outputs()
     mainBus.controls_out1.vc_steer_angle = main_dbc_vc_controls_out1_vc_steer_angle_encode(F34_Torque_Vectoring_Simulink_U.SteeringAngledeg);
     mainBus.controls_out2.vc_e_yaw_rate = main_dbc_vc_controls_out2_vc_e_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.e_yaw_raterads);
     mainBus.controls_out2.vc_lateral_torque_bias = main_dbc_vc_controls_out2_vc_e_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasRightLeftNm);
+    
+    mainBus.controls_out3.vc_yaw_rate_proportional = F34_Torque_Vectoring_Simulink_Y.YawRateProportionalNm;
+    mainBus.controls_out3.vc_yaw_rate_integral = F34_Torque_Vectoring_Simulink_Y.YawRateIntegralNm;
+    mainBus.controls_out4.vc_yaw_rate_feed_forward = F34_Torque_Vectoring_Simulink_Y.YawRateFeedforwardNm;
     // dbg.vc_debug1 = F34_Torque_Vectoring_Simulink_Y.debug1;
     // dbg.vc_debug2 = F34_Torque_Vectoring_Simulink_Y.debug2;
 
@@ -198,8 +219,14 @@ static void send_logging_outputs()
     main_dbc_vc_controls_out2_pack((uint8_t *)&msg, &mainBus.controls_out2, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT2_FRAME_ID, 8, msg);
     
-    main_dbc_vc_controls_debug_pack((uint8_t *)&msg, &dbg, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_DEBUG_FRAME_ID, 8, msg);
+    main_dbc_vc_controls_out3_pack((uint8_t *)&msg, &mainBus.controls_out3, 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT3_FRAME_ID, 8, msg);
+
+    main_dbc_vc_controls_out4_pack((uint8_t *)&msg, &mainBus.controls_out4, 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT4_FRAME_ID, 8, msg);
+
+    // main_dbc_vc_controls_debug_pack((uint8_t *)&msg, &dbg, 8);
+    // core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_DEBUG_FRAME_ID, 8, msg);
 }
 
 static float trq_power_limit()
@@ -208,6 +235,10 @@ static float trq_power_limit()
     int current = mainBus.bms_current_limit.d1_max_discharge_current;
     float mul = (current/max_current);
     return mul;
+}
+
+static void timeout_callback() {
+    FaultManager_set(FAULT_RUNAWAY);
 }
 
 

@@ -37,6 +37,8 @@ typedef struct
     struct main_dbc_vc_inverter_status_t inverter_status;
     struct main_dbc_vc_controls_out1_t controls_out1;
     struct main_dbc_vc_controls_out2_t controls_out2;
+    struct main_dbc_vc_controls_out3_t controls_out3;
+    struct main_dbc_vc_controls_out4_t controls_out4;
     struct main_dbc_vc_controls_constants1_t controls_const1;
     struct main_dbc_vc_controls_constants2_t controls_const2;
 

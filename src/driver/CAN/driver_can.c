@@ -428,6 +428,7 @@ static void send_controls_params()
     mainBus.controls_const2.vc_max_desired_yaw_rate = main_dbc_vc_controls_constants2_vc_max_desired_yaw_rate_encode(CG_MAX_DESIRED_YAW_RATE);
     mainBus.controls_const2.vc_understeer_gradient = main_dbc_vc_controls_constants2_vc_understeer_gradient_encode(CG_UNDERSTEER_GRADIENT);
     mainBus.controls_const2.vc_static_long_split = main_dbc_vc_controls_constants2_vc_static_long_split_encode(CG_STATIC_LONG_SPLIT);
+    mainBus.controls_const2.vc_k_f_yaw_rate = main_dbc_vc_controls_constants2_vc_k_f_yaw_rate_encode(CG_KF_YAW_RATE);
 
     uint64_t msg;
     main_dbc_vc_controls_constants1_pack((uint8_t *)&msg, &mainBus.controls_const1, 8);

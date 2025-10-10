@@ -42,8 +42,20 @@ void Controls_Task_Update()
     DriverInputs_get_driver_inputs(&inputs); 
     float reqTrq = inputs.accelPct * CS_TOTAL_GAIN; 
     float maxTotalTrq;
-    PowerLimit(reqTrq, &maxTotalTrq);
 
+#if CLASSIC_CONTROLS
+    if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
+
+    float tvTrqs[4];
+    TorqueVectoring(maxTotalTrq, tvTrqs);
+
+    for (int i = 0; i < 4; i++) {
+        Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+    }
+
+    PowerLimit_set_prev_trq(maxTotalTrq);
+#else
+    PowerLimit(reqTrq, &maxTotalTrq);
     // Controls uses torque in Nm, so have to convert from %Mn to Nm. Torque is represented 0 -> 1 = 0 -> 100%.
     F34_Torque_Vectoring_Simulink_U.TotalTorqueAvailableNm = maxTotalTrq * 9.8;
     update_controls_params();
@@ -66,7 +78,7 @@ void Controls_Task_Update()
     Inverters_set_torque_request(INV_RR, rrReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
 
     float totalTrq = flReqMn + rlReqMn + frReqMn + rrReqMn;
-    PowerLimit_set_prev_trq(totalTrq);
+#endif
 }
 
 static void update_controls_params()
@@ -130,7 +142,7 @@ bool rampup_update(float target, float *out, rampup_t *ramp)
     if (ramp->done) *out = ramp->target;
     else
     {
-        ramp->prev += ramp->step;
+        ramp->prev += ramp->step * target;
         if (ramp->prev >= ramp->target) ramp->prev = ramp->target;
         *out = ramp->prev;
     }

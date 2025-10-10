@@ -17,12 +17,14 @@ float prevTrq = 0;
 float prevRgn = 0;
 static rampup_t ramp;
 static core_filter_t tPerW;
+static core_filter_t setpoint;
 
 void PowerLimit_init()
 {
     ramp.done = true;
-    ramp.step = 0.3;
-    tPerW.orderX = 15;
+    ramp.step = 0.05;
+
+    tPerW.orderX = 1;
     tPerW.orderY = 0;
     tPerW.type = Filter_ROLLING_AVG;
     core_filter_init(&tPerW);
@@ -54,14 +56,23 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
     float currP = packV * amps; 
 
-    uint64_t msg = 0;
 
-    core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
-    
+    float rrT = invBus.rr_actual1.rr_feedback_torque;
+    float rlT = invBus.rl_actual1.rl_feedback_torque;
+    float frT = invBus.fr_actual1.fr_feedback_torque;
+    float flT = invBus.fl_actual1.fl_feedback_torque;
+    float totalTrq = (rrT + rlT + frT + flT) / 100;
+
+
+    // float curr_tPerW = core_filter_update(curr_conv, &tPerW);
+
     if (currP > (PL_THRESHOLD * maxP))
     {
-        float curr_tPerW = prevTrq / currP;
-        float convMax = (curr_tPerW * maxP);
+        float curr_conv = totalTrq/currP;
+        float msg[2] = {curr_conv, 0};
+        core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)msg));
+
+        float convMax = (curr_conv * maxP);
         *limitedMaxTrq = MIN(convMax, reqTrq);
         rampup_trigger(*limitedMaxTrq, &ramp);    
     }
@@ -99,8 +110,6 @@ float PowerLimit_endurance_current_limit(float min_V, float max_T)
 
     float current_limit = MIN(voltage_current_limit, temp_current_limit);
     current_limit = ( (current_limit < 0) ? (0) : (current_limit) );
-
-    uint64_t msg = 0;
 
     return current_limit;
 }

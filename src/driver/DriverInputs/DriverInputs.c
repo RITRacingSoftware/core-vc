@@ -206,7 +206,6 @@ void Accel_process()
     core_ADC_read_channel(ACCEL_A_PORT, ACCEL_A_PIN, &accelAVal);
     core_ADC_read_channel(ACCEL_B_PORT, ACCEL_B_PIN, &accelBVal);
     
-
     // Echo raw APPS ADC values on main bus
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_a_adc =
             main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_a_adc_encode(accelAVal);

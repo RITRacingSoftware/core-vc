@@ -70,7 +70,7 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     {
         float curr_conv = totalTrq/currP;
         float msg[2] = {curr_conv, 0};
-        core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)msg));
+        // core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)msg));
 
         float convMax = (curr_conv * maxP);
         *limitedMaxTrq = MIN(convMax, reqTrq);

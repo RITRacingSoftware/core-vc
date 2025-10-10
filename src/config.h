@@ -37,20 +37,22 @@
 #define CLASSIC_CONTROLS 1
 //#define TC_ENABLED
 
-#define CG_UNDERSTEER_GRADIENT 0.0001f 
+#define CG_UNDERSTEER_GRADIENT 0.0f
 #define CG_LONG_FACTOR 0.0f
 #define CG_TARGET_SLIP_RATIO 0.15f
-#define CG_KP_SLIP_RATIO 100.0f
+#define CG_KP_SLIP_RATIO 0.0f
 #define CG_KI_SLIP_RATIO 0.0f
 #define CG_TC_ACTIVATION_THRESHOLD 0.93f // Unit: Pct 0 -> 1
-#define CG_KP_YAW_RATE 11.0f
-#define CG_KI_YAW_RATE 30.0f
+#define CG_KP_YAW_RATE 0.0f
+#define CG_KI_YAW_RATE 0.0f
 #define CG_MAX_DESIRED_YAW_RATE 2.5f // Unit: Rad/sec
 #define CG_STATIC_LONG_SPLIT 0.5f
+#define CG_KF_YAW_RATE 11.06f
 
-#define CG_FULL_LEFT_STEER_DEG -90.0f
-#define CG_FULL_RIGHT_STEER_DEG 90.0f
+#define CG_FULL_LEFT_STEER_DEG 90.0f
+#define CG_FULL_RIGHT_STEER_DEG -90.0f
 
+#define MAX_VN_IRR 20
 
 // Torque Vectoring
 #define CS_LAT_FACTOR_ACC 0.35f

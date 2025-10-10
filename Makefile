@@ -1,5 +1,5 @@
 PROJECT_NAME := core_vc 
-PROJECT_VERSION := f33
+PROJECT_VERSION := f34
 
 # Build info
 BUILD_DIR := build

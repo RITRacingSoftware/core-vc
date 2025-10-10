@@ -1,5 +1,5 @@
 /*
- *  rtmodel.h:
+ * F34_Torque_Vectoring_Simulink_v1_3_capi.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
@@ -18,13 +18,12 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_rtmodel_h_
-#define RTW_HEADER_rtmodel_h_
+#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_3_capi_h_
+#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_3_capi_h_
 #include "F34_Torque_Vectoring_Simulink_v1_3.h"
-#define GRTINTERFACE                   0
 
-/* Macros generated for backwards compatibility  */
-#ifndef rtmGetStopRequested
-#define rtmGetStopRequested(rtm)       ((void*) 0)
-#endif
-#endif                                 /* RTW_HEADER_rtmodel_h_ */
+extern void F34_Torque_Vectoring_Simulink_v1_3_InitializeDataMapInfo(void);
+
+#endif               /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_3_capi_h_ */
+
+/* EOF: F34_Torque_Vectoring_Simulink_v1_3_capi.h */

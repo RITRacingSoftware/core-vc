@@ -1,5 +1,5 @@
 /*
- *  rtmodel.h:
+ * rtGetInf.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
@@ -18,13 +18,14 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_rtmodel_h_
-#define RTW_HEADER_rtmodel_h_
-#include "F34_Torque_Vectoring_Simulink_v1_3.h"
-#define GRTINTERFACE                   0
+#ifndef RTW_HEADER_rtGetInf_h_
+#define RTW_HEADER_rtGetInf_h_
+#include "rt_nonfinite.h"
+#include "rtwtypes.h"
 
-/* Macros generated for backwards compatibility  */
-#ifndef rtmGetStopRequested
-#define rtmGetStopRequested(rtm)       ((void*) 0)
-#endif
-#endif                                 /* RTW_HEADER_rtmodel_h_ */
+extern real_T rtGetInf(void);
+extern real32_T rtGetInfF(void);
+extern real_T rtGetMinusInf(void);
+extern real32_T rtGetMinusInfF(void);
+
+#endif                                 /* RTW_HEADER_rtGetInf_h_ */

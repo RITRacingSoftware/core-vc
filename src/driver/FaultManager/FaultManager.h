@@ -20,6 +20,9 @@
 #define FAULT_FL_ERROR            0x00004000
 #define FAULT_PRECHARGE_TIMEOUT   0x00008000
 #define FAULT_SOFT_DOUBLE_PEDAL   0x00010000
+#define FAULT_VN_NO_LOCK          0x00020000
+#define FAULT_VN_IRR              0x00040000
+#define FAULT_RUNAWAY             0x00080000
 
 
 void FaultManager_init();

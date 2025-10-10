@@ -8,7 +8,7 @@
 #include "driver_GPIO.h"
 #include "gpio.h"
 
-#define IGNORE_LIST (FAULT_RBPS_IRRA | FAULT_RSSDB_LOST | FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL)
+#define IGNORE_LIST (FAULT_RBPS_IRRA | FAULT_RSSDB_LOST | FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL | FAULT_VN_IRR | FAULT_VN_NO_LOCK)
 
 static uint64_t faultList;
 static void check_overspeed();

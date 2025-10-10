@@ -213,47 +213,52 @@ void Accel_process()
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_b_adc =
             main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_b_adc_encode(accelBVal);
 
-    aVal = SAT(accelAVal, ACCEL_A_OFFSET_ADC, ACCEL_A_MAX_ADC);
-    bVal = SAT(accelBVal, ACCEL_B_OFFSET_ADC, ACCEL_B_MAX_ADC);
 
-    accelAPos = ((aVal - ACCEL_A_OFFSET_ADC) / ((float)ACCEL_A_RANGE_ADC));
-    accelBPos = ((bVal - ACCEL_B_OFFSET_ADC) / ((float)ACCEL_B_RANGE_ADC));
-
-    avgPos = ((accelAPos + accelBPos) / 2.0f);
-
-#if REGEN_ENABLED
-    if (avgPos > ACCEL_DEADZONE_HIGH_PCT) avgPos = SCALE(avgPos, ACCEL_DEADZONE_HIGH_PCT, 1.0f, 0.0f, 1.0f);
-    else if (avgPos < ACCEL_DEADZONE_HIGH_PCT && avgPos > ACCEL_DEADZONE_LOW_PCT) avgPos = 0;
-    else if (avgPos < ACCEL_DEADZONE_LOW_PCT) avgPos = SCALE(avgPos, 0.0f, ACCEL_DEADZONE_LOW_PCT, MAX_REGEN_PCT, 0.0f);
-#endif
-
-    // Echo A, B, and average positions on main bus
-    mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_a =
-            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_accel_position_a_encode(accelAPos * 100);
-    mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_b =
-            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_accel_position_b_encode(accelBPos * 100);
-
-    // Irrationality check
+    // ADC irrationality check
     bool status = true;
     if (accelAVal <= ACCEL_A_IRRATIONAL_HIGH_ADC && accelAVal >= ACCEL_A_IRRATIONAL_LOW_ADC)
     {
+        aVal = SAT(accelAVal, ACCEL_A_OFFSET_ADC, ACCEL_A_MAX_ADC);
+        accelAPos = ((aVal - ACCEL_A_OFFSET_ADC) / ((float)ACCEL_A_RANGE_ADC));
+        mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_a =
+                main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_accel_position_a_encode(accelAPos * 100);
         core_timeout_reset(&accel_A_timeout);
     } else status = false;
-
     if (accelBVal <= ACCEL_B_IRRATIONAL_HIGH_ADC && accelBVal >= ACCEL_B_IRRATIONAL_LOW_ADC)
     {
+        bVal = SAT(accelBVal, ACCEL_B_OFFSET_ADC, ACCEL_B_MAX_ADC);
+        accelBPos = ((bVal - ACCEL_B_OFFSET_ADC) / ((float)ACCEL_B_RANGE_ADC));
+        mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_b =
+                main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_accel_position_b_encode(accelBPos * 100);
         core_timeout_reset(&accel_B_timeout);
     } else status = false;
 
+
+    if (status == true)
+    {
+        avgPos = ((accelAPos + accelBPos) / 2.0f);
+
+#if REGEN_ENABLED
+        if (avgPos > ACCEL_DEADZONE_HIGH_PCT) avgPos = SCALE(avgPos, ACCEL_DEADZONE_HIGH_PCT, 1.0f, 0.0f, 1.0f);
+        else if (avgPos < ACCEL_DEADZONE_HIGH_PCT && avgPos > ACCEL_DEADZONE_LOW_PCT) avgPos = 0;
+        else if (avgPos < ACCEL_DEADZONE_LOW_PCT) avgPos = SCALE(avgPos, 0.0f, ACCEL_DEADZONE_LOW_PCT, MAX_REGEN_PCT, 0.0f);
+#endif
+
+    }
+
+    // Check disagreement
     if (fabs(accelAPos - accelBPos) * 100 <= ACCEL_MAX_DISAGREEMENT)
     {
         core_timeout_reset(&accel_disagree_timeout);
     } else status = false;
 
-    if (status) driverInputs.accelPct = avgPos;
-    
-    mainBus.processed_inputs.vc_p_inputs_accel_position =
-            main_dbc_vc_processed_inputs_vc_p_inputs_accel_position_encode(driverInputs.accelPct * 100);
+    if (status == true)
+    {
+        driverInputs.accelPct = avgPos;
+
+        mainBus.processed_inputs.vc_p_inputs_accel_position =
+                main_dbc_vc_processed_inputs_vc_p_inputs_accel_position_encode(driverInputs.accelPct * 100);
+    }
 
 #ifdef VC_TEST
     test((t_val) accelAPos);

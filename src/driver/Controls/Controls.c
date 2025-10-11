@@ -28,6 +28,11 @@ static void vn_irrational_check();
 static float trq_power_limit();
 static void timeout_callback();
 
+static float rrPrev;
+static float rlPrev;
+static float frPrev;
+static float flPrev;
+
 typedef struct{
     float val;          // Previous rational value
     float *p_msg;       // Pointer to VN CAN message from RSSDB
@@ -35,11 +40,11 @@ typedef struct{
     uint8_t irrCnt;     // Number of irrational values
 } vn_input_t;
 
-vn_input_t velX = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_x, .irrCnt=0};
-vn_input_t velY = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_y, .irrCnt=0};
-vn_input_t angRateZ = {.val=0, .p_msg=&mainBus.vn2.vector_nav_angular_rate_z, .irrCnt=0};
-vn_input_t accelX = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_x, .irrCnt=0};
-vn_input_t yaw = {.val=0, .p_msg=&mainBus.vn7.vector_nav_ypr_y, .irrCnt=0};
+vn_input_t velX = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_x, .irrVal = VN_IRR_VEL_X, .irrCnt=0};
+vn_input_t velY = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_y, .irrVal = VN_IRR_VEL_Y, .irrCnt=0};
+vn_input_t angRateZ = {.val=0, .p_msg=&mainBus.vn2.vector_nav_angular_rate_z, .irrVal = VN_IRR_ANG_RATE_Z, .irrCnt=0};
+vn_input_t accelX = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_x, .irrVal = VN_IRR_ACCEL_X, .irrCnt=0};
+vn_input_t yaw = {.val=0, .p_msg=&mainBus.vn7.vector_nav_ypr_y, .irrVal = VN_IRR_YAW, .irrCnt=0};
 vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &yaw};
 
 core_timeout_t runaway_timeout;
@@ -56,7 +61,7 @@ void Controls_init()
 
     F34_Torque_Vectoring_Simulink_v1_3_initialize();
     
-    ControlsLevel = ControlsLevel_ADVANCED;
+    ControlsLevel = ControlsLevel_BASIC;
 
     // Set constants
     F34_Torque_Vectoring_Simulink_U.UndersteerGradient = CG_UNDERSTEER_GRADIENT;
@@ -87,7 +92,8 @@ void Controls_Task_Update()
         case ControlsLevel_BASIC:
             step_basic(maxTotalTrq); break;
 
-        case ControlsLevel_OFF:
+        case ControlsLevel_OFF: 
+            core_timeout_reset(&runaway_timeout);
             Inverters_set_torque_request(INV_RR, (maxTotalTrq * 0.5 * (1 - CS_LONG_SPLIT_ACC)) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
             Inverters_set_torque_request(INV_RL, (maxTotalTrq * 0.5 * (1 - CS_LONG_SPLIT_ACC)) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
             Inverters_set_torque_request(INV_FR, (maxTotalTrq * 0.5 * CS_LONG_SPLIT_ACC) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
@@ -99,15 +105,15 @@ void Controls_Task_Update()
 
 static void step_basic(float maxTrq)
 {
-
     float tvTrqs[4];
     TorqueVectoring(maxTrq, tvTrqs);
 
     for (int i = 0; i < 4; i++) {
         Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
-
+    
     PowerLimit_set_prev_trq(maxTrq);
+    core_timeout_reset(&runaway_timeout);
 }
 
 static int faulted = 0;
@@ -131,21 +137,31 @@ static void step_advanced(float maxTrq)
     float frReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2] / 9.8;
     float rrReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3] / 9.8;
     float totalTrq = flReqMn + rlReqMn + frReqMn + rrReqMn;
-    rprintf("totalTrq: %d\n", (int)(totalTrq * 100));
-    rprintf("%d %d %d %d\n", (int)(rrReqMn * 100), (int)(rlReqMn * 100), (int)(frReqMn * 100), (int)(flReqMn * 100));
+    // rprintf("totalTrq: %d\n", (int)(totalTrq * 100));
+    // rprintf("%d %d %d %d\n", (int)(rrReqMn * 100), (int)(rlReqMn * 100), (int)(frReqMn * 100), (int)(flReqMn * 100));
 
-    if (totalTrq <= maxTrq * RUNAWAY_PCT + RUNAWAY_OFFSET) {
-        Inverters_set_torque_request(INV_FL, flReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-        Inverters_set_torque_request(INV_RL, rlReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-        Inverters_set_torque_request(INV_FR, frReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-        Inverters_set_torque_request(INV_RR, rrReqMn * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+    if (totalTrq <= maxTrq) {
+        flPrev = flReqMn;
+        rlPrev = rlReqMn;
+        frPrev = frReqMn;
+        rrPrev = rrReqMn;
         core_timeout_reset(&runaway_timeout);
     }
     else {
         fault_total = totalTrq;
         fault_max = maxTrq;
     }
-    float debug[2] = {fault_total, fault_max};
+
+    Inverters_set_torque_request(INV_FL, flPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+    Inverters_set_torque_request(INV_RL, rlPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+    Inverters_set_torque_request(INV_FR, frPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+    Inverters_set_torque_request(INV_RR, rrPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+
+    float debug[2] = {totalTrq, maxTrq};
+    float rear[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1]};
+    float front[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0]};
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_REAR_FRAME_ID, 8, *((uint64_t *)rear));
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_FRONT_FRAME_ID, 8, *((uint64_t *)front));
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 }
 
@@ -156,13 +172,14 @@ static void update_controls_params()
     F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = velX.val;
     F34_Torque_Vectoring_Simulink_U.YBodyVelocityms = velY.val;
     // Fake velocity for bench testing
-    F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;
+    // F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;
     F34_Torque_Vectoring_Simulink_U.ThrottleInput01 = inputs.accelPct;
     F34_Torque_Vectoring_Simulink_U.BrakeInput01 = inputs.brakePct;
 
     // In the steering angle, -1 = full right, +1 = full left because that's what Jared wanted for some reason.
     F34_Torque_Vectoring_Simulink_U.SteeringAngledeg = SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
-    F34_Torque_Vectoring_Simulink_U.YawRaterads = angRateZ.val;
+    // Invert angular rate Z so when it is turning counterclockwise it is positive
+    F34_Torque_Vectoring_Simulink_U.YawRaterads = -1 * angRateZ.val;
     F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[0] = invBus.fl_actual1.fl_feedback_velocity;
     F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[1] = invBus.rl_actual1.rl_feedback_velocity;
     F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[2] = invBus.fr_actual1.fr_feedback_velocity;

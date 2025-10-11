@@ -4,7 +4,8 @@
 #include <stm32g4xx_hal.h>
 #endif
 
-/** GENERAL **/
+/********************** GENERAL **********************/
+/*****************************************************/
 #define LOW_SPEED_TASK_FREQ_HZ 100
 #define MIN_PRECHARGE_VOL 400
 #define PRECHARGE_MIN_TIME_MS 2000
@@ -14,9 +15,10 @@
 #define TSMS_HOLD_TIME 50
 #define PACK_IRR_V 380
 
-/** POWER LIMIT **/
+/******************** POWER LIMIT ********************/
+/*****************************************************/
 #define PL_THRESHOLD 0.30f
-#define PL_MAX_POWER_W 7000
+#define PL_MAX_POWER_W 50000
 #define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_VOLT_CURRENT_LIMIT_CUTOFF 3.6f
@@ -25,14 +27,16 @@
 #define TEMP_STEADY_LIMIT 37.06f
 #define MAX_REGEN_CURRENT_A -20.0f
 
-/** CAN **/
+/************************ CAN ************************/
+/*****************************************************/
 #define CAN_SENSE FDCAN1
 #define CAN_MAIN FDCAN2
 #define CAN_INV FDCAN3
 #define NUM_IDS_MAIN 10
 #define NUM_IDS_INV 20
 
-/** CONTROLS **/
+/********************** CONTROLS *********************/
+/*****************************************************/
 #define REGEN_ENABLED 0
 #define CLASSIC_CONTROLS 0
 #define RUNAWAY_TIMEOUT_MS 100
@@ -54,7 +58,13 @@
 #define CG_FULL_LEFT_STEER_DEG 90.0f
 #define CG_FULL_RIGHT_STEER_DEG -90.0f
 
+// VectorNAV
 #define MAX_VN_IRR 10
+#define VN_IRR_VEL_X 100               // m/s
+#define VN_IRR_VEL_Y 100               // m/s
+#define VN_IRR_ANG_RATE_Z 50           // rad/s
+#define VN_IRR_ACCEL_X 50              // m/s^2
+#define VN_IRR_YAW 360                 // deg
 
 // Torque Vectoring
 #define CS_LAT_FACTOR_ACC 0.35f

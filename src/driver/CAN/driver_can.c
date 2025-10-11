@@ -435,8 +435,8 @@ static void send_controls_params()
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_CONSTANTS1_FRAME_ID, 8, msg);
 
     msg = 0;
-    main_dbc_vc_controls_constants2_pack((uint8_t *)&msg, &mainBus.controls_const2, 4);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_CONSTANTS2_FRAME_ID, 4, msg);
+    main_dbc_vc_controls_constants2_pack((uint8_t *)&msg, &mainBus.controls_const2, 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_CONSTANTS2_FRAME_ID, 8, msg);
 
 
     /*

@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "inverter_dbc.h"
 
 #define INV_RR 0
 #define INV_RL 1
@@ -25,16 +26,26 @@ typedef enum {
     InvState_HARD_FAULT
 } InvState_e;
 
+typedef enum {
+    ResetState_0,
+    ResetState_1,
+    ResetState_2,
+    ResetState_3
+} ResetState_e;
+
 typedef struct
 {
-    double dcBusVoltage;
+    float dcBusVoltage;
+    struct inverter_dbc_actual_1_t actual1;
+    struct inverter_dbc_actual_2_t actual2;
+    struct inverter_dbc_rit_set1_t set1;
+    struct inverter_dbc_rit_set2_t set2;
+    struct inverter_dbc_rit_set3_t set3;
+    struct inverter_dbc_setpoints_t setpoints;
     InvState_e state;
-    bool isReady;
-    bool dcOnEcho;
-    bool dcOn;
-    bool isOnEcho;
-    bool isOn;
-    bool resetFlag;
+    ResetState_e reset_state;
+    float req_setpoint;
+    bool hyst;
 } Inverter_s;
 
 void Inverters_init();
@@ -67,7 +78,10 @@ void Inverters_resume_timeouts();
 bool Inverters_reset_charging_error();
 void Inverters_set_state(uint8_t invNum, InvState_e state);
 void Inverters_set_can_states();
-void Inverters_set_overspeed(uint8_t invNum);
 void Inverters_send_timeout_times();
-void Inverters_set_reset_flag(uint8_t invNum);
 void Inverters_reset_setpoints();
+void Inverters_CAN_rx();
+void Inverters_echo_on_main();
+void Inverters_get_velocities_codegen(float *velArr);
+void Inverters_get_voltages(float *volArr);
+void Inverters_get_torques(float *trqArr);

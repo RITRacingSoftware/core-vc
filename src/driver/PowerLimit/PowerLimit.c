@@ -4,6 +4,7 @@
 #include "driver_can.h"
 #include "can.h"
 #include "driver_GPIO.h"
+#include "Inverters.h"
 #include "gpio.h"
 #include <stdio.h>
 #include "rtt.h"
@@ -16,18 +17,12 @@
 float prevTrq = 0;
 float prevRgn = 0;
 static rampup_t ramp;
-static core_filter_t tPerW;
 static core_filter_t setpoint;
 
 void PowerLimit_init()
 {
     ramp.done = true;
     ramp.step = 0.05;
-
-    tPerW.orderX = 1;
-    tPerW.orderY = 0;
-    tPerW.type = Filter_ROLLING_AVG;
-    core_filter_init(&tPerW);
 }
 
 void PowerLimit(float reqTrq, float *limitedMaxTrq)
@@ -36,12 +31,10 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     float max_T = mainBus.bms_cells.bms_overview_temp_max;
 
     // Calculate pack voltage
-    float rrV = invBus.rr_set2.rr_dc_bus_voltage;
-    float rlV = invBus.rl_set2.rl_dc_bus_voltage;
-    float frV = invBus.fr_set2.fr_dc_bus_voltage;
-    float flV = invBus.fl_set2.fl_dc_bus_voltage;
+    float vol[4];
+    Inverters_get_voltages(vol);
+    float packV = (vol[0] + vol[1] + vol[2] + vol[3]) / 4.0f;
 
-    float packV = (rrV + rlV + frV + flV) / 4.0f;
     if (packV < PACK_IRR_V) packV = mainBus.bms_status.bms_status_pack_voltage;
     
     // Calculate max current
@@ -56,22 +49,13 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
     float currP = packV * amps; 
 
-
-    float rrT = invBus.rr_actual1.rr_feedback_torque;
-    float rlT = invBus.rl_actual1.rl_feedback_torque;
-    float frT = invBus.fr_actual1.fr_feedback_torque;
-    float flT = invBus.fl_actual1.fl_feedback_torque;
-    float totalTrq = (rrT + rlT + frT + flT) / 100;
-
-
-    // float curr_tPerW = core_filter_update(curr_conv, &tPerW);
+    float trqs[4];
+    Inverters_get_torques(trqs);
+    float totalTrq = (trqs[0] + trqs[1] + trqs[2] + trqs[3]) / 100;
 
     if (currP > (PL_THRESHOLD * maxP))
     {
         float curr_conv = totalTrq/currP;
-        float msg[2] = {curr_conv, 0};
-        // core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)msg));
-
         float convMax = (curr_conv * maxP);
         *limitedMaxTrq = MIN(convMax, reqTrq);
         rampup_trigger(*limitedMaxTrq, &ramp);    
@@ -134,13 +118,19 @@ float PowerLimit_short_current_limit(float min_V, float max_T)
 
 void RegenLimit(float reqRgn, float *limitedMaxRgn)
 {
+    float trqs[4];
+    Inverters_get_torques(trqs);
+    float totalTrq = (trqs[0] + trqs[1] + trqs[2] + trqs[3]) / 100;
+
     float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
-    if (prevRgn < PL_THRESHOLD * MAX_REGEN_CURRENT_A)
+
+    if (amps < (RL_THRESHOLD * MAX_REGEN_CURRENT_A))
     {
-        float curr_tPerA = prevRgn/amps;
-        float conv_max = curr_tPerA * MAX_REGEN_CURRENT_A;
+        float curr_tPerA = totalTrq/amps;                   // Positive
+        float conv_max = curr_tPerA * MAX_REGEN_CURRENT_A;  // Negative
         *limitedMaxRgn = MAX(reqRgn, conv_max);
     }
+    else *limitedMaxRgn = reqRgn;
 }
 
 void RegenLimit_set_prev_rgn(float rgn)

@@ -68,6 +68,7 @@ typedef struct
     struct main_dbc_vc_fr_info_3_t fr_info3;
 } MAIN_BUS;
 
+/*
 typedef struct
 {
     // Received by VC
@@ -101,8 +102,8 @@ typedef struct
     struct inverter_dbc_fr_amk_setpoints_t fr_setpoints;
     struct inverter_dbc_fl_amk_setpoints_t fl_setpoints;
 } INV_BUS;
+*/
 
-extern INV_BUS invBus;
 extern MAIN_BUS mainBus;
 
 bool CAN_init();
@@ -112,5 +113,4 @@ bool CAN_tx_inv();
 bool CAN_tx_sense();
 void CAN_rx_main();
 void CAN_rx_inv();
-int CAN_pack_message(int id, uint8_t *msg_data);
 void CAN_send_driver_inputs();

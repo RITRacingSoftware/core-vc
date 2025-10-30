@@ -40,7 +40,7 @@ void task_CAN_rx_main(void *pvParameters)
 void task_CAN_rx_inv(void *pvParameters)
 {
     (void) pvParameters;
-    while(true) {CAN_rx_inv();}
+    while(true) {Inverters_CAN_rx();}
 }
 
 void task_100Hz(void *pvParameters)

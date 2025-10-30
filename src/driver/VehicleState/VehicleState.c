@@ -95,6 +95,9 @@ void VehicleState_Task_Update()
             // Wait for minimum time before closing AIR 1
             if ((HAL_GetTick() - precharge_time) < PRECHARGE_MIN_TIME_MS) break;
             // Complete interlock from VC side, allow full HV to go through 
+            // core_GPIO_digital_write(SENSOR_LED_PORT, SENSOR_LED_PIN, true);
+            // float debug[2] = {1.1, 2.2};
+            // core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
             GPIO_set_interlock_relay(true);
             GPIO_set_precharge_relay(false);
             new_state(VehicleState_WAIT);
@@ -151,10 +154,10 @@ void VehicleState_Task_Update()
 
         case VehicleState_SHUTDOWN: 
             // Send zeroes for torque requests, turn off activation relay, send inverter off message
-            Inverters_set_torque_request(INV_RL, 0, 0, 0);
-            Inverters_set_torque_request(INV_FL, 0, 0, 0);
             Inverters_set_torque_request(INV_RR, 0, 0, 0);
+            Inverters_set_torque_request(INV_RL, 0, 0, 0);
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
+            Inverters_set_torque_request(INV_FL, 0, 0, 0);
             Inverters_reset_setpoints();
             GPIO_set_activate_inv_relays(false); // X140 binary input BE2 = 0
             Inverters_set_inv_on(false); // AMK_bInverterOn = 0

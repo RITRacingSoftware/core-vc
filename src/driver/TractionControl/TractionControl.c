@@ -55,12 +55,15 @@ void TractionControl_init()
 
 void TractionControl(float *inTrqs, float *outTrq, float *totalTrq)
 {
+    float tempVels[4];
+    Inverters_get_velocities_codegen(tempVels);
+
     frontTC = false;
     rearTC = false;
-    vel[0] = invBus.rr_actual1.rr_feedback_velocity;
-    vel[1] = invBus.rl_actual1.rl_feedback_velocity;
-    vel[2] = invBus.fr_actual1.fr_feedback_velocity;
-    vel[3] = invBus.fl_actual1.fl_feedback_velocity;
+    vel[0] = tempVels[3];
+    vel[1] = tempVels[1];
+    vel[2] = tempVels[2];
+    vel[3] = tempVels[0];
 
     calculate_derivatives();
 

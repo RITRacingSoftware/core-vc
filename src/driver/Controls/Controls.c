@@ -83,7 +83,9 @@ void Controls_Task_Update()
     float reqTrq = inputs.accelPct * CS_TOTAL_GAIN; 
     float maxTotalTrq;
 
-    PowerLimit(reqTrq, &maxTotalTrq);
+    if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
+    else maxTotalTrq = reqTrq;
+    // else RegenLimit(reqTrq, &maxTotalTrq);
     switch (ControlsLevel)
     {
         case ControlsLevel_ADVANCED:
@@ -111,8 +113,6 @@ static void step_basic(float maxTrq)
     for (int i = 0; i < 4; i++) {
         Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
-    
-    PowerLimit_set_prev_trq(maxTrq);
     core_timeout_reset(&runaway_timeout);
 }
 
@@ -162,7 +162,7 @@ static void step_advanced(float maxTrq)
     float front[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0]};
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_REAR_FRAME_ID, 8, *((uint64_t *)rear));
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_FRONT_FRAME_ID, 8, *((uint64_t *)front));
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
+    // core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 }
 
 static void update_controls_params()
@@ -173,17 +173,15 @@ static void update_controls_params()
     F34_Torque_Vectoring_Simulink_U.YBodyVelocityms = velY.val;
     // Fake velocity for bench testing
     // F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;
-    F34_Torque_Vectoring_Simulink_U.ThrottleInput01 = inputs.accelPct;
+    F34_Torque_Vectoring_Simulink_U.ThrottleInput01 = 1;
     F34_Torque_Vectoring_Simulink_U.BrakeInput01 = inputs.brakePct;
 
     // In the steering angle, -1 = full right, +1 = full left because that's what Jared wanted for some reason.
     F34_Torque_Vectoring_Simulink_U.SteeringAngledeg = SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
     // Invert angular rate Z so when it is turning counterclockwise it is positive
     F34_Torque_Vectoring_Simulink_U.YawRaterads = -1 * angRateZ.val;
-    F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[0] = invBus.fl_actual1.fl_feedback_velocity;
-    F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[1] = invBus.rl_actual1.rl_feedback_velocity;
-    F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[2] = invBus.fr_actual1.fr_feedback_velocity;
-    F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM[3] = invBus.rr_actual1.rr_feedback_velocity;
+    float velArr[4];
+    Inverters_get_velocities_codegen(F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM);
     F34_Torque_Vectoring_Simulink_U.LongAccelms2 = accelX.val;
     float slipRads = atan2f(F34_Torque_Vectoring_Simulink_U.YBodyVelocityms, F34_Torque_Vectoring_Simulink_U.XBodyVelocityms);
     F34_Torque_Vectoring_Simulink_U.BodySideslipAngle = slipRads * (180.0f / M_PI);
@@ -226,8 +224,6 @@ static void send_logging_outputs()
     mainBus.controls_out3.vc_yaw_rate_proportional = F34_Torque_Vectoring_Simulink_Y.YawRateProportionalNm;
     mainBus.controls_out3.vc_yaw_rate_integral = F34_Torque_Vectoring_Simulink_Y.YawRateIntegralNm;
     mainBus.controls_out4.vc_yaw_rate_feed_forward = F34_Torque_Vectoring_Simulink_Y.YawRateFeedforwardNm;
-    // dbg.vc_debug1 = F34_Torque_Vectoring_Simulink_Y.debug1;
-    // dbg.vc_debug2 = F34_Torque_Vectoring_Simulink_Y.debug2;
 
     uint64_t msg;
     main_dbc_vc_controls_out1_pack((uint8_t *)&msg, &mainBus.controls_out1, 8);
@@ -241,9 +237,6 @@ static void send_logging_outputs()
 
     main_dbc_vc_controls_out4_pack((uint8_t *)&msg, &mainBus.controls_out4, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT4_FRAME_ID, 8, msg);
-
-    // main_dbc_vc_controls_debug_pack((uint8_t *)&msg, &dbg, 8);
-    // core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_DEBUG_FRAME_ID, 8, msg);
 }
 
 static float trq_power_limit()
@@ -266,7 +259,7 @@ bool rampup_update(float target, float *out, rampup_t *ramp)
     if (ramp->done) *out = ramp->target;
     else
     {
-        ramp->prev += ramp->step * target;
+        ramp->prev += (ramp->step * target);
         if (ramp->prev >= ramp->target) ramp->prev = ramp->target;
         *out = ramp->prev;
     }

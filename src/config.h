@@ -18,14 +18,16 @@
 /******************** POWER LIMIT ********************/
 /*****************************************************/
 #define PL_THRESHOLD 0.30f
-#define PL_MAX_POWER_W 50000
+#define PL_MAX_POWER_W 40000
 #define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_VOLT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_TEMP_CURRENT_LIMIT_CUTOFF 45.0f
 #define VOLTAGE_STEADY_LIMIT 34.56f
 #define TEMP_STEADY_LIMIT 37.06f
-#define MAX_REGEN_CURRENT_A -20.0f
+
+#define RL_THRESHOLD 0.30f
+#define MAX_REGEN_CURRENT_A -10.0f
 
 /************************ CAN ************************/
 /*****************************************************/
@@ -38,22 +40,21 @@
 /********************** CONTROLS *********************/
 /*****************************************************/
 #define REGEN_ENABLED 0
-#define CLASSIC_CONTROLS 0
 #define RUNAWAY_TIMEOUT_MS 100
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02
 
-#define CG_UNDERSTEER_GRADIENT 0.0f
+#define CG_UNDERSTEER_GRADIENT 0.00005f
 #define CG_LONG_FACTOR 0.0f
 #define CG_TARGET_SLIP_RATIO 0.15f
 #define CG_KP_SLIP_RATIO 0.0f
 #define CG_KI_SLIP_RATIO 0.0f
 #define CG_TC_ACTIVATION_THRESHOLD 0.93f // Unit: Pct 0 -> 1
-#define CG_KP_YAW_RATE 0.0f
-#define CG_KI_YAW_RATE 0.0f
+#define CG_KP_YAW_RATE 5.50f
+#define CG_KI_YAW_RATE 10.0f
 #define CG_MAX_DESIRED_YAW_RATE 2.5f // Unit: Rad/sec
-#define CG_STATIC_LONG_SPLIT 0.5f
-#define CG_KF_YAW_RATE 11.06f
+#define CG_STATIC_LONG_SPLIT 0.25f
+#define CG_KF_YAW_RATE 5.53f
 
 #define CG_FULL_LEFT_STEER_DEG 90.0f
 #define CG_FULL_RIGHT_STEER_DEG -90.0f
@@ -114,7 +115,11 @@
 #define ACCEL_DEADZONE_HIGH_PCT 0.40f
 #define ACCEL_DEADZONE_LOW_PCT 0.30f
 #define MAX_REGEN_PCT -0.2f
-#define MIN_REGEN_MOTORSPEED_RPM 300.0f
+
+// Hysteresis because when it regens at low speeds and cuts out it jitters.
+// Releasing regen causes the wheels to spin more, which feeds back into more regen.
+#define REGEN_MOTORSPEED_RPM_LOW 200.0f     // Hysteresis low for regen motorspeed.
+#define REGEN_MOTORSPEED_RPM_HIGH 400.0f    // Hysteresis high for regen motorspeed.
 
 /** Brakes **/
 // 0.5 - 4.5v maps to 0 - 3000 psi

@@ -11,7 +11,6 @@
 #define IGNORE_LIST (FAULT_RBPS_IRRA | FAULT_RSSDB_LOST | FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL | FAULT_VN_IRR | FAULT_VN_NO_LOCK)
 
 static uint64_t faultList;
-static void check_overspeed();
 
 void FaultManager_init() {
     faultList = 0;
@@ -63,17 +62,5 @@ void FaultManager_reset(uint64_t faultCode) {
 
 void FaultManager_Task_Update()
 {
-    check_overspeed();
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, 8, faultList);
-}
-
-static void check_overspeed()
-{
-    if      (invBus.rr_actual1.rr_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_RR);
-    else if (invBus.rl_actual1.rl_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_RL); 
-    else if (invBus.fr_actual1.fr_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_FR);
-    else if (invBus.fl_actual1.fl_feedback_velocity > OVERSPEED_RPM) Inverters_set_overspeed(INV_FL);
-    // if (invBus.fl_actual1.fl_feedback_velocity > 2000) Inverters_set_state(INV_FL, InvState_SOFT_FAULT);
-
-    // rprintf("FR: %d\n", invBus.rl_actual1.rl_feedback_velocity);
 }

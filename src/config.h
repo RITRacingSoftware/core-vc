@@ -12,13 +12,14 @@
 #define PRECHARGE_MAX_TIME_MS 5000
 #define OVERSPEED_RPM 20000
 #define RTD_HOLD_TIME 1000
-#define TSMS_HOLD_TIME 50
+#define TSMS_HOLD_SAMPLES 10
+#define RTD_HOLD_SAMPLES 10
 #define PACK_IRR_V 380
 
 /******************** POWER LIMIT ********************/
 /*****************************************************/
 #define PL_THRESHOLD 0.30f
-#define PL_MAX_POWER_W 40000
+#define PL_MAX_POWER_W 80000
 #define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_VOLT_CURRENT_LIMIT_CUTOFF 3.6f
@@ -26,7 +27,7 @@
 #define VOLTAGE_STEADY_LIMIT 34.56f
 #define TEMP_STEADY_LIMIT 37.06f
 
-#define RL_THRESHOLD 0.30f
+#define RL_THRESHOLD 0.50f
 #define MAX_REGEN_CURRENT_A -10.0f
 
 /************************ CAN ************************/
@@ -107,8 +108,8 @@
 #define ACCEL_B_MAX_ADC 1800
 #define ACCEL_B_OFFSET_ADC 150
 #define ACCEL_B_RANGE_ADC (ACCEL_B_MAX_ADC - ACCEL_B_OFFSET_ADC)
-#define ACCEL_B_IRRATIONAL_LOW_ADC 20
-#define ACCEL_MAX_DISAGREEMENT 10
+#define ACCEL_B_IRRATIONAL_LOW_ADC 0
+#define ACCEL_MAX_DISAGREEMENT 25
 #define ACCEL_POS_TOL 1
 
 // Regen

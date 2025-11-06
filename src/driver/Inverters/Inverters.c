@@ -76,8 +76,6 @@ void Inverters_Task_Update()
 
     check_errors();
     state_machine();
-    debug[0] = invRR.req_setpoint;
-
 
     // Check to see if we're in RTD
     if (VehicleState_get_state() != VehicleState_RTD) {
@@ -89,13 +87,10 @@ void Inverters_Task_Update()
         for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
     }
 
-    debug[1] = invRR.req_setpoint; 
-
     // Check if the motorspeeds are too low for regen
     check_regen();
     send_setpoints(); 
 
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 }
 
 bool Inverters_get_ready_all() { return (invRR.actual1.system_ready && invRL.actual1.system_ready && invFR.actual1.system_ready && invFL.actual1.system_ready); }
@@ -117,7 +112,7 @@ bool Inverters_get_precharged_all ()
 {
     for (int i = 0; i < 4; i++) {
         // Return false if bus voltage is less than 90% of pack or bus voltage is less than minimum value
-        if (invArr[i]->set2.dc_bus_voltage < (mainBus.bms_status.bms_status_pack_voltage * 0.9) || invArr[i]->set2.dc_bus_voltage < MIN_PRECHARGE_VOL) return false;
+        if (invArr[i]->set2.dc_bus_voltage < (mainBus.bms_status.bms_status_pack_voltage * 0.9f) || invArr[i]->set2.dc_bus_voltage < MIN_PRECHARGE_VOL) return false;
     }
     return true;
 }
@@ -190,7 +185,7 @@ void Inverters_set_state(uint8_t invNum, InvState_e state)
 
             case InvState_RESETTING:
                 if (check_state_change(paired, InvState_PAIRED_SOFT)) paired->state = InvState_PAIRED_SOFT;
-                target->setpoints.b_error_reset = 1;
+                // target->setpoints.b_error_reset = 1;
                 break;
 
             case InvState_HARD_FAULT:
@@ -335,6 +330,7 @@ void Inverters_echo_on_main()
     mainBus.rr_info2.vc_rr_temp_inverter = invRR.actual2.temp_inverter;
     mainBus.rr_info3.vc_rr_temp_motor = invRR.actual2.temp_motor;
     mainBus.rr_info3.vc_rr_dc_bus_voltage = invRR.set2.dc_bus_voltage;
+    mainBus.rr_info3.vc_rr_active_power = invRR.set3.active_power;
 
     // RL
     mainBus.rl_info1.vc_rl_error_list1 = invRL.set1.error_list1;
@@ -344,6 +340,7 @@ void Inverters_echo_on_main()
     mainBus.rl_info2.vc_rl_temp_inverter = invRL.actual2.temp_inverter;
     mainBus.rl_info3.vc_rl_temp_motor = invRL.actual2.temp_motor;
     mainBus.rl_info3.vc_rl_dc_bus_voltage = invRL.set2.dc_bus_voltage;
+    mainBus.rl_info3.vc_rl_active_power = invRL.set3.active_power;
 
     // FR
     mainBus.fr_info1.vc_fr_error_list1 = invFR.set1.error_list1;
@@ -353,6 +350,7 @@ void Inverters_echo_on_main()
     mainBus.fr_info2.vc_fr_temp_inverter = invFR.actual2.temp_inverter;
     mainBus.fr_info3.vc_fr_temp_motor = invFR.actual2.temp_motor;
     mainBus.fr_info3.vc_fr_dc_bus_voltage = invFR.set2.dc_bus_voltage;
+    mainBus.fr_info3.vc_fr_active_power = invFR.set3.active_power;
 
     // FL
     mainBus.fl_info1.vc_fl_error_list1 = invFL.set1.error_list1;
@@ -362,6 +360,7 @@ void Inverters_echo_on_main()
     mainBus.fl_info2.vc_fl_temp_inverter = invFL.actual2.temp_inverter;
     mainBus.fl_info3.vc_fl_temp_motor = invFL.actual2.temp_motor;
     mainBus.fl_info3.vc_fl_dc_bus_voltage = invFL.set2.dc_bus_voltage;
+    mainBus.fl_info3.vc_fl_active_power = invFL.set3.active_power;
 
     uint64_t msg_data;
 
@@ -436,26 +435,27 @@ static void state_machine()
             switch(target->reset_state)
             {
                 case ResetState_0:
-                    target->setpoints.b_error_reset = 1;
-                    if (target->actual2.error_info == 0) {
-                        target->setpoints.b_error_reset = 0;
+                    target->setpoints.b_inverter_on = 0;
+                    if (target->actual1.quit_inverter_on == 0) {
                         target->reset_state = ResetState_1;
                     }
                     break;
 
                 case ResetState_1:
-                    if (target->actual1.quit_inverter_on == 0) {
-                        target->setpoints.b_inverter_on = 0;
+                    target->setpoints.b_error_reset = 1;
+                    if (target->actual2.error_info == 0) {
+                        target->setpoints.b_error_reset = 0;
                         target->reset_state = ResetState_2;
                     }
                     break;
 
+                // case ResetState_2:
+                    // target->setpoints.b_inverter_on = 1;
+                    // target->reset_state = ResetState_3;
+                    // break;
+
                 case ResetState_2:
                     target->setpoints.b_inverter_on = 1;
-                    target->reset_state = ResetState_3;
-                    break;
-
-                case ResetState_3:
                     if (target->actual1.system_ready == 1) {
                         Inverters_set_state(inv, InvState_NORMAL);
                         target->reset_state = ResetState_0;

@@ -66,6 +66,7 @@ void VC_Task_Update()
     FaultManager_Task_Update();
     Inverters_Task_Update();
     CAN_Task_Update();
+    GPIO_Task_Update();
 }
 
 void toggle_heartbeat()

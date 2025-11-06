@@ -1,6 +1,12 @@
 #include "driver_GPIO.h"
 #include "Inverters.h"
+#include "config.h"
 #include "gpio.h"
+
+static uint8_t RTD_counter;
+static bool RTD_state;
+static uint8_t TSMS_counter;
+static bool TSMS_state;
 
 void GPIO_init()
 {
@@ -57,8 +63,8 @@ bool GPIO_set_interlock_relay(bool on) {
     return true;
 }
 
-bool GPIO_get_TSMS() {return core_GPIO_digital_read(TSMS_PORT, TSMS_PIN);}
-bool GPIO_get_RTD() {return core_GPIO_digital_read(RTD_PORT, RTD_PIN);}
+bool GPIO_get_TSMS() {return TSMS_state;}
+bool GPIO_get_RTD() {return RTD_state;}
 
 void GPIO_set_activate_inv_relays(bool on)
 {
@@ -66,4 +72,17 @@ void GPIO_set_activate_inv_relays(bool on)
     core_GPIO_digital_write(RL_ACTIVATE_RELAY_PORT, RL_ACTIVATE_RELAY_PIN, on);
     core_GPIO_digital_write(FR_ACTIVATE_RELAY_PORT, FR_ACTIVATE_RELAY_PIN, on);
     core_GPIO_digital_write(FL_ACTIVATE_RELAY_PORT, FL_ACTIVATE_RELAY_PIN, on);
+}
+
+void GPIO_Task_Update()
+{
+    if (core_GPIO_digital_read(TSMS_PORT, TSMS_PIN) != TSMS_state) {
+        if (++TSMS_counter >= TSMS_HOLD_SAMPLES) TSMS_state = !TSMS_state;
+    }
+    else TSMS_counter = 0;
+
+    if (core_GPIO_digital_read(RTD_PORT, RTD_PIN) != RTD_state) {
+        if (++RTD_counter >= RTD_HOLD_SAMPLES) RTD_state = !RTD_state;
+    }
+    else RTD_counter = 0;
 }

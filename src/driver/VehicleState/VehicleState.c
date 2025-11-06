@@ -14,8 +14,6 @@
 static unsigned long precharge_time;
 static VehicleState_e state;
 static DriverInputs_s inputs;
-static uint8_t RTD_cycles;
-static uint8_t TSMS_cycles;
 
 static void new_state(uint8_t new)
 {
@@ -27,8 +25,6 @@ void VehicleState_init()
 {
     // Set default values
     state = VehicleState_VC_NOT_READY;
-    RTD_cycles = 0;
-    TSMS_cycles = 0;
     precharge_time = 0; 
     Inverters_suspend_timeouts();
 }
@@ -36,18 +32,15 @@ void VehicleState_init()
 void VehicleState_Task_Update()
 {
     // Kill AIR1 if TSMS is hit
-    if (state > VehicleState_VC_NOT_READY && state < VehicleState_SHUTDOWN && !GPIO_get_TSMS())
-    {
+    if (state > VehicleState_VC_NOT_READY && !GPIO_get_TSMS()) {
         GPIO_set_interlock_relay(false);
-        state = VehicleState_VC_NOT_READY;
+        state = VehicleState_SHUTDOWN;
     }
     
     DriverInputs_get_driver_inputs(&inputs);
     switch(state)
     {
         case VehicleState_VC_NOT_READY:
-            // core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
-            // if (!Inverters_reset_charging_error()) break;
             if ( !(Inverters_get_state(INV_RR) == InvState_NORMAL &&
                    Inverters_get_state(INV_RL) == InvState_NORMAL &&
                    Inverters_get_state(INV_FR) == InvState_NORMAL &&
@@ -109,9 +102,7 @@ void VehicleState_Task_Update()
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
             Inverters_set_torque_request(INV_FL, 0, 0, 0);
 
-            RTD_cycles = GPIO_get_RTD() ? RTD_cycles + 1 : 0;
-
-            if (RTD_cycles * VS_UPDATE_FREQ >= RTD_HOLD_TIME)
+            if (GPIO_get_RTD())
             {
                 new_state(VehicleState_STANDBY);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 1);
@@ -140,19 +131,10 @@ void VehicleState_Task_Update()
             break;
 
         case VehicleState_RTD:
-            // If the start button is pressed again, shutdown
-            // Inverters_set_torque_request(INV_RR, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_RL, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_FR, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);
-            // Inverters_set_torque_request(INV_FL, (MAX_TORQUE * 1.0 * inputs.accelPct), 0, POS_TORQUE_LIMIT);  
-            
-            TSMS_cycles = !GPIO_get_TSMS() ? TSMS_cycles + 1 : 0;
-            if (TSMS_cycles * VS_UPDATE_FREQ >= TSMS_HOLD_TIME) {
-                new_state(VehicleState_SHUTDOWN);
-            }
             break;
 
         case VehicleState_SHUTDOWN: 
+            core_GPIO_digital_write(SENSOR_LED_PORT, SENSOR_LED_PIN, true);
             // Send zeroes for torque requests, turn off activation relay, send inverter off message
             Inverters_set_torque_request(INV_RR, 0, 0, 0);
             Inverters_set_torque_request(INV_RL, 0, 0, 0);
@@ -161,7 +143,6 @@ void VehicleState_Task_Update()
             Inverters_reset_setpoints();
             GPIO_set_activate_inv_relays(false); // X140 binary input BE2 = 0
             Inverters_set_inv_on(false); // AMK_bInverterOn = 0
-            GPIO_set_interlock_relay(false); // Kill interlock
             
             // Receive echo for inverters being commanded off
             // AMK_bInverterOn = 0 MIRROR

@@ -32,7 +32,7 @@ static rampup_t rampFR;
 static rampup_t rampFL;
 static rampup_t *rampArr[4] = {&rampRR, &rampRL, &rampFR, &rampFL};
 
-static core_filter_t derArr[4];
+// static core_filter_t derArr[4];
 // static core_filter_t derRR;
 // static core_filter_t derRL;
 // static core_filter_t derFR;
@@ -42,7 +42,7 @@ static core_filter_t derArr[4];
 
 void TractionControl_init()
 {
-    
+/*    
     for (int i = 0; i < 4; i++) {
         rampArr[i]->done = true;
         rampArr[i]->step = TC_RESET_STEP;
@@ -51,6 +51,7 @@ void TractionControl_init()
         derArr[i].type = Filter_ROLLING_AVG; 
         core_filter_init(&derArr[i]);
     }
+    */
 }
 
 void TractionControl(float *inTrqs, float *outTrq, float *totalTrq)
@@ -126,7 +127,7 @@ static void calculate_derivatives()
 {
     for (int i = 0; i < 4; i++) {
         float derf = vel[i] - velPrev[i];
-        der[i] = core_filter_update(derf, &derArr[i]);
+        // der[i] = core_filter_update(derf, &derArr[i]);
         // der[i] = vel[i] - velPrev[i];
 
         velPrev[i] = vel[i];

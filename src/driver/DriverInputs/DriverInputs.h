@@ -4,14 +4,14 @@
 
 #define BPS_IRRA_REF 0;
 
-#define BPS_PORT GPIOB
-#define BPS_PIN GPIO_PIN_1
+#define BPS_PORT GPIOC
+#define BPS_PIN GPIO_PIN_3
 
-#define ACCEL_A_PORT GPIOA
-#define ACCEL_A_PIN GPIO_PIN_3
+#define ACCEL_A_PORT GPIOB
+#define ACCEL_A_PIN GPIO_PIN_11
 
-#define ACCEL_B_PORT GPIOA
-#define ACCEL_B_PIN GPIO_PIN_4
+#define ACCEL_B_PORT GPIOB
+#define ACCEL_B_PIN GPIO_PIN_14
 
 typedef enum
 {

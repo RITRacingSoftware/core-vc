@@ -3,6 +3,7 @@
 #include "can.h"
 
 #include "Controls.h"
+#include "driver_GPIO.h"
 #include "PowerLimit.h"
 #include "TorqueVectoring.h"
 #include "TractionControl.h"
@@ -11,11 +12,11 @@
 #include "FaultManager.h"
 #include "timeout.h"
 #include "driver_can.h"
-#include "F34_Torque_Vectoring_Simulink_v1_3.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5.h"
 #include <math.h>
 #include "rtt.h"
 
-#define NUM_VN_INPUTS 5
+#define NUM_VN_INPUTS 6
 
 static DriverInputs_s inputs;
 static ControlsLevel_e ControlsLevel;
@@ -44,6 +45,7 @@ vn_input_t velX = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_x, .irrVal = 
 vn_input_t velY = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_y, .irrVal = VN_IRR_VEL_Y, .irrCnt=0};
 vn_input_t angRateZ = {.val=0, .p_msg=&mainBus.vn2.vector_nav_angular_rate_z, .irrVal = VN_IRR_ANG_RATE_Z, .irrCnt=0};
 vn_input_t accelX = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_x, .irrVal = VN_IRR_ACCEL_X, .irrCnt=0};
+vn_input_t accelY = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_y, .irrVal = VN_IRR_ACCEL_Y, .irrCnt=0};
 vn_input_t yaw = {.val=0, .p_msg=&mainBus.vn7.vector_nav_ypr_y, .irrVal = VN_IRR_YAW, .irrCnt=0};
 vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &yaw};
 
@@ -59,22 +61,38 @@ void Controls_init()
     runaway_timeout.single_shot = 0;
     core_timeout_insert(&runaway_timeout);
 
-    F34_Torque_Vectoring_Simulink_v1_3_initialize();
+    F34_Torque_Vectoring_Simulink_v1_5_initialize();
     
     ControlsLevel = ControlsLevel_BASIC;
 
     // Set constants
-    F34_Torque_Vectoring_Simulink_U.UndersteerGradient = CG_UNDERSTEER_GRADIENT;
-    F34_Torque_Vectoring_Simulink_U.LongFactor = CG_LONG_FACTOR;
-    F34_Torque_Vectoring_Simulink_U.TargetSlipRatio = CG_TARGET_SLIP_RATIO;
-    F34_Torque_Vectoring_Simulink_U.kP_slip_ratio = CG_KP_SLIP_RATIO;
-    F34_Torque_Vectoring_Simulink_U.kI_slip_ratio = CG_KI_SLIP_RATIO;
-    F34_Torque_Vectoring_Simulink_U.TCActivationThreshold = CG_TC_ACTIVATION_THRESHOLD;
-    F34_Torque_Vectoring_Simulink_U.kP_yaw_rate = CG_KP_YAW_RATE;
-    F34_Torque_Vectoring_Simulink_U.kI_yaw_rate = CG_KI_YAW_RATE;
-    F34_Torque_Vectoring_Simulink_U.MaxDesiredYawRaterads = CG_MAX_DESIRED_YAW_RATE;
-    F34_Torque_Vectoring_Simulink_U.StaticLongSplit = CG_STATIC_LONG_SPLIT;
-    F34_Torque_Vectoring_Simulink_U.kF_yaw_rate = CG_KF_YAW_RATE;
+    F34_Torque_Vectoring_Simulink_U.YawParams_d.Understeer_Gradient = CG_UNDERSTEER_GRADIENT;
+    F34_Torque_Vectoring_Simulink_U.YawParams_d.kP_Yaw_Rate = CG_KP_YAW_RATE;
+    F34_Torque_Vectoring_Simulink_U.YawParams_d.kI_Yaw_Rate = CG_KI_YAW_RATE;
+    F34_Torque_Vectoring_Simulink_U.YawParams_d.kF_Yaw_Rate = CG_KF_YAW_RATE;
+    F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Split = CG_STATIC_LONG_SPLIT;
+    F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Factor = CG_LONG_FACTOR;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR = CG_TARGET_SR_NOMINAL;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ax_min = CG_TARGET_SR_AX_MIN;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ay_min = CG_TARGET_SR_AY_MIN;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max = CG_TARGET_SR_MAX;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min = CG_TARGET_SR_MIN;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Lat = CG_TARGET_SR_LAT;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Long = CG_TARGET_SR_LONG;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Lat_min = CG_TARGET_SR_LAT_MIN;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.kP_Slip_Ratio = CG_KP_SLIP_RATIO;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.kI_Slip_Ratio = CG_KI_SLIP_RATIO;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.kD_Slip_Ratio = CG_KD_SLIP_RATIO;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Activation_Threshold = CG_TC_ACTIVATION_THRESHOLD;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[0] = CG_TC_FX_FRONT;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[1] = CG_TC_FX_REAR;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[2] = CG_TC_FX_FRONT;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[3] = CG_TC_FX_REAR;
+    F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Preload_Torque = CG_LC_PRELOAD;
+    F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax = CG_LC_TMAX;
+    F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wdot_max = CG_LC_WDOT_MAX;
+    F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend1 = CG_LC_TBLEND1;
+    F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend2 = CG_LC_TBLEND2;
 }
 
 void Controls_Task_Update()
@@ -123,19 +141,21 @@ static float fault_max = 0;
 static void step_advanced(float maxTrq)
 {
     // Controls uses torque in Nm, so have to convert from %Mn to Nm. Torque is represented 0 -> 1 = 0 -> 100%.
-    F34_Torque_Vectoring_Simulink_U.TotalTorqueAvailableNm = maxTrq * 9.8;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Total_Torque_Request = maxTrq * 9.8f;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = !GPIO_get_LC();
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.dt_loop = 0.01f;
     rprintf("avail %d\n", (int)(maxTrq*100));
     update_controls_params();
 
-    F34_Torque_Vectoring_Simulink_v1_3_step();
+    F34_Torque_Vectoring_Simulink_v1_5_step();
 
     send_logging_outputs();
 
     // Gets torque requests in %Mn/100 format from Nm. 9.8Nm = 1
-    float flReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0] / 9.8;
-    float rlReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1] / 9.8;
-    float frReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2] / 9.8;
-    float rrReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3] / 9.8;
+    float flReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0] / 9.8f;
+    float rlReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1] / 9.8f;
+    float frReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2] / 9.8f;
+    float rrReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3] / 9.8f;
     float totalTrq = flReqMn + rlReqMn + frReqMn + rrReqMn;
     // rprintf("totalTrq: %d\n", (int)(totalTrq * 100));
     // rprintf("%d %d %d %d\n", (int)(rrReqMn * 100), (int)(rlReqMn * 100), (int)(frReqMn * 100), (int)(flReqMn * 100));
@@ -169,22 +189,20 @@ static void update_controls_params()
 {
     vn_irrational_check();
 
-    F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = velX.val;
-    F34_Torque_Vectoring_Simulink_U.YBodyVelocityms = velY.val;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = velX.val;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_velocity = velY.val;
     // Fake velocity for bench testing
     // F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;
-    F34_Torque_Vectoring_Simulink_U.ThrottleInput01 = 1;
-    F34_Torque_Vectoring_Simulink_U.BrakeInput01 = inputs.brakePct;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos = inputs.accelPct;
 
     // In the steering angle, -1 = full right, +1 = full left because that's what Jared wanted for some reason.
-    F34_Torque_Vectoring_Simulink_U.SteeringAngledeg = SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle = SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
     // Invert angular rate Z so when it is turning counterclockwise it is positive
-    F34_Torque_Vectoring_Simulink_U.YawRaterads = -1 * angRateZ.val;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Yaw_Rate = -1 * angRateZ.val;
     float velArr[4];
-    Inverters_get_velocities_codegen(F34_Torque_Vectoring_Simulink_U.FeedbackSpeedsRPM);
-    F34_Torque_Vectoring_Simulink_U.LongAccelms2 = accelX.val;
-    float slipRads = atan2f(F34_Torque_Vectoring_Simulink_U.YBodyVelocityms, F34_Torque_Vectoring_Simulink_U.XBodyVelocityms);
-    F34_Torque_Vectoring_Simulink_U.BodySideslipAngle = slipRads * (180.0f / M_PI);
+    Inverters_get_velocities_codegen(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds);
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_accel = accelX.val;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_accel = accelY.val;
 }
 
 static void vn_irrational_check()
@@ -212,18 +230,24 @@ static void vn_irrational_check()
 static void send_logging_outputs()
 {
     struct main_dbc_vc_controls_debug_t dbg;
-    mainBus.controls_out1.vc_fl_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.SlipRatios[0]);
-    mainBus.controls_out1.vc_rl_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.SlipRatios[1]);
-    mainBus.controls_out1.vc_fr_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.SlipRatios[2]);
-    mainBus.controls_out1.vc_rr_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.SlipRatios[3]);
-    mainBus.controls_out1.vc_desired_yaw_rate = main_dbc_vc_controls_out1_vc_desired_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.DesiredYawRaterads);
-    mainBus.controls_out1.vc_steer_angle = main_dbc_vc_controls_out1_vc_steer_angle_encode(F34_Torque_Vectoring_Simulink_U.SteeringAngledeg);
+    mainBus.controls_out1.vc_fl_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[0]);
+    mainBus.controls_out1.vc_rl_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[1]);
+    mainBus.controls_out1.vc_fr_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[2]);
+    mainBus.controls_out1.vc_rr_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[3]);
+
     mainBus.controls_out2.vc_e_yaw_rate = main_dbc_vc_controls_out2_vc_e_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.e_yaw_raterads);
-    mainBus.controls_out2.vc_lateral_torque_bias = main_dbc_vc_controls_out2_vc_e_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasRightLeftNm);
+    mainBus.controls_out2.vc_lateral_torque_bias = main_dbc_vc_controls_out2_vc_e_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasNm);
+    mainBus.controls_out2.vc_desired_yaw_rate = main_dbc_vc_controls_out2_vc_desired_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.Desired_Yaw_Rate_rads);
+    mainBus.controls_out2.vc_steer_angle = main_dbc_vc_controls_out2_vc_steer_angle_encode(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle);
     
-    mainBus.controls_out3.vc_yaw_rate_proportional = F34_Torque_Vectoring_Simulink_Y.YawRateProportionalNm;
-    mainBus.controls_out3.vc_yaw_rate_integral = F34_Torque_Vectoring_Simulink_Y.YawRateIntegralNm;
-    mainBus.controls_out4.vc_yaw_rate_feed_forward = F34_Torque_Vectoring_Simulink_Y.YawRateFeedforwardNm;
+    mainBus.controls_out3.vc_yaw_rate_proportional = F34_Torque_Vectoring_Simulink_Y.Yaw_Rate_Proportional_nm;
+    mainBus.controls_out3.vc_yaw_rate_integral = F34_Torque_Vectoring_Simulink_Y.Yaw_Rate_Integral_nm;
+
+    mainBus.controls_out4.vc_yaw_rate_feed_forward = F34_Torque_Vectoring_Simulink_Y.Yaw_Rate_Feedforward_nm;
+    mainBus.controls_out4.vc_lc_state = F34_Torque_Vectoring_Simulink_Y.LaunchControlState;
+    mainBus.controls_out4.vc_lc_button = F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button;
+    mainBus.controls_out4.vc_lc_ramp = F34_Torque_Vectoring_Simulink_Y.LC_ramp_pct * 255;
+    mainBus.controls_out4.vc_lc_blend = F34_Torque_Vectoring_Simulink_Y.LC_blend_pct * 255;
 
     uint64_t msg;
     main_dbc_vc_controls_out1_pack((uint8_t *)&msg, &mainBus.controls_out1, 8);

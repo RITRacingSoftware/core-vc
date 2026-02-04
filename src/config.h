@@ -14,6 +14,7 @@
 #define RTD_HOLD_TIME 1000
 #define TSMS_HOLD_SAMPLES 10
 #define RTD_HOLD_SAMPLES 10
+#define LC_HOLD_SAMPLES 10
 #define PACK_IRR_V 380
 
 /******************** POWER LIMIT ********************/
@@ -45,17 +46,34 @@
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02
 
-#define CG_UNDERSTEER_GRADIENT 0.00005f
+#define CG_STATIC_LONG_SPLIT 0.25f
 #define CG_LONG_FACTOR 0.0f
-#define CG_TARGET_SLIP_RATIO 0.15f
-#define CG_KP_SLIP_RATIO 0.0f
-#define CG_KI_SLIP_RATIO 0.0f
-#define CG_TC_ACTIVATION_THRESHOLD 0.93f // Unit: Pct 0 -> 1
+
+#define CG_UNDERSTEER_GRADIENT 0.00005f
+#define CG_MAX_DESIRED_YAW_RATE 2.5f // Unit: Rad/sec
 #define CG_KP_YAW_RATE 5.50f
 #define CG_KI_YAW_RATE 10.0f
-#define CG_MAX_DESIRED_YAW_RATE 2.5f // Unit: Rad/sec
-#define CG_STATIC_LONG_SPLIT 0.25f
 #define CG_KF_YAW_RATE 5.53f
+
+#define CG_TC_FX_REAR               1000.0f
+#define CG_TC_FX_FRONT              350.0f
+#define CG_TARGET_SR_NOMINAL        0.15f
+#define CG_TARGET_SR_AX_MIN         0.1f
+#define CG_TARGET_SR_AY_MIN         0.1f
+#define CG_TARGET_SR_MAX            0.22f
+#define CG_TARGET_SR_MIN            0.015f
+#define CG_TARGET_SR_LAT            1.8f
+#define CG_TARGET_SR_LONG           0.02f
+#define CG_TARGET_SR_LAT_MIN        0.0f
+#define CG_KP_SLIP_RATIO            (-5.0f)
+#define CG_KI_SLIP_RATIO            (-15.0f)
+#define CG_KD_SLIP_RATIO            (-0.1f)
+#define CG_TC_ACTIVATION_THRESHOLD  0.65f // Unit: Pct 0 -> 1
+#define CG_LC_PRELOAD               0.35f
+#define CG_LC_TMAX                  1.0f
+#define CG_LC_WDOT_MAX              1000.0f
+#define CG_LC_TBLEND1               0.2f
+#define CG_LC_TBLEND2               0.4f
 
 #define CG_FULL_LEFT_STEER_DEG 90.0f
 #define CG_FULL_RIGHT_STEER_DEG -90.0f
@@ -66,6 +84,7 @@
 #define VN_IRR_VEL_Y 100               // m/s
 #define VN_IRR_ANG_RATE_Z 50           // rad/s
 #define VN_IRR_ACCEL_X 50              // m/s^2
+#define VN_IRR_ACCEL_Y 50              // m/s^2
 #define VN_IRR_YAW 360                 // deg
 
 // Torque Vectoring

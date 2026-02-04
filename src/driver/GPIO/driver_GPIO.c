@@ -7,11 +7,14 @@ static uint8_t RTD_counter;
 static bool RTD_state;
 static uint8_t TSMS_counter;
 static bool TSMS_state;
+static uint8_t LC_counter;
+static bool LC_state;
 
 void GPIO_init()
 {
     core_GPIO_init(TSMS_PORT, TSMS_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN);
     core_GPIO_init(RTD_PORT, RTD_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN);
+    core_GPIO_init(LC_PORT, LC_PIN, GPIO_MODE_INPUT, GPIO_PULLUP);
 
     core_GPIO_init(PRECHARGE_RELAY_PORT, PRECHARGE_RELAY_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(AIR1_PORT, AIR1_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
@@ -65,6 +68,7 @@ bool GPIO_set_interlock_relay(bool on) {
 
 bool GPIO_get_TSMS() {return TSMS_state;}
 bool GPIO_get_RTD() {return RTD_state;}
+bool GPIO_get_LC() {return LC_state;}
 
 void GPIO_set_activate_inv_relays(bool on)
 {
@@ -85,4 +89,9 @@ void GPIO_Task_Update()
         if (++RTD_counter >= RTD_HOLD_SAMPLES) RTD_state = !RTD_state;
     }
     else RTD_counter = 0;
+    
+    if (core_GPIO_digital_read(LC_PORT, LC_PIN) != LC_state) {
+        if (++LC_counter >= LC_HOLD_SAMPLES) LC_state = !LC_state;
+    }
+    else LC_counter = 0;
 }

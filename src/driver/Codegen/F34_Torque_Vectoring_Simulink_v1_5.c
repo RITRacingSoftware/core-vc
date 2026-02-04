@@ -27,6 +27,9 @@
 #include <string.h>
 #include "F34_Torque_Vectoring_Simulink_v1_5_capi.h"
 
+#include "Controls.h"
+#include <stdbool.h>
+
 /* Block signals (default storage) */
 B_F34_Torque_Vectoring_Simuli_T F34_Torque_Vectoring_Simulink_B;
 
@@ -58,6 +61,8 @@ static void F34_Torque_Vec_SystemCore_setup(dsp_simulink_MovingAverage_F3_T *obj
   obj->isSetupComplete = true;
   obj->TunablePropsChanged = false;
 }
+
+static rampup_t ramp[4];
 
 /* System initialize for atomic system: */
 void F34_Torque_V_MovingAverage_Init(B_MovingAverage_F34_Torque_Ve_T *localB,
@@ -546,6 +551,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_step(void)
      */
     rtb_VectorConcatenate[3] = (1.0F - rtb_FrontTCLong) * rtb_RightSideTorqueNm;
 
+    /************************************
+     * COMPUTATION OF TARGET SLIP RATIO
+     ************************************/
+
     /* Product: '<S8>/Product2' incorporates:
      *  Inport: '<Root>/TCParams'
      *  Sum: '<S8>/Add3'
@@ -798,6 +807,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_step(void)
      */
     F34_Torque_Vectoring_Simulin_DW.PrevY_g[3] = rtb_FrontTCLong;
 
+    /************************************
+     * WHEEL-INDIVIDUAL TRACTION CONTROL
+     ************************************/
+
     /* Outputs for Iterator SubSystem: '<S1>/Traction Control (For Each)' incorporates:
      *  ForEach: '<S10>/For Each'
      */
@@ -818,7 +831,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_step(void)
         /* SignalConversion generated from: '<S16>/Inport' incorporates:
          *  ForEachSliceSelector generated from: '<S10>/Wheel Torque [Nm]'
          */
-        rtb_e_yaw_ratekI = rtb_VectorConcatenate[ForEach_itr];
+        ramp[ForEach_itr].done = rampup_update(rtb_VectorConcatenate[ForEach_itr], &rtb_e_yaw_ratekI, ramp+ForEach_itr);
 
         /* End of Outputs for SubSystem: '<S10>/No Torque Reduction' */
       } else {
@@ -873,8 +886,11 @@ void F34_Torque_Vectoring_Simulink_v1_5_step(void)
         F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].UD_DSTATE =
           rtb_RightSideTorqueNm;
 
+        rampup_trigger(rtb_e_yaw_ratekI, ramp+ForEach_itr);
+
         /* End of Outputs for SubSystem: '<S10>/PI Controller' */
       }
+        F34_Torque_Vectoring_Simulink_Y.debug1 = rtb_e_yaw_ratekI;
 
       /* End of If: '<S10>/If' */
 
@@ -893,6 +909,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_step(void)
       rtb_ImpAsg_InsertedFor_WheelTor[ForEach_itr] = fminf
         (rtb_VectorConcatenate[ForEach_itr], rtb_e_yaw_ratekI);
     }
+
+    /************************************
+     * LC STATE MACHINE
+     ************************************/
 
     /* End of Outputs for SubSystem: '<S1>/Traction Control (For Each)' */
 
@@ -948,16 +968,23 @@ void F34_Torque_Vectoring_Simulink_v1_5_step(void)
         rtb_VectorConcatenate[2] = rtb_ImpAsg_InsertedFor_WheelTor[2];
         rtb_VectorConcatenate[3] = rtb_ImpAsg_InsertedFor_WheelTor[3];
         F34_Torque_Vectoring_Simulin_DW.s = 0U;
-      } else if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button &&
-                 (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos >
-                  F34_Torque_Vectoring_Simulin_DW.LC_pre_APPS)) {
+      } else if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button) {
         rtb_VectorConcatenate[0] = 0.0F;
         rtb_VectorConcatenate[1] = 0.0F;
         rtb_VectorConcatenate[2] = 0.0F;
         rtb_VectorConcatenate[3] = 0.0F;
-        F34_Torque_Vectoring_Simulin_DW.s = 2U;
-        F34_Torque_Vectoring_Simulin_DW.counter = 0U;
+        if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos >
+                  F34_Torque_Vectoring_Simulin_DW.LC_pre_APPS) {
+            F34_Torque_Vectoring_Simulin_DW.s = 2U;
+            F34_Torque_Vectoring_Simulin_DW.counter = 0U;
+        }
+      } else {
+        rtb_VectorConcatenate[0] = rtb_ImpAsg_InsertedFor_WheelTor[0];
+        rtb_VectorConcatenate[1] = rtb_ImpAsg_InsertedFor_WheelTor[1];
+        rtb_VectorConcatenate[2] = rtb_ImpAsg_InsertedFor_WheelTor[2];
+        rtb_VectorConcatenate[3] = rtb_ImpAsg_InsertedFor_WheelTor[3];
       }
+
       break;
 
      case 2U:
@@ -1231,6 +1258,11 @@ void F34_Torque_Vectoring_Simulink_v1_5_initialize(void)
 
   /* Initialize DataMapInfo substructure containing ModelMap for C API */
   F34_Torque_Vectoring_Simulink_v1_5_InitializeDataMapInfo();
+
+  for (int i=0; i < 4; i++) {
+      ramp[i].done = true;
+      ramp[i].step = 0.02f;
+  }
 
   {
     /* local scratch DWork variables */

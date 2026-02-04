@@ -65,15 +65,15 @@
 #define CG_TARGET_SR_LAT            1.8f
 #define CG_TARGET_SR_LONG           0.02f
 #define CG_TARGET_SR_LAT_MIN        0.0f
-#define CG_KP_SLIP_RATIO            -5.0f
-#define CG_KI_SLIP_RATIO            -15.0f
-#define CG_KD_SLIP_RATIO            -0.1f
+#define CG_KP_SLIP_RATIO            (-5.0f)
+#define CG_KI_SLIP_RATIO            (-15.0f)
+#define CG_KD_SLIP_RATIO            (-0.1f)
 #define CG_TC_ACTIVATION_THRESHOLD  0.65f // Unit: Pct 0 -> 1
 #define CG_LC_PRELOAD               0.35f
-#define CG_LC_TMAX                  5.0f
+#define CG_LC_TMAX                  1.0f
 #define CG_LC_WDOT_MAX              1000.0f
-#define CG_LC_TBLEND1               0.1f
-#define CG_LC_TBLEND2               0.2f
+#define CG_LC_TBLEND1               0.2f
+#define CG_LC_TBLEND2               0.4f
 
 #define CG_FULL_LEFT_STEER_DEG 90.0f
 #define CG_FULL_RIGHT_STEER_DEG -90.0f

@@ -104,6 +104,7 @@ void Controls_Task_Update()
     if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
     else maxTotalTrq = reqTrq;
     // else RegenLimit(reqTrq, &maxTotalTrq);
+    ControlsLevel = ControlsLevel_ADVANCED;
     switch (ControlsLevel)
     {
         case ControlsLevel_ADVANCED:
@@ -182,27 +183,28 @@ static void step_advanced(float maxTrq)
     float front[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0]};
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_REAR_FRAME_ID, 8, *((uint64_t *)rear));
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_FRONT_FRAME_ID, 8, *((uint64_t *)front));
-    // core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)(&(F34_Torque_Vectoring_Simulink_Y.debug1))));
 }
 
 static void update_controls_params()
 {
-    vn_irrational_check();
+    //vn_irrational_check();
 
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = velX.val;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = 10;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_velocity = velY.val;
     // Fake velocity for bench testing
     // F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos = inputs.accelPct;
 
     // In the steering angle, -1 = full right, +1 = full left because that's what Jared wanted for some reason.
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle = SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle = 0; //SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
     // Invert angular rate Z so when it is turning counterclockwise it is positive
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Yaw_Rate = -1 * angRateZ.val;
     float velArr[4];
     Inverters_get_velocities_codegen(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds);
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_accel = accelX.val;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_accel = accelY.val;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_accel = 0; //accelY.val;
 }
 
 static void vn_irrational_check()

@@ -126,6 +126,7 @@ typedef struct {
   uint8_T LaunchControlState;          /* '<Root>/Launch Control State' */
   real32_T LC_ramp_pct;                /* '<Root>/LC_ramp_pct' */
   real32_T LC_blend_pct;               /* '<Root>/LC_blend_pct' */
+  float debug1, debug2;
 } ExtY_F34_Torque_Vectoring_Sim_T;
 
 /* Real-time Model Data Structure */

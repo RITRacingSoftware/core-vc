@@ -8,11 +8,6 @@
 #include "sensor_dbc.h"
 
 #define INV_ERROR_RESET_BIT ((uint64_t)(1 << 11))
-#define FEEDBACK_VEL_SCALE 0.0001f
-#define FEEDBACK_TRQ_SCALE 0.1f
-#define PACK_VOLTAGE_SCALE 0.1f
-#define INST_CURRENT_SCALE 0.001f
-#define BMS_OVERVIEW_SCALE 0.01f
 
 
 typedef struct

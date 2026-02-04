@@ -36,7 +36,7 @@
 #define CAN_MAIN FDCAN2
 #define CAN_INV FDCAN3
 #define NUM_IDS_MAIN 10
-#define NUM_IDS_INV 20
+#define NUM_IDS_INV 32
 
 /********************** CONTROLS *********************/
 /*****************************************************/

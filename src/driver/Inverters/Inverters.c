@@ -256,6 +256,16 @@ void Inverters_CAN_rx()
             case INVERTER_DBC_RR_AMK_RIT_SET3_FRAME_ID:
                 inverter_dbc_rit_set3_unpack(&invRR.set3, (uint8_t *) &canMessage.data, 8); break;
 
+            case INVERTER_DBC_RR_AMK_RIT_SET4_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_RIT_SET4_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+            case INVERTER_DBC_RR_AMK_RIT_SET5_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_RIT_SET5_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+            case INVERTER_DBC_RR_AMK_RIT_SET6_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_RIT_SET6_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+
 
             // RL
             case INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID:
@@ -275,6 +285,15 @@ void Inverters_CAN_rx()
 
             case INVERTER_DBC_RL_AMK_RIT_SET3_FRAME_ID:
                 inverter_dbc_rit_set3_unpack(&invRL.set3, (uint8_t *) &canMessage.data, 8); break;
+
+            case INVERTER_DBC_RL_AMK_RIT_SET4_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_RIT_SET4_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+            case INVERTER_DBC_RL_AMK_RIT_SET5_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_RIT_SET5_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+            case INVERTER_DBC_RL_AMK_RIT_SET6_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_RIT_SET6_FRAME_ID, canMessage.dlc, canMessage.data); break;
 
 
             // FR
@@ -296,6 +315,15 @@ void Inverters_CAN_rx()
             case INVERTER_DBC_FR_AMK_RIT_SET3_FRAME_ID:
                 inverter_dbc_rit_set3_unpack(&invFR.set3, (uint8_t *) &canMessage.data, 8); break;
 
+            case INVERTER_DBC_FR_AMK_RIT_SET4_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_RIT_SET4_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+            case INVERTER_DBC_FR_AMK_RIT_SET5_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_RIT_SET5_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+            case INVERTER_DBC_FR_AMK_RIT_SET6_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_RIT_SET6_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
 
             // FL
             case INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID:
@@ -315,6 +343,15 @@ void Inverters_CAN_rx()
 
             case INVERTER_DBC_FL_AMK_RIT_SET3_FRAME_ID:
                 inverter_dbc_rit_set3_unpack(&invFL.set3, (uint8_t *) &canMessage.data, 8); break;
+
+            case INVERTER_DBC_FL_AMK_RIT_SET4_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_RIT_SET4_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+            case INVERTER_DBC_FL_AMK_RIT_SET5_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_RIT_SET5_FRAME_ID, canMessage.dlc, canMessage.data); break;
+
+            case INVERTER_DBC_FL_AMK_RIT_SET6_FRAME_ID:
+                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_RIT_SET6_FRAME_ID, canMessage.dlc, canMessage.data); break;
         }
     }
 

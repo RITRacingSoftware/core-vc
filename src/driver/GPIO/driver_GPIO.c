@@ -8,7 +8,7 @@ static bool RTD_state;
 static uint8_t TSMS_counter;
 static bool TSMS_state;
 static uint8_t LC_counter;
-static bool LC_state;
+static bool LC_state = 0;
 
 void GPIO_init()
 {
@@ -90,8 +90,8 @@ void GPIO_Task_Update()
     }
     else RTD_counter = 0;
     
-    if (core_GPIO_digital_read(LC_PORT, LC_PIN) != LC_state) {
+    /*if (core_GPIO_digital_read(LC_PORT, LC_PIN) != LC_state) {
         if (++LC_counter >= LC_HOLD_SAMPLES) LC_state = !LC_state;
     }
-    else LC_counter = 0;
+    else LC_counter = 0;*/
 }

@@ -49,8 +49,10 @@ static float lastSteer;
 
 void DriverInputs_init()
 {
-    Accel_init();
-    Brakes_init();
+    if (!core_ADC_init(ADC5)) return false;
+    if (!core_ADC_setup_pin(ACCEL_A_PORT, ACCEL_A_PIN, 1)) return false;
+    if (!core_ADC_setup_pin(ACCEL_B_PORT, ACCEL_B_PIN, 1)) return false;
+    if (!core_ADC_setup_pin(BPS_PORT, BPS_PIN, 0)) return false;
 
     faultList = 0;
     driverInputs.accelPct = 0;
@@ -188,15 +190,6 @@ static void timeout_callback (core_timeout_t *timeout)
     FaultManager_set(timeout->ref);
 }
 
-static bool Accel_init()
-{
-    if (!core_ADC_init(ADC1)) return false;
-    if (!core_ADC_init(ADC2)) return false;
-    if (!core_ADC_setup_pin(ACCEL_A_PORT, ACCEL_A_PIN, 0)) return false;
-    if (!core_ADC_setup_pin(ACCEL_B_PORT, ACCEL_B_PIN, 0)) return false;
-    return true;
-}
-
 void Accel_process()
 {
     uint16_t accelAVal, accelBVal, aVal, bVal = 0;
@@ -264,13 +257,6 @@ void Accel_process()
     test((t_val) accelBPos);
     test((t_val) driverInputs.accelPct);
 #endif    
-}
-
-static bool Brakes_init()
-{
-    if (!core_ADC_init(ADC1)) return false;
-    if (!core_ADC_setup_pin(BPS_PORT, BPS_PIN, 0)) return false;
-    return true;
 }
 
 void Brakes_process()

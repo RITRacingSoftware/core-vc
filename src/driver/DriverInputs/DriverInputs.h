@@ -27,7 +27,7 @@ typedef struct
     float steerPct; // -1 -> 1
 } DriverInputs_s;
 
-void DriverInputs_init();
+bool DriverInputs_init();
 void DriverInputs_Task_Update();
 void Accel_to_pos(uint16_t accelAVal, uint16_t accelBVal, float *accelAPos, float *accelBPos);
 void Steer_process();

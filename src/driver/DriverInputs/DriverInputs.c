@@ -47,7 +47,7 @@ static DP_State_e DP_State;
 
 static float lastSteer;
 
-void DriverInputs_init()
+bool DriverInputs_init()
 {
     if (!core_ADC_init(ADC5)) return false;
     if (!core_ADC_setup_pin(ACCEL_A_PORT, ACCEL_A_PIN, 1)) return false;

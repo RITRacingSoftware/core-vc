@@ -104,7 +104,8 @@ void Controls_Task_Update()
     if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
     else maxTotalTrq = reqTrq;
     // else RegenLimit(reqTrq, &maxTotalTrq);
-    ControlsLevel = ControlsLevel_ADVANCED;
+    // ControlsLevel = ControlsLevel_ADVANCED;
+    ControlsLevel = ControlsLevel_OFF;
     switch (ControlsLevel)
     {
         case ControlsLevel_ADVANCED:
@@ -267,10 +268,10 @@ static void send_logging_outputs()
 
 static float trq_power_limit()
 {
-    float max_current = 165.0;
-    int current = mainBus.bms_current_limit.d1_max_discharge_current;
-    float mul = (current/max_current);
-    return mul;
+    // float max_current = 165.0;
+    // int current = mainBus.bms_current_limit.d1_max_discharge_current;
+    // float mul = (current/max_current);
+    // return mul;
 }
 
 static void timeout_callback() {

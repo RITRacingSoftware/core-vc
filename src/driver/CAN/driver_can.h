@@ -8,14 +8,18 @@
 #include "sensor_dbc.h"
 
 #define INV_ERROR_RESET_BIT ((uint64_t)(1 << 11))
-
+#define FEEDBACK_VEL_SCALE 0.0001f
+#define FEEDBACK_TRQ_SCALE 0.1f
+#define PACK_VOLTAGE_SCALE 0.1f
+#define INST_CURRENT_SCALE 0.001f
+#define BMS_OVERVIEW_SCALE 0.01f
 
 typedef struct
 {
     // Received by VC 
     struct main_dbc_bms_fault_vector_t bms_fault_vector;
     struct main_dbc_bms_status_t bms_status;
-    struct main_dbc_bms_current_limit_t bms_current_limit;
+    // struct main_dbc_bms_current_limit_t bms_current_limit;
     struct main_dbc_ssdb_front_t ssdb_front;
     struct main_dbc_vector_nav0_t vn0;
     struct main_dbc_vector_nav2_t vn2; 

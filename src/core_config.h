@@ -47,10 +47,6 @@
 /********************** CAN PARAMETERS *************************/
 /***************************************************************/
 /**
-  * @brief  CAN bitrate in bits per second
-  */
-#define CORE_CAN_BITRATE 1000000
-/**
   * @brief  Number of CAN messages that can be stored in the CAN FreeRTOS queue
   */
 #define CORE_CAN_QUEUE_LENGTH 30
@@ -62,6 +58,14 @@
   * @brief  Disable CAN FreeRTOS TX queues
   */
 #define CORE_CAN_DISABLE_TX_QUEUE 0
+/**
+  * @brief  Disable CAN FreeRTOS RX queues
+  */
+#define CORE_CAN_DISABLE_RX_QUEUE 0
+/**
+  * @brief  Disable CAN FreeRTOS TX semaphores
+  */
+#define CORE_CAN_DISABLE_SEMAPHORE 0
 
 /**
   * @brief If set, calls to core_CAN_send_message will block
@@ -86,13 +90,14 @@
   * @brief  Timer that stores the upper bits of the CAN timestamp
   */
 #define CORE_CAN_TIMER  TIM2
+#define CORE_TIMESTAMP_MSB 12
 
 #define CORE_CAN_MSGBUF1_SIZE 1024
 #define CORE_CAN_MSGBUF2_SIZE 0
 #define CORE_CAN_MSGBUF3_SIZE 0
-#define CORE_FDCAN1_MSGBUF 1
-#define CORE_FDCAN2_MSGBUF 1
-#define CORE_FDCAN3_MSGBUF 1
+#define CORE_FDCAN1_MSGBUF 0
+#define CORE_FDCAN2_MSGBUF 0
+#define CORE_FDCAN3_MSGBUF 0
 
 // Ports and pins for CAN communication
 #define CORE_FDCAN1_TX_PORT GPIOA
@@ -237,14 +242,41 @@
   */
 #define CORE_USART_TXBUFLEN 512
 
-#define CORE_USART1_PORT GPIOC
-#define CORE_USART1_PINS (GPIO_PIN_4 | GPIO_PIN_5)
-//#define CORE_USART2_PORT GPIOB
-//#define CORE_USART2_PINS (GPIO_PIN_3 | GPIO_PIN_4)
-#define CORE_USART2_PORT GPIOA
-#define CORE_USART2_PINS (GPIO_PIN_3 | GPIO_PIN_2)
-#define CORE_USART3_PORT GPIOC
-#define CORE_USART3_PINS (GPIO_PIN_10 | GPIO_PIN_11)
+#define CORE_USART1_TX_PORT GPIOC
+#define CORE_USART1_TX_PIN  GPIO_PIN_4
+#define CORE_USART1_TX_AF   7
+#define CORE_USART1_RX_PORT GPIOC
+#define CORE_USART1_RX_PIN  GPIO_PIN_5
+#define CORE_USART1_RX_AF   7
+
+#define CORE_USART2_TX_PORT GPIOA
+#define CORE_USART2_TX_PIN  GPIO_PIN_2
+#define CORE_USART2_TX_AF   7
+#define CORE_USART2_RX_PORT GPIOA
+#define CORE_USART2_RX_PIN  GPIO_PIN_3
+#define CORE_USART2_RX_AF   7
+
+#define CORE_USART3_TX_PORT GPIOB
+#define CORE_USART3_TX_PIN  GPIO_PIN_10
+#define CORE_USART3_TX_AF   7
+#define CORE_USART3_RX_PORT GPIOB
+#define CORE_USART3_RX_PIN  GPIO_PIN_11
+#define CORE_USART3_RX_AF   7
+
+#define CORE_UART4_TX_PORT  GPIOC
+#define CORE_UART4_TX_PIN   GPIO_PIN_10
+#define CORE_UART4_TX_AF    5
+#define CORE_UART4_RX_PORT  GPIOC
+#define CORE_UART4_RX_PIN   GPIO_PIN_11
+#define CORE_UART4_RX_AF    5
+#define CORE_UART4_IRQ_PRIO 5
+
+#define CORE_UART5_TX_PORT  GPIOC
+#define CORE_UART5_TX_PIN   GPIO_PIN_12
+#define CORE_UART5_TX_AF    5
+#define CORE_UART5_RX_PORT  GPIOD
+#define CORE_UART5_RX_PIN   GPIO_PIN_2
+#define CORE_UART5_RX_AF    5
 
 
 /*********************** RTC PARAMETERS ************************/
@@ -282,7 +314,7 @@
 /**
  * @brief Number of timeouts used
  */
-#define CORE_TIMEOUT_NUM 20
+#define CORE_TIMEOUT_NUM 22
 
 
 

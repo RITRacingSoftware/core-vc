@@ -591,8 +591,9 @@ static void check_errors()
                 errorCode == INV_SPECIAL_SOFTWARE_MESSAGE_ERROR ||
                 errorCode == INV_OVERSPEED_ERROR ||
                 errorCode == INV_ENCODER_COMMS_ERROR ||
-                errorCode == INV_OVER_CURRENT_ERROR) Inverters_set_state(inv, InvState_RESETTING);
+                errorCode == INV_OVER_CURRENT_ERROR) Inverters_set_state(inv, InvState_SOFT_FAULT);
             else Inverters_set_state(inv, InvState_HARD_FAULT);
+
         }
     }
 }

@@ -46,7 +46,7 @@ bool VC_init()
     GPIO_init();
     VehicleState_init();
     Inverters_init();
-    DriverInputs_init();
+    if (!DriverInputs_init()) return false;
     FaultManager_init();
     TractionControl_init();
     PowerLimit_init();

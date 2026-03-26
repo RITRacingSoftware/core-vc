@@ -11,6 +11,7 @@
 #include "FaultManager.h"
 
 MAIN_BUS mainBus = {0};
+// SENSE_BUS senseBus = {0};
 
 static bool CAN_add_filters();
 static void pack_and_send_main_echoes(int id);
@@ -21,7 +22,6 @@ static void send_controls_params();
 int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
         MAIN_DBC_BMS_STATUS_FRAME_ID,
-        MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID,
         MAIN_DBC_SSDB_FRONT_FRAME_ID,
         MAIN_DBC_VECTOR_NAV0_FRAME_ID,
         MAIN_DBC_VECTOR_NAV2_FRAME_ID,
@@ -82,6 +82,12 @@ bool CAN_tx_main()
     return false;
 }
 
+bool CAN_tx_sense()
+{
+    core_CAN_send_from_tx_queue_task(CAN_SENSE);
+    return false;
+}
+
 bool CAN_tx_inv()
 {
     core_CAN_send_from_tx_queue_task(CAN_INV);
@@ -107,8 +113,8 @@ void CAN_rx_main()
                 main_dbc_bms_status_unpack(&mainBus.bms_status, (uint8_t *) &canMessage.data, canMessage.dlc);
                 mainBus.bms_status.bms_status_pack_voltage *= PACK_VOLTAGE_SCALE; break;
 
-            case MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID:
-                main_dbc_bms_current_limit_unpack(&mainBus.bms_current_limit, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+            // case MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID:
+                // main_dbc_bms_current_limit_unpack(&mainBus.bms_current_limit, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_BMS_CURRENT_FRAME_ID:
                 main_dbc_bms_current_unpack(&mainBus.bms_current, (uint8_t *) &canMessage.data, canMessage.dlc);

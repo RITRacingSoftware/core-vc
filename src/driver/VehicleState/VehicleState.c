@@ -132,6 +132,10 @@ void VehicleState_Task_Update()
 
         case VehicleState_RTD:
             break;
+#ifdef DRIVERLESS_ENABLED
+        case VehicleState_RTD_AS:
+            break;
+#endif
 
         case VehicleState_SHUTDOWN: 
             core_GPIO_digital_write(SENSOR_LED_PORT, SENSOR_LED_PIN, true);

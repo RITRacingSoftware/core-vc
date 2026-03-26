@@ -8,6 +8,9 @@
 #define RTD_PORT GPIOB
 #define RTD_PIN GPIO_PIN_15
 
+#define ASMS_PORT   GPIOC
+#define ASMS_PIN    GPIO_PIN_7
+
 #define PRECHARGE_RELAY_PORT GPIOB
 #define PRECHARGE_RELAY_PIN GPIO_PIN_10
 
@@ -58,6 +61,6 @@ void GPIO_set_precharge_relay(bool on);
 bool GPIO_set_interlock_relay(bool on);
 bool GPIO_get_TSMS();
 bool GPIO_get_RTD();
-bool GPIO_get_LC();
+bool GPIO_get_ASMS();
 void GPIO_set_activate_inv_relays(bool on);
 void GPIO_Task_Update();

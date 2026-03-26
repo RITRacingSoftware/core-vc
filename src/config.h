@@ -8,10 +8,11 @@
 /*****************************************************/
 #define LOW_SPEED_TASK_FREQ_HZ 100
 #define MIN_PRECHARGE_VOL 400
-#define PRECHARGE_MIN_TIME_MS 2000
+#define PRECHARGE_MIN_TIME_MS 4000
 #define PRECHARGE_MAX_TIME_MS 5000
 #define OVERSPEED_RPM 20000
 #define RTD_HOLD_TIME 1000
+#define ASMS_HOLD_SAMPLES 10
 #define TSMS_HOLD_SAMPLES 10
 #define RTD_HOLD_SAMPLES 10
 #define LC_HOLD_SAMPLES 10

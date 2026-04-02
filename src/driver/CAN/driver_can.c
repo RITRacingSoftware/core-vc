@@ -9,6 +9,7 @@
 #include "VC.h"
 #include "DriverInputs.h"
 #include "FaultManager.h"
+#include "vectornav.h"
 
 MAIN_BUS mainBus = {0};
 // SENSE_BUS senseBus = {0};
@@ -158,7 +159,8 @@ void CAN_Task_Update()
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, msg);
 
     // Inverters_send_timeout_times();
-    Inverters_echo_on_main();
+    //Inverters_echo_on_main();
+    vectornav_send_errors();
     send_CAN_errors();
     send_controls_params();
 }

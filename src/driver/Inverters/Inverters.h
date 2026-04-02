@@ -82,7 +82,6 @@ void Inverters_set_can_states();
 void Inverters_send_timeout_times();
 void Inverters_reset_setpoints();
 void Inverters_CAN_rx();
-void Inverters_echo_on_main();
 void Inverters_get_velocities_codegen(float *velArr);
 void Inverters_get_voltages(float *volArr);
 void Inverters_get_torques(float *trqArr);

@@ -1,3 +1,6 @@
+#include <stdbool.h>
+#include <math.h>
+
 #include "config.h"
 #include "common_macros.h"
 #include "can.h"
@@ -13,19 +16,17 @@
 #include "timeout.h"
 #include "driver_can.h"
 #include "F34_Torque_Vectoring_Simulink_v1_5.h"
-#include <math.h>
 #include "rtt.h"
 
 #define NUM_VN_INPUTS 6
 
 static DriverInputs_s inputs;
-static ControlsLevel_e ControlsLevel;
+static ControlsLevel_e ControlsLevel = CONTROLS_MAX_LEVEL;
 
 static void update_controls_params();
 static void step_advanced(float maxTrq);
-static void step_basic(float maxTrq);
+static void step_basic(float maxTrq, bool dynamic);
 static void send_logging_outputs();
-static void vn_irrational_check();
 static float trq_power_limit();
 static void timeout_callback();
 
@@ -33,13 +34,6 @@ static float rrPrev;
 static float rlPrev;
 static float frPrev;
 static float flPrev;
-
-typedef struct{
-    float val;          // Previous rational value
-    float *p_msg;       // Pointer to VN CAN message from RSSDB
-    float irrVal;       // Must not be higher than positive or lower than negative
-    uint8_t irrCnt;     // Number of irrational values
-} vn_input_t;
 
 vn_input_t velX = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_x, .irrVal = VN_IRR_VEL_X, .irrCnt=0};
 vn_input_t velY = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_y, .irrVal = VN_IRR_VEL_Y, .irrCnt=0};
@@ -95,6 +89,10 @@ void Controls_init()
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend2 = CG_LC_TBLEND2;
 }
 
+void Controls_set_max_level(ControlsLevel_e l) {
+    if (l < CONTROLS_MAX_LEVEL) ControlsLevel = l;
+}
+
 void Controls_Task_Update()
 {
     DriverInputs_get_driver_inputs(&inputs); 
@@ -105,14 +103,16 @@ void Controls_Task_Update()
     else maxTotalTrq = reqTrq;
     // else RegenLimit(reqTrq, &maxTotalTrq);
     // ControlsLevel = ControlsLevel_ADVANCED;
-    ControlsLevel = ControlsLevel_OFF;
     switch (ControlsLevel)
     {
         case ControlsLevel_ADVANCED:
             step_advanced(maxTotalTrq); break;
         
         case ControlsLevel_BASIC:
-            step_basic(maxTotalTrq); break;
+            step_basic(maxTotalTrq, false); break;
+        
+        case ControlsLevel_BASIC_VEL:
+            step_basic(maxTotalTrq, true); break;
 
         case ControlsLevel_OFF: 
             core_timeout_reset(&runaway_timeout);
@@ -125,10 +125,10 @@ void Controls_Task_Update()
     mainBus.vc_status.vc_controls_level = ControlsLevel;
 }
 
-static void step_basic(float maxTrq)
+static void step_basic(float maxTrq, bool dynamic)
 {
     float tvTrqs[4];
-    TorqueVectoring(maxTrq, tvTrqs);
+    TorqueVectoring(maxTrq, tvTrqs, dynamic);
 
     for (int i = 0; i < 4; i++) {
         Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
@@ -208,19 +208,18 @@ static void update_controls_params()
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_accel = 0; //accelY.val;
 }
 
-static void vn_irrational_check()
-{
-    for (int i = 0; i < NUM_VN_INPUTS; i++)
-    {
+bool Controls_update_vn() {
+    bool faulted = false;
+    for (int i = 0; i < NUM_VN_INPUTS; i++) {
         float inVal = *(vnIns[i]->p_msg);
         if ( ((inVal == vnIns[i]->val) && (inVal != 0)) || // If the value is the same from the last time and it isn't 0
              (inVal >= vnIns[i]->irrVal) || (inVal <= (-1 * vnIns[i]->irrVal)) ) // If value is greater than irr or less than negative irr
         {
             vnIns[i]->irrCnt++;
-            if (vnIns[i]->irrCnt >= MAX_VN_IRR)
-            {
+            if (vnIns[i]->irrCnt >= MAX_VN_IRR) {
                 FaultManager_set(FAULT_VN_IRR);
                 ControlsLevel = ControlsLevel_BASIC;
+                faulted = true;
             }
         }
         else {
@@ -228,6 +227,7 @@ static void vn_irrational_check()
             vnIns[i]->val = *(vnIns[i]->p_msg);
         }
     }
+    return faulted;
 }
 
 static void send_logging_outputs()

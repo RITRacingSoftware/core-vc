@@ -154,10 +154,9 @@ void Steer_process()
     {
         core_timeout_reset(&steer_irr_timeout);
 
-        uint16_t pos;
-        pos = SAT(rawPos, STEER_OFFSET_ADC, STEER_MAX_ADC);
-
-        float steerPct = -(((pos - STEER_OFFSET_ADC) / HALF_STEER_RANGE_ADC) - 1);
+        float steerPct = -((float)(rawPos - STEER_CENTER_ADC) / HALF_STEER_RANGE_ADC);
+        if (steerPct > 1.0f) steerPct = 1.0f;
+        if (steerPct < -1.0f) steerPct = -1.0f;
 
         // if ((fabs(steerPct - lastSteer) > STEER_DIFF_FAULT) && (VehicleState_get_state() > VehicleState_VC_NOT_READY)) FaultManager_set(FAULT_STEER_IRRA);
         // else lastSteer = steerPct;

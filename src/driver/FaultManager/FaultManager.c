@@ -30,6 +30,9 @@ void FaultManager_set(uint64_t faultCode)
             faultList |= faultCode;
         }
     }
+    if (faultList & (FAULT_VN_IRR | FAULT_VN_LOST | FAULT_VN_NO_LOCK)) {
+        Controls_set_max_level(ControlsLevel_NO_VN);
+    }
 }
 
 bool FaultManager_read(uint64_t faultCode)

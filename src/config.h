@@ -4,6 +4,8 @@
 #include <stm32g4xx_hal.h>
 #endif
 
+#include "Controls.h"
+
 /********************** GENERAL **********************/
 /*****************************************************/
 #define LOW_SPEED_TASK_FREQ_HZ 100
@@ -45,6 +47,8 @@
 #define RUNAWAY_TIMEOUT_MS 100
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02
+#define VN_LOST_TIMEOUT_MS 100
+#define CONTROLS_MAX_LEVEL ControlsLevel_BASIC
 
 #define CG_STATIC_LONG_SPLIT 0.50f
 #define CG_LONG_FACTOR 0.0f
@@ -88,13 +92,15 @@
 #define VN_IRR_YAW 360                 // deg
 
 // Torque Vectoring
-#define CS_LAT_FACTOR_ACC 0.35f
-#define CS_LONG_FACTOR_ACC 0.0f
-#define CS_LONG_SPLIT_ACC 0.50f
-#define CS_LAT_FACTOR_BRAKE 0.25f
-#define CS_LONG_FACTOR_BRAKE 0.1f
-#define CS_LONG_SPLIT_BRAKE 0.65f
-#define CS_TOTAL_GAIN 4.9f
+#define CS_LAT_FACTOR_ACC       0.35f
+#define CS_LONG_FACTOR_ACC      0.0f
+#define CS_LONG_SPLIT_ACC       0.50f
+#define CS_LAT_FACTOR_BRAKE     0.25f
+#define CS_LONG_FACTOR_BRAKE    0.1f
+#define CS_LONG_SPLIT_BRAKE     0.65f
+#define CS_TOTAL_GAIN           6.53f
+#define CS_LONG_FUNC(vel)       (0.00019f*vel*vel + 0.28f)
+#define CS_LAT_FUNC(vel)        (-0.00045f*vel*vel + 0.6f)
 
 // Traction Control
 #define TC_SPEED_DIFF_MAX 1000
@@ -105,7 +111,7 @@
 #define TC_RESET_STEP 0.10f
 
 /** Inverters **/
-#define MAX_TORQUE 100
+#define MAX_TORQUE 200
 #define POS_TORQUE_LIMIT (MAX_TORQUE)
 #define NEG_TORQUE_LIMIT (-20)
 #define INV_CAN_TIMEOUT_MS 300
@@ -118,16 +124,16 @@
 
 /** Accelerator **/
 #define ACCEL_A_IRRATIONAL_HIGH_ADC 2700
-#define ACCEL_A_MAX_ADC 2100
-#define ACCEL_A_OFFSET_ADC 1000
+#define ACCEL_A_MAX_ADC 2000
+#define ACCEL_A_OFFSET_ADC 600
 #define ACCEL_A_RANGE_ADC (ACCEL_A_MAX_ADC - ACCEL_A_OFFSET_ADC)
-#define ACCEL_A_IRRATIONAL_LOW_ADC 400
+#define ACCEL_A_IRRATIONAL_LOW_ADC 200
 
-#define ACCEL_B_IRRATIONAL_HIGH_ADC 4050
-#define ACCEL_B_MAX_ADC 3800
-#define ACCEL_B_OFFSET_ADC 1400
+#define ACCEL_B_IRRATIONAL_HIGH_ADC 4000
+#define ACCEL_B_MAX_ADC 3400
+#define ACCEL_B_OFFSET_ADC 300
 #define ACCEL_B_RANGE_ADC (ACCEL_B_MAX_ADC - ACCEL_B_OFFSET_ADC)
-#define ACCEL_B_IRRATIONAL_LOW_ADC 700
+#define ACCEL_B_IRRATIONAL_LOW_ADC 10
 #define ACCEL_MAX_DISAGREEMENT 25
 #define ACCEL_POS_TOL 1
 
@@ -171,12 +177,12 @@
 #define DI_DOUBLE_PEDAL_TIMEOUT_MS 100
 #define DI_DOUBLE_PEDAL_RESET_PCT 0.03f
 
-#define STEER_IRRATIONAL_MAX_ADC 4000
-#define STEER_MAX_ADC 3500
-#define STEER_OFFSET_ADC 2050
-#define STEER_RANGE_ADC (STEER_MAX_ADC - STEER_OFFSET_ADC)
-#define HALF_STEER_RANGE_ADC ((float)(STEER_RANGE_ADC / 2.0f))
-#define STEER_IRRATIONAL_MIN_ADC 1000
+#define STEER_CENTER_ADC            1865
+// Full left: 940 (925)
+// Full right: 2770 (905)
+#define HALF_STEER_RANGE_ADC        850
+#define STEER_IRRATIONAL_MAX_ADC    4000
+#define STEER_IRRATIONAL_MIN_ADC    1000
 
 #define DI_UPDATE_FREQ LOW_SPEED_TASK_FREQ_HZ
 #define DI_ACCEL_SOFT_DP_THRESHOLD 0.15f

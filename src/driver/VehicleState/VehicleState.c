@@ -173,7 +173,8 @@ void VehicleState_Task_Update()
             if (Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
                 Inverters_get_state(INV_RL) <= InvState_SOFT_FAULT &&
                 Inverters_get_state(INV_FR) <= InvState_SOFT_FAULT &&
-                Inverters_get_state(INV_FL) <= InvState_SOFT_FAULT)
+                Inverters_get_state(INV_FL) <= InvState_SOFT_FAULT &&
+                !FaultManager_hardfault_active())
             {
                 new_state(VehicleState_VC_NOT_READY);
             }

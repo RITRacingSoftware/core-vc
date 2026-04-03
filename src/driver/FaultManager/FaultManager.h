@@ -27,6 +27,7 @@
 #define FAULT_VN_LOST             0x00200000
 
 
+
 void FaultManager_init();
 void FaultManager_Inv(uint8_t faultList);
 void FaultManager_Task_Update();
@@ -34,3 +35,4 @@ void FaultManager_set(uint64_t faultCode);
 void FaultManager_reset(uint64_t faultCode);
 bool FaultManager_read(uint64_t faultCode);
 void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo);
+bool FaultManager_hardfault_active();

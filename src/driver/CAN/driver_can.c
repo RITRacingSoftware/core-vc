@@ -85,6 +85,7 @@ bool CAN_tx_main()
 
 bool CAN_tx_sense()
 {
+    rprintf("Starting CAN task\n");
     core_CAN_send_from_tx_queue_task(CAN_SENSE);
     return false;
 }

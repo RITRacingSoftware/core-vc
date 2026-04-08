@@ -68,7 +68,7 @@ void task_heartbeat(void *pvParameters)
     while(true)
     {
         toggle_heartbeat();
-        vTaskDelayUntil(&next_wake_time, 100);
+        vTaskDelayUntil(&next_wake_time, 500);
     }
 }
 

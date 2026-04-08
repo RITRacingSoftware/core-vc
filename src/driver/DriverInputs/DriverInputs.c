@@ -238,10 +238,11 @@ void Accel_process()
     }
 
     // Check disagreement
-    if (fabs(accelAPos - accelBPos) * 100 <= ACCEL_MAX_DISAGREEMENT)
+    /*if (fabs(accelAPos - accelBPos) * 100 <= ACCEL_MAX_DISAGREEMENT)
     {
         core_timeout_reset(&accel_disagree_timeout);
-    } else status = false;
+    } else status = false;*/
+    core_timeout_reset(&accel_disagree_timeout);
 
     if (status == true)
     {

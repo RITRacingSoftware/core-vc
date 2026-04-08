@@ -37,7 +37,7 @@ void VehicleState_Task_Update()
         state = VehicleState_SHUTDOWN;
     }
     
-    rprintf("TSMS: %d", GPIO_get_TSMS());
+    //rprintf("TSMS: %d", GPIO_get_TSMS());
     DriverInputs_get_driver_inputs(&inputs);
     switch(state)
     {

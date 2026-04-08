@@ -26,7 +26,7 @@ void FaultManager_set(uint64_t faultCode)
             VehicleState_set_fault();
             faultList |= faultCode;
             core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, 8, faultList);
-            core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, 8, faultList);
+            //core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_FAULT_VECTOR_FRAME_ID, 8, faultList);
         }
         else {
             faultList |= faultCode;

@@ -15,7 +15,7 @@
 #include "FaultManager.h"
 #include "timeout.h"
 #include "driver_can.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_2.h"
 #include "rtt.h"
 
 #define NUM_VN_INPUTS 6
@@ -55,7 +55,7 @@ void Controls_init()
     runaway_timeout.single_shot = 0;
     core_timeout_insert(&runaway_timeout);
 
-    F34_Torque_Vectoring_Simulink_v1_5_initialize();
+    F34_Torque_Vectoring_Simulink_v1_5_2_initialize();
     
     ControlsLevel = ControlsLevel_BASIC;
 
@@ -64,8 +64,12 @@ void Controls_init()
     F34_Torque_Vectoring_Simulink_U.YawParams_d.kP_Yaw_Rate = CG_KP_YAW_RATE;
     F34_Torque_Vectoring_Simulink_U.YawParams_d.kI_Yaw_Rate = CG_KI_YAW_RATE;
     F34_Torque_Vectoring_Simulink_U.YawParams_d.kF_Yaw_Rate = CG_KF_YAW_RATE;
-    F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Split = CG_STATIC_LONG_SPLIT;
-    F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Factor = CG_LONG_FACTOR;
+    // F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Split = CG_STATIC_LONG_SPLIT;
+    // F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Factor = CG_LONG_FACTOR;
+    F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Split = CS_LONG_SPLIT_ACC;
+    F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Factor = CS_LONG_FACTOR_ACC;
+    F34_Torque_Vectoring_Simulink_U.LongParams_g.Regen_Long_Split = 0;
+    F34_Torque_Vectoring_Simulink_U.LongParams_g.Regen_Long_Factor = 0;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR = CG_TARGET_SR_NOMINAL;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ax_min = CG_TARGET_SR_AX_MIN;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ay_min = CG_TARGET_SR_AY_MIN;
@@ -87,6 +91,7 @@ void Controls_init()
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wdot_max = CG_LC_WDOT_MAX;
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend1 = CG_LC_TBLEND1;
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend2 = CG_LC_TBLEND2;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Power_Limit_Flag = 0;
 }
 
 void Controls_set_max_level(ControlsLevel_e l) {
@@ -146,10 +151,16 @@ static void step_advanced(float maxTrq)
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Total_Torque_Request = maxTrq * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = !GPIO_get_LC();
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.dt_loop = 0.01f;
+    float tvArr[4];    
+    TorqueVectoring(maxTrq, tvArr, false);
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[0] = tvArr[3] * 9.8f;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[1] = tvArr[1] * 9.8f;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[2] = tvArr[0] * 9.8f;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[3] = tvArr[2] * 9.8f;
     rprintf("avail %d\n", (int)(maxTrq*100));
     update_controls_params();
 
-    F34_Torque_Vectoring_Simulink_v1_5_step();
+    F34_Torque_Vectoring_Simulink_v1_5_2_step();
 
     send_logging_outputs();
 
@@ -184,7 +195,6 @@ static void step_advanced(float maxTrq)
     float front[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0]};
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_REAR_FRAME_ID, 8, *((uint64_t *)rear));
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_FRONT_FRAME_ID, 8, *((uint64_t *)front));
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)(&(F34_Torque_Vectoring_Simulink_Y.debug1))));
 }
 
 static void update_controls_params()

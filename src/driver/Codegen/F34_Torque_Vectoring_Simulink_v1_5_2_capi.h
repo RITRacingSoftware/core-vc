@@ -1,5 +1,5 @@
 /*
- * rtGetInf.h
+ * F34_Torque_Vectoring_Simulink_v1_5_2_capi.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
@@ -18,14 +18,12 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_rtGetInf_h_
-#define RTW_HEADER_rtGetInf_h_
-#include "rt_nonfinite.h"
-#include "rtwtypes.h"
+#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_2_capi_h_
+#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_2_capi_h_
+#include "F34_Torque_Vectoring_Simulink_v1_5_2.h"
 
-extern real_T rtGetInf(void);
-extern real32_T rtGetInfF(void);
-extern real_T rtGetMinusInf(void);
-extern real32_T rtGetMinusInfF(void);
+extern void F34_Torque_Vectoring_Simulink_v1_5_2_InitializeDataMapInfo(void);
 
-#endif                                 /* RTW_HEADER_rtGetInf_h_ */
+#endif             /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_2_capi_h_ */
+
+/* EOF: F34_Torque_Vectoring_Simulink_v1_5_2_capi.h */

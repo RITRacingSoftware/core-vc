@@ -1,15 +1,15 @@
 /*
- * F34_Torque_Vectoring_Simulink_v1_5.h
+ * F34_Torque_Vectoring_Simulink_v1_5_2.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5".
+ * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_2".
  *
- * Model version              : 1.341
+ * Model version              : 1.352
  * Simulink Coder version : 23.2 (R2023b) 01-Aug-2023
- * C source code generated on : Sun Jan 18 14:21:47 2026
+ * C source code generated on : Tue Apr  7 20:57:33 2026
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -18,16 +18,16 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_h_
-#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_h_
-#ifndef F34_Torque_Vectoring_Simulink_v1_5_COMMON_INCLUDES_
-#define F34_Torque_Vectoring_Simulink_v1_5_COMMON_INCLUDES_
+#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_2_h_
+#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_2_h_
+#ifndef F34_Torque_Vectoring_Simulink_v1_5_2_COMMON_INCLUDES_
+#define F34_Torque_Vectoring_Simulink_v1_5_2_COMMON_INCLUDES_
 #include "rtwtypes.h"
 #include "rtw_continuous.h"
 #include "rtw_solver.h"
-#endif                 /* F34_Torque_Vectoring_Simulink_v1_5_COMMON_INCLUDES_ */
+#endif               /* F34_Torque_Vectoring_Simulink_v1_5_2_COMMON_INCLUDES_ */
 
-#include "F34_Torque_Vectoring_Simulink_v1_5_types.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_2_types.h"
 #include "rtw_modelmap.h"
 #include <string.h>
 #include "rt_nonfinite.h"
@@ -49,7 +49,7 @@
 #define rtmSetErrorStatus(rtm, val)    ((rtm)->errorStatus = (val))
 #endif
 
-#define F34_Torque_Vectoring_Simulink_v1_5_M (F34_Torque_Vectoring_Simulin_M)
+#define F34_Torque_Vectoring_Simulink_v1_5_2_M (F34_Torque_Vectoring_Simulin_M)
 
 /* Block signals for system '<S9>/Moving Average' */
 typedef struct {
@@ -84,8 +84,8 @@ typedef struct {
 typedef struct {
   real32_T YawRateIntegrator_DSTATE;   /* '<S11>/Yaw Rate Integrator' */
   real32_T PrevY;                      /* '<S2>/Desired Yaw Rate Limiter' */
-  real32_T PrevY_b;                    /* '<S1>/Lt Trq Bias Rate Limiter' */
   real32_T PrevY_g[4];                 /* '<S8>/Target S.R. Rate Limiter' */
+  real32_T PrevY_b;                    /* '<S1>/Lt Trq Bias Rate Limiter' */
   real32_T t;                          /* '<S1>/LC_State_Machine' */
   real32_T preloadTorques[4];          /* '<S1>/LC_State_Machine' */
   real32_T LC_pre_APPS;                /* '<S1>/LC_State_Machine' */
@@ -126,7 +126,6 @@ typedef struct {
   uint8_T LaunchControlState;          /* '<Root>/Launch Control State' */
   real32_T LC_ramp_pct;                /* '<Root>/LC_ramp_pct' */
   real32_T LC_blend_pct;               /* '<Root>/LC_blend_pct' */
-  float debug1, debug2;
 } ExtY_F34_Torque_Vectoring_Sim_T;
 
 /* Real-time Model Data Structure */
@@ -156,13 +155,13 @@ extern ExtU_F34_Torque_Vectoring_Sim_T F34_Torque_Vectoring_Simulink_U;
 extern ExtY_F34_Torque_Vectoring_Sim_T F34_Torque_Vectoring_Simulink_Y;
 
 /* Model entry point functions */
-extern void F34_Torque_Vectoring_Simulink_v1_5_initialize(void);
-extern void F34_Torque_Vectoring_Simulink_v1_5_step(void);
-extern void F34_Torque_Vectoring_Simulink_v1_5_terminate(void);
+extern void F34_Torque_Vectoring_Simulink_v1_5_2_initialize(void);
+extern void F34_Torque_Vectoring_Simulink_v1_5_2_step(void);
+extern void F34_Torque_Vectoring_Simulink_v1_5_2_terminate(void);
 
 /* Function to get C API Model Mapping Static Info */
 extern const rtwCAPI_ModelMappingStaticInfo*
-  F34_Torque_Vectoring_Simulink_v1_5_GetCAPIStaticMap(void);
+  F34_Torque_Vectoring_Simulink_v1_5_2_GetCAPIStaticMap(void);
 
 /* Real-time Model object */
 extern RT_MODEL_F34_Torque_Vectoring_T *const F34_Torque_Vectoring_Simulin_M;
@@ -197,24 +196,24 @@ extern RT_MODEL_F34_Torque_Vectoring_T *const F34_Torque_Vectoring_Simulin_M;
  *
  * Here is the system hierarchy for this model
  *
- * '<Root>' : 'F34_Torque_Vectoring_Simulink_v1_5'
- * '<S1>'   : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls'
- * '<S2>'   : 'F34_Torque_Vectoring_Simulink_v1_5/Desired Yaw Rate Calculator'
- * '<S3>'   : 'F34_Torque_Vectoring_Simulink_v1_5/No TV'
- * '<S4>'   : 'F34_Torque_Vectoring_Simulink_v1_5/Slip Ratio Calculator'
- * '<S5>'   : 'F34_Torque_Vectoring_Simulink_v1_5/Steering Angle Deadzone'
- * '<S6>'   : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/LC_State_Machine'
- * '<S7>'   : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Long Split Selector'
- * '<S8>'   : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Target Slip Ratio Calculator'
- * '<S9>'   : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Torque Request Calculator'
- * '<S10>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Traction Control (For Each)'
- * '<S11>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Yaw Rate Controller'
- * '<S12>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Zero Lat. Trq. Bias'
- * '<S13>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Target Slip Ratio Calculator/Saturation Dynamic'
- * '<S14>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Target Slip Ratio Calculator/TC Lat Saturation'
- * '<S15>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Target Slip Ratio Calculator/Target Slip Ratio Saturation'
- * '<S16>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Traction Control (For Each)/No Torque Reduction'
- * '<S17>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Traction Control (For Each)/PI Controller'
- * '<S18>'  : 'F34_Torque_Vectoring_Simulink_v1_5/Advanced Controls/Traction Control (For Each)/PI Controller/Slip Ratio Derivative'
+ * '<Root>' : 'F34_Torque_Vectoring_Simulink_v1_5_2'
+ * '<S1>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls'
+ * '<S2>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/Desired Yaw Rate Calculator'
+ * '<S3>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/No TV'
+ * '<S4>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/Slip Ratio Calculator'
+ * '<S5>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/Steering Angle Deadzone'
+ * '<S6>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/LC_State_Machine'
+ * '<S7>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Long Split Selector'
+ * '<S8>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Target Slip Ratio Calculator'
+ * '<S9>'   : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Torque Request Calculator'
+ * '<S10>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Traction Control (For Each)'
+ * '<S11>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Yaw Rate Controller'
+ * '<S12>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Zero Lat. Trq. Bias'
+ * '<S13>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Target Slip Ratio Calculator/Saturation Dynamic'
+ * '<S14>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Target Slip Ratio Calculator/TC Lat Saturation'
+ * '<S15>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Target Slip Ratio Calculator/Target Slip Ratio Saturation'
+ * '<S16>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Traction Control (For Each)/No Torque Reduction'
+ * '<S17>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Traction Control (For Each)/PI Controller'
+ * '<S18>'  : 'F34_Torque_Vectoring_Simulink_v1_5_2/Advanced Controls/Traction Control (For Each)/PI Controller/Slip Ratio Derivative'
  */
-#endif                    /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_h_ */
+#endif                  /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_2_h_ */

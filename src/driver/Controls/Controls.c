@@ -149,14 +149,15 @@ static void step_advanced(float maxTrq)
 {
     // Controls uses torque in Nm, so have to convert from %Mn to Nm. Torque is represented 0 -> 1 = 0 -> 100%.
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Total_Torque_Request = maxTrq * 9.8f;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = !GPIO_get_LC();
+    // Use RTD as launch control button
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = GPIO_get_RTD();
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.dt_loop = 0.01f;
     float tvArr[4];    
     TorqueVectoring(maxTrq, tvArr, false);
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[0] = tvArr[3] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[1] = tvArr[1] * 9.8f;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[2] = tvArr[0] * 9.8f;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[3] = tvArr[2] * 9.8f;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[2] = tvArr[2] * 9.8f;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[3] = tvArr[0] * 9.8f;
     rprintf("avail %d\n", (int)(maxTrq*100));
     update_controls_params();
 
@@ -202,7 +203,7 @@ static void update_controls_params()
     //vn_irrational_check();
 
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = velX.val;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = 10;
+    //F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = 0;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_velocity = velY.val;
     // Fake velocity for bench testing
     // F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;

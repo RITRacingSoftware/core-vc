@@ -66,15 +66,15 @@
 #define CG_TARGET_SR_AY_MIN         0.1f
 #define CG_TARGET_SR_MAX            0.22f
 #define CG_TARGET_SR_MIN            0.015f
-#define CG_TARGET_SR_LAT            1.8f
-#define CG_TARGET_SR_LONG           0.02f
+#define CG_TARGET_SR_LAT            0.0f
+#define CG_TARGET_SR_LONG           0.0f
 #define CG_TARGET_SR_LAT_MIN        0.0f
-#define CG_KP_SLIP_RATIO            (-5.0f)
-#define CG_KI_SLIP_RATIO            (-15.0f)
-#define CG_KD_SLIP_RATIO            (-0.1f)
+#define CG_KP_SLIP_RATIO            (20.0f)
+#define CG_KI_SLIP_RATIO            (2.0f)
+#define CG_KD_SLIP_RATIO            (-0.0f)
 #define CG_TC_ACTIVATION_THRESHOLD  0.65f // Unit: Pct 0 -> 1
 #define CG_LC_PRELOAD               0.35f
-#define CG_LC_TMAX                  1.0f
+#define CG_LC_TMAX                  45.0f
 #define CG_LC_WDOT_MAX              1000.0f
 #define CG_LC_TBLEND1               0.2f
 #define CG_LC_TBLEND2               0.4f
@@ -94,7 +94,7 @@
 // Torque Vectoring
 #define CS_LAT_FACTOR_ACC       0.35f
 #define CS_LONG_FACTOR_ACC      0.0f
-#define CS_LONG_SPLIT_ACC       0.50f
+#define CS_LONG_SPLIT_ACC       0.28f
 #define CS_LAT_FACTOR_BRAKE     0.25f
 #define CS_LONG_FACTOR_BRAKE    0.1f
 #define CS_LONG_SPLIT_BRAKE     0.65f
@@ -123,17 +123,17 @@
 #define ADC_MAX_VOLTAGE 3.3
 
 /** Accelerator **/
-#define ACCEL_A_IRRATIONAL_HIGH_ADC 3000
-#define ACCEL_A_MAX_ADC 2000
-#define ACCEL_A_OFFSET_ADC 930
+#define ACCEL_A_IRRATIONAL_HIGH_ADC 2300
+#define ACCEL_A_MAX_ADC 1940
+#define ACCEL_A_OFFSET_ADC 690
 #define ACCEL_A_RANGE_ADC (ACCEL_A_MAX_ADC - ACCEL_A_OFFSET_ADC)
 #define ACCEL_A_IRRATIONAL_LOW_ADC 200
 
-#define ACCEL_B_IRRATIONAL_HIGH_ADC 4000
+#define ACCEL_B_IRRATIONAL_HIGH_ADC 3900
 #define ACCEL_B_MAX_ADC 3400
-#define ACCEL_B_OFFSET_ADC 1360
+#define ACCEL_B_OFFSET_ADC 1190
 #define ACCEL_B_RANGE_ADC (ACCEL_B_MAX_ADC - ACCEL_B_OFFSET_ADC)
-#define ACCEL_B_IRRATIONAL_LOW_ADC 30
+#define ACCEL_B_IRRATIONAL_LOW_ADC 470
 #define ACCEL_MAX_DISAGREEMENT 25
 #define ACCEL_POS_TOL 1
 

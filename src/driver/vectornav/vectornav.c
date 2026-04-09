@@ -299,8 +299,14 @@ static void timeout_callback() {
 }
 
 void vectornav_init() {
-    core_USART_init(USART3, 921600);
-    core_USART_register_callback(USART3, vectornav_handler);
+    core_USART_init(UART4, 921600);
+    /*USART3->CR1 &= ~USART_CR1_UE;
+    USART3->CR2 |= USART_CR2_SWAP;
+    USART3->CR1 |= USART_CR1_UE;*/
+    core_USART_register_callback(UART4, vectornav_handler);
+    //core_GPIO_init(GPIOC, GPIO_PIN_11, GPIO_MODE_INPUT, GPIO_NOPULL);
+    rprintf("USART %08x %08x\n", UART4->BRR, UART4->PRESC);
+    rprintf("GPIOC %08x %08x\n", GPIOC->MODER, GPIOC->AFR[1]);
     
     vn_timeout.module = NULL;
     vn_timeout.ref = FAULT_VN_LOST;

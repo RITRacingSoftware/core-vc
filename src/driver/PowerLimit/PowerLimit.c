@@ -66,7 +66,7 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
         prev_curr = amps;
     }
     float currP = packV * amps; 
-    rprintf("amps: %d, currP: %d\n", (int)(amps), (int)(currP));
+    //rprintf("amps: %d, currP: %d\n", (int)(amps), (int)(currP));
 
     float trqs[4];
     Inverters_get_torques(trqs);

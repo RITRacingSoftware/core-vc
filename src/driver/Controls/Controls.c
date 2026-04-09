@@ -41,7 +41,7 @@ vn_input_t angRateZ = {.val=0, .p_msg=&mainBus.vn2.vector_nav_angular_rate_z, .i
 vn_input_t accelX = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_x, .irrVal = VN_IRR_ACCEL_X, .irrCnt=0};
 vn_input_t accelY = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_y, .irrVal = VN_IRR_ACCEL_Y, .irrCnt=0};
 vn_input_t yaw = {.val=0, .p_msg=&mainBus.vn7.vector_nav_ypr_y, .irrVal = VN_IRR_YAW, .irrCnt=0};
-vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &yaw};
+vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &accelY, &yaw};
 
 core_timeout_t runaway_timeout;
 

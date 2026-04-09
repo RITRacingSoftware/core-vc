@@ -229,12 +229,12 @@
   * @brief  Number of bits periods that must elapse since the most recent
   *         transmission for the receive interrupt to trigger
   */
-#define CORE_USART_RX_TIMEOUT 64
+#define CORE_USART_RX_TIMEOUT 16
 
 /**
   * @brief  Enable the uprintf function
   */
-#define CORE_USART_UPRINTF 1
+#define CORE_USART_UPRINTF 0
 /**
   * @brief  Size of the transmit buffer to which uprintf stores characters to
   *         be transmitted. The tranmit buffer is shared and is only defined 

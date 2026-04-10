@@ -39,6 +39,10 @@ static void check_errors();
 uint8_t num = 0;
 bool led = false;
 
+static int pwm_msg_divider = 0;
+static uint8_t inverter_pwm = 0;
+static uint8_t motor_pwm = 0;
+
 void Inverters_init()
 {
     // RR timeout init
@@ -91,6 +95,21 @@ void Inverters_Task_Update()
     check_regen();
     send_setpoints(); 
 
+    // Fan PWM control
+    if ((++pwm_msg_divider) == 100) {
+        int16_t max_inv = 0, max_mot = 0;
+        for (int i=0; i < 4; i++) {
+            if (invArr[i]->actual2.temp_motor > max_mot) max_mot = invArr[i]->actual2.temp_motor;
+            if (invArr[i]->actual2.temp_inverter > max_inv) max_inv = invArr[i]->actual2.temp_inverter;
+        }
+        if ((inverter_pwm > 0) && (max_inv < 250)) inverter_pwm = 0;
+        else if ((inverter_pwm == 0) && (max_inv >= 300)) inverter_pwm = 25;
+        if ((motor_pwm > 0) && (max_mot < 750)) motor_pwm = 0;
+        else if ((motor_pwm == 0) && (max_mot > 800)) motor_pwm = 25;
+        uint64_t msg = inverter_pwm | (motor_pwm << 5);
+        core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_PDU_CONTROL_FRAME_ID, 2, msg);
+        pwm_msg_divider = 0;
+    }
 }
 
 bool Inverters_get_ready_all() { return (invRR.actual1.system_ready && invRL.actual1.system_ready && invFR.actual1.system_ready && invFL.actual1.system_ready); }

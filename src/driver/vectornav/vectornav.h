@@ -70,6 +70,8 @@ typedef struct vectornav_result_s {
     // attitude data
 } vectornav_result_t;
 
+extern vectornav_result_t vn_data_raw;
+
 bool vectornav_parse(const uint8_t *buf, uint16_t buflen, vectornav_result_t *data);
 void vectornav_send_errors();
 void vectornav_init();

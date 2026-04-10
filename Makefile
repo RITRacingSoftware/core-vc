@@ -152,4 +152,5 @@ clean-user:
 	# rm -r src/test/build
 	rm -r $(BUILD_DIR)/stm32/obj/app
 	rm -r $(BUILD_DIR)/stm32/obj/core
-	$ find $(BUILD_DIR)/stm32/obj -mindepth 1 -delete
+	rm -r $(BUILD_DIR)/stm32/obj/driver
+	#$ find $(BUILD_DIR)/stm32/obj -mindepth 1 -delete

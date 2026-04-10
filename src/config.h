@@ -59,8 +59,8 @@
 #define CG_KI_YAW_RATE 10.0f
 #define CG_KF_YAW_RATE 5.53f
 
-#define CG_TC_FX_REAR               1000.0f
-#define CG_TC_FX_FRONT              350.0f
+#define CG_TC_FX_REAR               0.0f
+#define CG_TC_FX_FRONT              0.0f
 #define CG_TARGET_SR_NOMINAL        0.15f
 #define CG_TARGET_SR_AX_MIN         0.1f
 #define CG_TARGET_SR_AY_MIN         0.1f
@@ -69,12 +69,12 @@
 #define CG_TARGET_SR_LAT            0.0f
 #define CG_TARGET_SR_LONG           0.0f
 #define CG_TARGET_SR_LAT_MIN        0.0f
-#define CG_KP_SLIP_RATIO            (20.0f)
-#define CG_KI_SLIP_RATIO            (2.0f)
+#define CG_KP_SLIP_RATIO            (5.0f)
+#define CG_KI_SLIP_RATIO            (0.0f)
 #define CG_KD_SLIP_RATIO            (-0.0f)
-#define CG_TC_ACTIVATION_THRESHOLD  0.65f // Unit: Pct 0 -> 1
+#define CG_TC_ACTIVATION_THRESHOLD  0.2f // Unit: Pct 0 -> 1
 #define CG_LC_PRELOAD               0.35f
-#define CG_LC_TMAX                  45.0f
+#define CG_LC_TMAX                  50.0f
 #define CG_LC_WDOT_MAX              1000.0f
 #define CG_LC_TBLEND1               0.2f
 #define CG_LC_TBLEND2               0.4f

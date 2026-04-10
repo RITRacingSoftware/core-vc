@@ -208,7 +208,7 @@ static const uint8_t imu_lengths[] = {
     0, 8, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 };
 
-static vectornav_result_t vn_data_raw;
+vectornav_result_t vn_data_raw;
 static core_timeout_t vn_timeout;
 static uint16_t vectornav_packets = 0, vectornav_errors = 0;
 

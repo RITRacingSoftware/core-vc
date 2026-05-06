@@ -53,13 +53,15 @@ void TorqueVectoring(float maxTotalTorque, float *trqs, bool dynamic)
     else if (accelPct < 0 && REGEN_ENABLED) {
         if (dynamic) {
             lat_factor = CS_LAT_FUNC(velX.val);
+            long_split = CS_LONG_FUNC_BRAKE(velX.val);
         } else {
             lat_factor = CS_LAT_FACTOR_BRAKE;
+            long_split = CS_LONG_SPLIT_BRAKE;
         }
         core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
         totalPctLeft = 0.5f + (steerPct * CS_LAT_FACTOR_BRAKE);
         float regenScale = SCALE(accelPct, 0.0f, MAX_REGEN_PCT, 0.0f, 1.0f);
-        totalPctFront = CS_LONG_SPLIT_BRAKE + (regenScale * CS_LONG_FACTOR_BRAKE);
+        totalPctFront = long_split + (regenScale * CS_LONG_FACTOR_BRAKE);
         setSplits(maxTotalTorque);
     }
 

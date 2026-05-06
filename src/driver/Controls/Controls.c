@@ -15,7 +15,7 @@
 #include "FaultManager.h"
 #include "timeout.h"
 #include "driver_can.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5_2.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3.h"
 #include "rtt.h"
 #include "vectornav.h"
 
@@ -56,9 +56,9 @@ void Controls_init()
     runaway_timeout.single_shot = 0;
     core_timeout_insert(&runaway_timeout);
 
-    F34_Torque_Vectoring_Simulink_v1_5_2_initialize();
+    F34_Torque_Vectoring_Simulink_v1_5_3_initialize();
     
-    ControlsLevel = ControlsLevel_ADVANCED;
+    ControlsLevel = CONTROLS_MAX_LEVEL;
 
     // Set constants
     F34_Torque_Vectoring_Simulink_U.YawParams_d.Understeer_Gradient = CG_UNDERSTEER_GRADIENT;
@@ -87,6 +87,7 @@ void Controls_init()
     F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[1] = CG_TC_FX_REAR;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[2] = CG_TC_FX_FRONT;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[3] = CG_TC_FX_REAR;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.N_Slip_Ratio = CG_TC_N_SLIP_RATIO;
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Preload_Torque = CG_LC_PRELOAD;
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax = CG_LC_TMAX;
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wdot_max = CG_LC_WDOT_MAX;
@@ -163,10 +164,10 @@ static void step_advanced(float maxTrq)
     v[0] = tvArr[3] * 9.8f;
     v[1] = tvArr[1] * 9.8f;
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t*)(&v)));
-    rprintf("avail %d\n", (int)(maxTrq*100));
+    //rprintf("avail %d\n", (int)(maxTrq*100));
     update_controls_params();
 
-    F34_Torque_Vectoring_Simulink_v1_5_2_step();
+    F34_Torque_Vectoring_Simulink_v1_5_3_step();
 
     send_logging_outputs();
 
@@ -208,7 +209,7 @@ static void update_controls_params()
     //vn_irrational_check();
 
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = velX.val;
-    //F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = 0;
+    //F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = 3;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_velocity = velY.val;
     // Fake velocity for bench testing
     // F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;
@@ -280,6 +281,13 @@ static void send_logging_outputs()
 
     main_dbc_vc_controls_out4_pack((uint8_t *)&msg, &mainBus.controls_out4, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT4_FRAME_ID, 8, msg);
+
+    mainBus.target_wheel_speeds.vc_rr_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[0];
+    mainBus.target_wheel_speeds.vc_rl_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[1];
+    mainBus.target_wheel_speeds.vc_fr_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[2];
+    mainBus.target_wheel_speeds.vc_fl_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[3];
+    main_dbc_vc_target_wheel_speeds_pack((uint8_t*)(&msg), &(mainBus.target_wheel_speeds), 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_TARGET_WHEEL_SPEEDS_FRAME_ID, 8, msg);
 }
 
 static float trq_power_limit()

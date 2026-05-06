@@ -40,6 +40,7 @@ typedef struct
     struct main_dbc_vc_controls_out4_t controls_out4;
     struct main_dbc_vc_controls_constants1_t controls_const1;
     struct main_dbc_vc_controls_constants2_t controls_const2;
+    struct main_dbc_vc_target_wheel_speeds_t target_wheel_speeds;
 
 } MAIN_BUS;
 

@@ -295,7 +295,7 @@ void vectornav_send_errors() {
 }
 
 static void timeout_callback() {
-    FaultManager_set(FAULT_VN_LOST);
+    //FaultManager_set(FAULT_VN_LOST);
 }
 
 void vectornav_init() {

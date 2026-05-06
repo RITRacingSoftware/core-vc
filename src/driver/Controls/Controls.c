@@ -105,9 +105,9 @@ void Controls_Task_Update()
     float maxTotalTrq;
 
     if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
-    else maxTotalTrq = reqTrq;
-    // else RegenLimit(reqTrq, &maxTotalTrq);
-    // ControlsLevel = ControlsLevel_ADVANCED;
+    // else maxTotalTrq = reqTrq;
+    else RegenLimit(reqTrq, &maxTotalTrq);
+    ControlsLevel = ControlsLevel_BASIC;
     switch (ControlsLevel)
     {
         case ControlsLevel_ADVANCED:

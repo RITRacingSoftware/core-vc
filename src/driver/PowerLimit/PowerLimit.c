@@ -144,6 +144,11 @@ void RegenLimit(float reqRgn, float *limitedMaxRgn)
 
     float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
 
+    if ((amps != prev_curr) || (amps == 0)) {
+        core_timeout_reset(&current_timeout);
+        prev_curr = amps;
+    }
+
     if (amps < (RL_THRESHOLD * MAX_REGEN_CURRENT_A))
     {
         float curr_tPerA = totalTrq/amps;                   // Positive

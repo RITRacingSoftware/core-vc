@@ -763,10 +763,11 @@ void F34_Torque_Vectoring_Simulink_v1_5_2_step(void)
         rtb_Switch2_idx_2 = rtb_ImpAsg_InsertedFor_WheelTor[2];
         rtb_Switch2_idx_3 = rtb_ImpAsg_InsertedFor_WheelTor[3];
         F34_Torque_Vectoring_Simulin_DW.s = 0U;
-      } else if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button &&
-                 (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos >
-                  F34_Torque_Vectoring_Simulin_DW.LC_pre_APPS)) {
-        F34_Torque_Vectoring_Simulin_DW.s = 2U;
+      } else if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button) {
+        if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos >
+            F34_Torque_Vectoring_Simulin_DW.LC_pre_APPS) {
+          F34_Torque_Vectoring_Simulin_DW.s = 2U;
+        }
         F34_Torque_Vectoring_Simulin_DW.counter = 0U;
       } else {
         rtb_Switch2_idx_0 = rtb_ImpAsg_InsertedFor_WheelTor[0];

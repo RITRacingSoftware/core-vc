@@ -10,6 +10,7 @@
 #include "DriverInputs.h"
 #include "FaultManager.h"
 #include "vectornav.h"
+#include <math.h>
 
 MAIN_BUS mainBus = {0};
 // SENSE_BUS senseBus = {0};
@@ -124,7 +125,7 @@ void CAN_rx_main()
                 break;
 
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
-                main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+                main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, 8); break;
 
             case MAIN_DBC_VECTOR_NAV0_FRAME_ID:
                 main_dbc_vector_nav0_unpack(&mainBus.vn0, (uint8_t *) &canMessage.data, canMessage.dlc); break;
@@ -207,8 +208,8 @@ static void send_controls_params()
 {
     mainBus.controls_const1.vc_long_factor = main_dbc_vc_controls_constants1_vc_long_factor_encode(CG_LONG_FACTOR);
     mainBus.controls_const1.vc_target_slip_ratio = main_dbc_vc_controls_constants1_vc_target_slip_ratio_encode(CG_TARGET_SR_NOMINAL);
-    mainBus.controls_const1.vc_k_p_slip_ratio = main_dbc_vc_controls_constants1_vc_k_p_slip_ratio_encode(CG_KP_SLIP_RATIO);
-    mainBus.controls_const1.vc_k_i_slip_ratio = main_dbc_vc_controls_constants1_vc_k_i_slip_ratio_encode(CG_KI_SLIP_RATIO);
+    mainBus.controls_const1.vc_k_p_slip_ratio = main_dbc_vc_controls_constants1_vc_k_p_slip_ratio_encode(fabsf(CG_KP_SLIP_RATIO));
+    mainBus.controls_const1.vc_k_i_slip_ratio = main_dbc_vc_controls_constants1_vc_k_i_slip_ratio_encode(fabsf(CG_KI_SLIP_RATIO));
     mainBus.controls_const1.vc_tc_activation_threshold = main_dbc_vc_controls_constants1_vc_tc_activation_threshold_encode(CG_TC_ACTIVATION_THRESHOLD);
     mainBus.controls_const1.vc_k_p_yaw_rate = main_dbc_vc_controls_constants1_vc_k_p_yaw_rate_encode(CG_KP_YAW_RATE);
     mainBus.controls_const1.vc_k_i_yaw_rate = main_dbc_vc_controls_constants1_vc_k_i_yaw_rate_encode(CG_KI_YAW_RATE);

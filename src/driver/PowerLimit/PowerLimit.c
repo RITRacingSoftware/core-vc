@@ -28,7 +28,7 @@ static void timeout_callback (core_timeout_t *timeout);
 void PowerLimit_init()
 {
     ramp.done = true;
-    ramp.step = 0.05;
+    ramp.step = 0.03;
 
     current_timeout.module = NULL;
     current_timeout.ref = FAULT_CURRENT_IRR;
@@ -66,7 +66,7 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
         prev_curr = amps;
     }
     float currP = packV * amps; 
-    rprintf("amps: %d, currP: %d\n", (int)(amps), (int)(currP));
+    //rprintf("amps: %d, currP: %d\n", (int)(amps), (int)(currP));
 
     float trqs[4];
     Inverters_get_torques(trqs);

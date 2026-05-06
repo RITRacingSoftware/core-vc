@@ -17,6 +17,7 @@
 #include "driver_can.h"
 #include "F34_Torque_Vectoring_Simulink_v1_5_2.h"
 #include "rtt.h"
+#include "vectornav.h"
 
 #define NUM_VN_INPUTS 6
 
@@ -35,13 +36,13 @@ static float rlPrev;
 static float frPrev;
 static float flPrev;
 
-vn_input_t velX = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_x, .irrVal = VN_IRR_VEL_X, .irrCnt=0};
-vn_input_t velY = {.val=0, .p_msg=&mainBus.vn6.vector_nav_vel_body_y, .irrVal = VN_IRR_VEL_Y, .irrCnt=0};
-vn_input_t angRateZ = {.val=0, .p_msg=&mainBus.vn2.vector_nav_angular_rate_z, .irrVal = VN_IRR_ANG_RATE_Z, .irrCnt=0};
-vn_input_t accelX = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_x, .irrVal = VN_IRR_ACCEL_X, .irrCnt=0};
-vn_input_t accelY = {.val=0, .p_msg=&mainBus.vn0.vector_nav_accel_y, .irrVal = VN_IRR_ACCEL_Y, .irrCnt=0};
-vn_input_t yaw = {.val=0, .p_msg=&mainBus.vn7.vector_nav_ypr_y, .irrVal = VN_IRR_YAW, .irrCnt=0};
-vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &yaw};
+vn_input_t velX = {.val=0, .p_msg=&(vn_data_raw.VelBodyX), .irrVal = VN_IRR_VEL_X, .irrCnt=0};
+vn_input_t velY = {.val=0, .p_msg=&(vn_data_raw.VelBodyY), .irrVal = VN_IRR_VEL_Y, .irrCnt=0};
+vn_input_t angRateZ = {.val=0, .p_msg=&(vn_data_raw.AngularRateZ), .irrVal = VN_IRR_ANG_RATE_Z, .irrCnt=0};
+vn_input_t accelX = {.val=0, .p_msg=&(vn_data_raw.AccelX), .irrVal = VN_IRR_ACCEL_X, .irrCnt=0};
+vn_input_t accelY = {.val=0, .p_msg=&(vn_data_raw.AccelY), .irrVal = VN_IRR_ACCEL_Y, .irrCnt=0};
+vn_input_t yaw = {.val=0, .p_msg=&(vn_data_raw.YprY), .irrVal = VN_IRR_YAW, .irrCnt=0};
+vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &accelY, &yaw};
 
 core_timeout_t runaway_timeout;
 
@@ -57,7 +58,7 @@ void Controls_init()
 
     F34_Torque_Vectoring_Simulink_v1_5_2_initialize();
     
-    ControlsLevel = ControlsLevel_BASIC;
+    ControlsLevel = ControlsLevel_ADVANCED;
 
     // Set constants
     F34_Torque_Vectoring_Simulink_U.YawParams_d.Understeer_Gradient = CG_UNDERSTEER_GRADIENT;
@@ -149,14 +150,19 @@ static void step_advanced(float maxTrq)
 {
     // Controls uses torque in Nm, so have to convert from %Mn to Nm. Torque is represented 0 -> 1 = 0 -> 100%.
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Total_Torque_Request = maxTrq * 9.8f;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = !GPIO_get_LC();
+    // Use RTD as launch control button
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = GPIO_get_RTD();
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.dt_loop = 0.01f;
     float tvArr[4];    
     TorqueVectoring(maxTrq, tvArr, false);
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[0] = tvArr[3] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[1] = tvArr[1] * 9.8f;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[2] = tvArr[0] * 9.8f;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[3] = tvArr[2] * 9.8f;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[2] = tvArr[2] * 9.8f;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[3] = tvArr[0] * 9.8f;
+    float v[2];
+    v[0] = tvArr[3] * 9.8f;
+    v[1] = tvArr[1] * 9.8f;
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t*)(&v)));
     rprintf("avail %d\n", (int)(maxTrq*100));
     update_controls_params();
 
@@ -173,7 +179,7 @@ static void step_advanced(float maxTrq)
     // rprintf("totalTrq: %d\n", (int)(totalTrq * 100));
     // rprintf("%d %d %d %d\n", (int)(rrReqMn * 100), (int)(rlReqMn * 100), (int)(frReqMn * 100), (int)(flReqMn * 100));
 
-    if (totalTrq <= maxTrq) {
+    if (totalTrq <= maxTrq * RUNAWAY_PCT) {
         flPrev = flReqMn;
         rlPrev = rlReqMn;
         frPrev = frReqMn;
@@ -202,7 +208,7 @@ static void update_controls_params()
     //vn_irrational_check();
 
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = velX.val;
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = 10;
+    //F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity = 0;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_velocity = velY.val;
     // Fake velocity for bench testing
     // F34_Torque_Vectoring_Simulink_U.XBodyVelocityms = 10;

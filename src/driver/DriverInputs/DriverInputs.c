@@ -227,22 +227,21 @@ void Accel_process()
 
     if (status == true)
     {
-        avgPos = ((accelAPos + accelBPos) / 2.0f);
-
+        avgPos = ((accelAPos + accelBPos) / 2.0f); 
 #if REGEN_ENABLED
         if (avgPos > ACCEL_DEADZONE_HIGH_PCT) avgPos = SCALE(avgPos, ACCEL_DEADZONE_HIGH_PCT, 1.0f, 0.0f, 1.0f);
-        else if (avgPos < ACCEL_DEADZONE_HIGH_PCT && avgPos > ACCEL_DEADZONE_LOW_PCT) avgPos = 0;
         else if (avgPos < ACCEL_DEADZONE_LOW_PCT) avgPos = SCALE(avgPos, 0.0f, ACCEL_DEADZONE_LOW_PCT, MAX_REGEN_PCT, 0.0f);
+        else avgPos = 0;
 #endif
 
     }
 
     // Check disagreement
-    /*if (fabs(accelAPos - accelBPos) * 100 <= ACCEL_MAX_DISAGREEMENT)
+    if (fabs(accelAPos - accelBPos) * 100 <= ACCEL_MAX_DISAGREEMENT)
     {
         core_timeout_reset(&accel_disagree_timeout);
-    } else status = false;*/
-    core_timeout_reset(&accel_disagree_timeout);
+    } else status = false;
+    // core_timeout_reset(&accel_disagree_timeout);
 
     if (status == true)
     {

@@ -31,7 +31,7 @@
 #define TEMP_STEADY_LIMIT 37.06f
 
 #define RL_THRESHOLD 0.50f
-#define MAX_REGEN_CURRENT_A -10.0f
+#define MAX_REGEN_CURRENT_A -30.0f
 
 /************************ CAN ************************/
 /*****************************************************/
@@ -43,7 +43,7 @@
 
 /********************** CONTROLS *********************/
 /*****************************************************/
-#define REGEN_ENABLED 0
+#define REGEN_ENABLED 1
 #define RUNAWAY_TIMEOUT_MS 100
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02
@@ -95,11 +95,11 @@
 // Torque Vectoring
 #define CS_LAT_FACTOR_ACC       0.35f
 #define CS_LONG_FACTOR_ACC      0.0f
-#define CS_LONG_SPLIT_ACC       0.28f
+#define CS_LONG_SPLIT_ACC       0.30f
 #define CS_LAT_FACTOR_BRAKE     0.25f
 #define CS_LONG_FACTOR_BRAKE    0.1f
 #define CS_LONG_SPLIT_BRAKE     0.65f
-#define CS_TOTAL_GAIN           6.53f
+#define CS_TOTAL_GAIN           7.0f
 #define CS_LONG_FUNC(vel)       (0.00019f*vel*vel + 0.28f)
 #define CS_LAT_FUNC(vel)        (-0.00045f*vel*vel + 0.6f)
 
@@ -114,7 +114,7 @@
 /** Inverters **/
 #define MAX_TORQUE 200
 #define POS_TORQUE_LIMIT (MAX_TORQUE)
-#define NEG_TORQUE_LIMIT (-20)
+#define NEG_TORQUE_LIMIT (-MAX_TORQUE)
 #define INV_CAN_TIMEOUT_MS 300
 #define INV_LIMIT_TOL 5
 
@@ -124,24 +124,24 @@
 #define ADC_MAX_VOLTAGE 3.3
 
 /** Accelerator **/
-#define ACCEL_A_IRRATIONAL_HIGH_ADC 2300
-#define ACCEL_A_MAX_ADC 1940
-#define ACCEL_A_OFFSET_ADC 690
+#define ACCEL_A_IRRATIONAL_HIGH_ADC 2500
+#define ACCEL_A_MAX_ADC 1900
+#define ACCEL_A_OFFSET_ADC 900
 #define ACCEL_A_RANGE_ADC (ACCEL_A_MAX_ADC - ACCEL_A_OFFSET_ADC)
-#define ACCEL_A_IRRATIONAL_LOW_ADC 200
+#define ACCEL_A_IRRATIONAL_LOW_ADC 100
 
 #define ACCEL_B_IRRATIONAL_HIGH_ADC 3900
 #define ACCEL_B_MAX_ADC 3400
-#define ACCEL_B_OFFSET_ADC 1190
+#define ACCEL_B_OFFSET_ADC 1600
 #define ACCEL_B_RANGE_ADC (ACCEL_B_MAX_ADC - ACCEL_B_OFFSET_ADC)
-#define ACCEL_B_IRRATIONAL_LOW_ADC 470
+#define ACCEL_B_IRRATIONAL_LOW_ADC 200
 #define ACCEL_MAX_DISAGREEMENT 25
 #define ACCEL_POS_TOL 1
 
 // Regen
-#define ACCEL_DEADZONE_HIGH_PCT 0.40f
+#define ACCEL_DEADZONE_HIGH_PCT 0.31f
 #define ACCEL_DEADZONE_LOW_PCT 0.30f
-#define MAX_REGEN_PCT -0.2f
+#define MAX_REGEN_PCT -0.4f
 
 // Hysteresis because when it regens at low speeds and cuts out it jitters.
 // Releasing regen causes the wheels to spin more, which feeds back into more regen.

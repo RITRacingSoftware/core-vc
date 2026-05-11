@@ -22,6 +22,7 @@
 #include "FaultManager.h"
 #include "TractionControl.h"
 #include "PowerLimit.h"
+#include "vectornav.h"
 
 #include "adc.h"
 #include "spi.h"
@@ -36,17 +37,15 @@ bool VC_init()
     if (!CAN_init()) return false;
     core_boot_init();
     
-    core_USART_init(USART2, 100000);
-    core_USART_init(USART3, 500000);
     core_ADC_init(ADC1);
     core_RTT_init();
     rprintf("Inits\n");
 
-    core_USART_init(USART3, 500000);
     GPIO_init();
+    vectornav_init();
     VehicleState_init();
     Inverters_init();
-    DriverInputs_init();
+    if (!DriverInputs_init()) return false;
     FaultManager_init();
     TractionControl_init();
     PowerLimit_init();

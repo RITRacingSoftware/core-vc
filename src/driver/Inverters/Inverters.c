@@ -39,6 +39,10 @@ static void check_errors();
 uint8_t num = 0;
 bool led = false;
 
+static int pwm_msg_divider = 0;
+static uint8_t inverter_pwm = 0;
+static uint8_t motor_pwm = 0;
+
 void Inverters_init()
 {
     // RR timeout init
@@ -91,6 +95,21 @@ void Inverters_Task_Update()
     check_regen();
     send_setpoints(); 
 
+    // Fan PWM control
+    if ((++pwm_msg_divider) == 100) {
+        int16_t max_inv = 0, max_mot = 0;
+        for (int i=0; i < 4; i++) {
+            if (invArr[i]->actual2.temp_motor > max_mot) max_mot = invArr[i]->actual2.temp_motor;
+            if (invArr[i]->actual2.temp_inverter > max_inv) max_inv = invArr[i]->actual2.temp_inverter;
+        }
+        if ((inverter_pwm > 0) && (max_inv < 250)) inverter_pwm = 0;
+        else if ((inverter_pwm == 0) && (max_inv >= 300)) inverter_pwm = 25;
+        if ((motor_pwm > 0) && (max_mot < 750)) motor_pwm = 0;
+        else if ((motor_pwm == 0) && (max_mot > 800)) motor_pwm = 25;
+        uint64_t msg = inverter_pwm | (motor_pwm << 5);
+        core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_PDU_CONTROL_FRAME_ID, 2, msg);
+        pwm_msg_divider = 0;
+    }
 }
 
 bool Inverters_get_ready_all() { return (invRR.actual1.system_ready && invRL.actual1.system_ready && invFR.actual1.system_ready && invFL.actual1.system_ready); }
@@ -242,7 +261,8 @@ void Inverters_CAN_rx()
                 inverter_dbc_actual_1_unpack(&invRR.actual1, (uint8_t *) &canMessage.data, 8);
                 invRR.actual1.feedback_velocity = (float)inverter_dbc_actual_1_feedback_velocity_decode(invRR.actual1.feedback_velocity);
                 invRR.actual1.feedback_torque = (float)inverter_dbc_actual_1_feedback_torque_decode(invRR.actual1.feedback_torque);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;  // Echo over main bus
+                break;
+                //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;  // Echo over main bus
 
             case INVERTER_DBC_RR_AMK_ACTUAL_2_FRAME_ID:
                 inverter_dbc_actual_2_unpack(&invRR.actual2, (uint8_t *) &canMessage.data, 8); break;
@@ -262,7 +282,8 @@ void Inverters_CAN_rx()
                 inverter_dbc_actual_1_unpack(&invRL.actual1, (uint8_t *) &canMessage.data, 8);
                 invRL.actual1.feedback_velocity = (float)inverter_dbc_actual_1_feedback_velocity_decode(invRL.actual1.feedback_velocity);
                 invRL.actual1.feedback_torque = (float)inverter_dbc_actual_1_feedback_torque_decode(invRL.actual1.feedback_torque);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
+                break;
+                //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_RL_AMK_ACTUAL_2_FRAME_ID:
                 inverter_dbc_actual_2_unpack(&invRL.actual2, (uint8_t *) &canMessage.data, 8); break;
@@ -282,7 +303,8 @@ void Inverters_CAN_rx()
                 inverter_dbc_actual_1_unpack(&invFR.actual1, (uint8_t *) &canMessage.data, 8);
                 invFR.actual1.feedback_velocity = (float)inverter_dbc_actual_1_feedback_velocity_decode(invFR.actual1.feedback_velocity);
                 invFR.actual1.feedback_torque = (float)inverter_dbc_actual_1_feedback_torque_decode(invFR.actual1.feedback_torque);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
+                break;
+                //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FR_AMK_ACTUAL_2_FRAME_ID:
                 inverter_dbc_actual_2_unpack(&invFR.actual2, (uint8_t *) &canMessage.data, 8); break;
@@ -302,7 +324,8 @@ void Inverters_CAN_rx()
                 inverter_dbc_actual_1_unpack(&invFL.actual1, (uint8_t *) &canMessage.data, 8);
                 invFL.actual1.feedback_velocity = (float)inverter_dbc_actual_1_feedback_velocity_decode(invFL.actual1.feedback_velocity);
                 invFL.actual1.feedback_torque = (float)inverter_dbc_actual_1_feedback_torque_decode(invFL.actual1.feedback_torque);
-                core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
+                break;
+                //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FL_AMK_ACTUAL_2_FRAME_ID:
                 inverter_dbc_actual_2_unpack(&invFL.actual2, (uint8_t *) &canMessage.data, 8); break;
@@ -315,82 +338,10 @@ void Inverters_CAN_rx()
 
             case INVERTER_DBC_FL_AMK_RIT_SET3_FRAME_ID:
                 inverter_dbc_rit_set3_unpack(&invFL.set3, (uint8_t *) &canMessage.data, 8); break;
+
         }
     }
 
-}
-
-void Inverters_echo_on_main()
-{
-    // RR
-    mainBus.rr_info1.vc_rr_error_list1 = invRR.set1.error_list1;
-    mainBus.rr_info1.vc_rr_error_list2 = invRR.set1.error_list2;
-    mainBus.rr_info2.vc_rr_error_list3 = invRR.set2.error_list3;
-    mainBus.rr_info2.vc_rr_error_info = invRR.actual2.error_info;
-    mainBus.rr_info2.vc_rr_temp_inverter = invRR.actual2.temp_inverter;
-    mainBus.rr_info3.vc_rr_temp_motor = invRR.actual2.temp_motor;
-    mainBus.rr_info3.vc_rr_dc_bus_voltage = invRR.set2.dc_bus_voltage;
-    mainBus.rr_info3.vc_rr_active_power = invRR.set3.active_power;
-
-    // RL
-    mainBus.rl_info1.vc_rl_error_list1 = invRL.set1.error_list1;
-    mainBus.rl_info1.vc_rl_error_list2 = invRL.set1.error_list2;
-    mainBus.rl_info2.vc_rl_error_list3 = invRL.set2.error_list3;
-    mainBus.rl_info2.vc_rl_error_info = invRL.actual2.error_info;
-    mainBus.rl_info2.vc_rl_temp_inverter = invRL.actual2.temp_inverter;
-    mainBus.rl_info3.vc_rl_temp_motor = invRL.actual2.temp_motor;
-    mainBus.rl_info3.vc_rl_dc_bus_voltage = invRL.set2.dc_bus_voltage;
-    mainBus.rl_info3.vc_rl_active_power = invRL.set3.active_power;
-
-    // FR
-    mainBus.fr_info1.vc_fr_error_list1 = invFR.set1.error_list1;
-    mainBus.fr_info1.vc_fr_error_list2 = invFR.set1.error_list2;
-    mainBus.fr_info2.vc_fr_error_list3 = invFR.set2.error_list3;
-    mainBus.fr_info2.vc_fr_error_info = invFR.actual2.error_info;
-    mainBus.fr_info2.vc_fr_temp_inverter = invFR.actual2.temp_inverter;
-    mainBus.fr_info3.vc_fr_temp_motor = invFR.actual2.temp_motor;
-    mainBus.fr_info3.vc_fr_dc_bus_voltage = invFR.set2.dc_bus_voltage;
-    mainBus.fr_info3.vc_fr_active_power = invFR.set3.active_power;
-
-    // FL
-    mainBus.fl_info1.vc_fl_error_list1 = invFL.set1.error_list1;
-    mainBus.fl_info1.vc_fl_error_list2 = invFL.set1.error_list2;
-    mainBus.fl_info2.vc_fl_error_list3 = invFL.set2.error_list3;
-    mainBus.fl_info2.vc_fl_error_info = invFL.actual2.error_info;
-    mainBus.fl_info2.vc_fl_temp_inverter = invFL.actual2.temp_inverter;
-    mainBus.fl_info3.vc_fl_temp_motor = invFL.actual2.temp_motor;
-    mainBus.fl_info3.vc_fl_dc_bus_voltage = invFL.set2.dc_bus_voltage;
-    mainBus.fl_info3.vc_fl_active_power = invFL.set3.active_power;
-
-    uint64_t msg_data;
-
-    main_dbc_vc_rr_info_1_pack((uint8_t *)&msg_data, &mainBus.rr_info1, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_INFO_1_FRAME_ID, 8, msg_data);
-    main_dbc_vc_rr_info_2_pack((uint8_t *)&msg_data, &mainBus.rr_info2, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_INFO_2_FRAME_ID, 8, msg_data);
-    main_dbc_vc_rr_info_3_pack((uint8_t *)&msg_data, &mainBus.rr_info3, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_INFO_3_FRAME_ID, 8, msg_data);
-
-    main_dbc_vc_rl_info_1_pack((uint8_t *)&msg_data, &mainBus.rl_info1, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_INFO_1_FRAME_ID, 8, msg_data);
-    main_dbc_vc_rl_info_2_pack((uint8_t *)&msg_data, &mainBus.rl_info2, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_INFO_2_FRAME_ID, 8, msg_data);
-    main_dbc_vc_rl_info_3_pack((uint8_t *)&msg_data, &mainBus.rl_info3, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_INFO_3_FRAME_ID, 8, msg_data);
-
-    main_dbc_vc_fr_info_1_pack((uint8_t *)&msg_data, &mainBus.fr_info1, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_INFO_1_FRAME_ID, 8, msg_data);
-    main_dbc_vc_fr_info_2_pack((uint8_t *)&msg_data, &mainBus.fr_info2, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_INFO_2_FRAME_ID, 8, msg_data);
-    main_dbc_vc_fr_info_3_pack((uint8_t *)&msg_data, &mainBus.fr_info3, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_INFO_3_FRAME_ID, 8, msg_data);
-
-    main_dbc_vc_fl_info_1_pack((uint8_t *)&msg_data, &mainBus.fl_info1, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_INFO_1_FRAME_ID, 8, msg_data);
-    main_dbc_vc_fl_info_2_pack((uint8_t *)&msg_data, &mainBus.fl_info2, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_INFO_2_FRAME_ID, 8, msg_data);
-    main_dbc_vc_fl_info_3_pack((uint8_t *)&msg_data, &mainBus.fl_info3, 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_INFO_3_FRAME_ID, 8, msg_data);
 }
 
 void Inverters_get_velocities_codegen(float *velArr)
@@ -511,25 +462,25 @@ static void send_setpoints()
     invRR.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRR.req_setpoint);
     inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRR.setpoints, 8);
     core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
+    //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
 
     // RL
     invRL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRL.req_setpoint);
     inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRL.setpoints, 8);
     core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
+    //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
 
     // FR
     invFR.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFR.req_setpoint);
     inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFR.setpoints, 8);
     core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
+    //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
 
     // FL
     invFL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFL.req_setpoint);
     inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFL.setpoints, 8);
     core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
+    //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
 }
 
 static void check_regen()
@@ -555,7 +506,11 @@ static void check_errors()
                 errorCode == INV_OVERSPEED_ERROR ||
                 errorCode == INV_ENCODER_COMMS_ERROR ||
                 errorCode == INV_OVER_CURRENT_ERROR) Inverters_set_state(inv, InvState_RESETTING);
-            else Inverters_set_state(inv, InvState_HARD_FAULT);
+            else {
+                rprintf("Error state %d: %d\n", inv, errorCode);
+                Inverters_set_state(inv, InvState_HARD_FAULT);
+            }
+
         }
     }
 }

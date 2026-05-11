@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "TorqueVectoring.h"
 #include "config.h"
 #include "common_macros.h"
@@ -25,29 +26,42 @@ static void setSplits(float trqPctTotal);
 static float powerLimit();
 static void CAN_send_trqs();
 
-void TorqueVectoring(float maxTotalTorque, float *trqs)
+void TorqueVectoring(float maxTotalTorque, float *trqs, bool dynamic)
 {
+    float lat_factor, long_split;
     DriverInputs_get_driver_inputs(&inputs);
     accelPct = inputs.accelPct;
     steerPct = inputs.steerPct;
     brakePct = inputs.brakePct;
 
     // Case: Acceleration with no braking
-    if (accelPct > 0)
-    {
-        totalPctLeft = 0.5f - (steerPct * CS_LAT_FACTOR_ACC);
-        totalPctFront = CS_LONG_SPLIT_ACC - (accelPct * CS_LONG_FACTOR_ACC);
+    if (accelPct > 0) {
+        if (dynamic) {
+            lat_factor = CS_LAT_FUNC(velX.val);
+            long_split = CS_LONG_FUNC(velX.val);
+        } else {
+            lat_factor = CS_LAT_FACTOR_ACC;
+            long_split = CS_LONG_SPLIT_ACC;
+        }
+        totalPctLeft = 0.5f - (steerPct * lat_factor);
+        totalPctFront = long_split - (accelPct * CS_LONG_FACTOR_ACC);
         setSplits(maxTotalTorque);
         core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, false);
     }
 
     // Case: Regen braking
-    else if (accelPct < 0 && REGEN_ENABLED)
-    {
+    else if (accelPct < 0 && REGEN_ENABLED) {
+        if (dynamic) {
+            lat_factor = CS_LAT_FUNC(velX.val);
+            long_split = CS_LONG_FUNC_BRAKE(velX.val);
+        } else {
+            lat_factor = CS_LAT_FACTOR_BRAKE;
+            long_split = CS_LONG_SPLIT_BRAKE;
+        }
         core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, true);
         totalPctLeft = 0.5f + (steerPct * CS_LAT_FACTOR_BRAKE);
         float regenScale = SCALE(accelPct, 0.0f, MAX_REGEN_PCT, 0.0f, 1.0f);
-        totalPctFront = CS_LONG_SPLIT_BRAKE + (regenScale * CS_LONG_FACTOR_BRAKE);
+        totalPctFront = long_split + (regenScale * CS_LONG_FACTOR_BRAKE);
         setSplits(maxTotalTorque);
     }
 

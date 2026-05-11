@@ -37,6 +37,7 @@ void VehicleState_Task_Update()
         state = VehicleState_SHUTDOWN;
     }
     
+    //rprintf("TSMS: %d", GPIO_get_TSMS());
     DriverInputs_get_driver_inputs(&inputs);
     switch(state)
     {
@@ -106,11 +107,13 @@ void VehicleState_Task_Update()
             {
                 new_state(VehicleState_STANDBY);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 1);
+                core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 1);
             }
             break;
 
         case VehicleState_STANDBY:
             core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 0);
+            core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 0);
             // Set inverter enable and on
             Inverters_set_enable(true); // AMK_bEnable = 1
             Inverters_set_inv_on(true); // AMLK_bInverterOn = 1
@@ -174,7 +177,8 @@ void VehicleState_Task_Update()
             if (Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
                 Inverters_get_state(INV_RL) <= InvState_SOFT_FAULT &&
                 Inverters_get_state(INV_FR) <= InvState_SOFT_FAULT &&
-                Inverters_get_state(INV_FL) <= InvState_SOFT_FAULT)
+                Inverters_get_state(INV_FL) <= InvState_SOFT_FAULT &&
+                !FaultManager_hardfault_active())
             {
                 new_state(VehicleState_VC_NOT_READY);
             }
@@ -185,6 +189,8 @@ void VehicleState_Task_Update()
     uint64_t msg;
     uint8_t dlc = main_dbc_vc_status_pack((uint8_t *)&msg, &mainBus.vc_status, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_STATUS_FRAME_ID, dlc, msg);
+    core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_STATUS_FRAME_ID, dlc, msg);
+    core_CAN_add_message_to_tx_queue(CAN_SENSE, 7, 8, 0xfa55fa55);
 }
 
 void VehicleState_set_fault() {

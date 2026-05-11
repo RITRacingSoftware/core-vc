@@ -9,8 +9,11 @@
 #include "VC.h"
 #include "DriverInputs.h"
 #include "FaultManager.h"
+#include "vectornav.h"
+#include <math.h>
 
 MAIN_BUS mainBus = {0};
+// SENSE_BUS senseBus = {0};
 
 static bool CAN_add_filters();
 static void pack_and_send_main_echoes(int id);
@@ -21,7 +24,6 @@ static void send_controls_params();
 int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
         MAIN_DBC_BMS_STATUS_FRAME_ID,
-        MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID,
         MAIN_DBC_SSDB_FRONT_FRAME_ID,
         MAIN_DBC_VECTOR_NAV0_FRAME_ID,
         MAIN_DBC_VECTOR_NAV2_FRAME_ID,
@@ -37,21 +39,33 @@ int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET2_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET3_FRAME_ID,
+        INVERTER_DBC_RR_AMK_RIT_SET4_FRAME_ID,
+        INVERTER_DBC_RR_AMK_RIT_SET5_FRAME_ID,
+        INVERTER_DBC_RR_AMK_RIT_SET6_FRAME_ID,
         INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_RL_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_RL_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_RL_AMK_RIT_SET2_FRAME_ID,
         INVERTER_DBC_RL_AMK_RIT_SET3_FRAME_ID,
+        INVERTER_DBC_RL_AMK_RIT_SET4_FRAME_ID,
+        INVERTER_DBC_RL_AMK_RIT_SET5_FRAME_ID,
+        INVERTER_DBC_RL_AMK_RIT_SET6_FRAME_ID,
         INVERTER_DBC_FR_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_FR_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_FR_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_FR_AMK_RIT_SET2_FRAME_ID,
         INVERTER_DBC_FR_AMK_RIT_SET3_FRAME_ID,
+        INVERTER_DBC_FR_AMK_RIT_SET4_FRAME_ID,
+        INVERTER_DBC_FR_AMK_RIT_SET5_FRAME_ID,
+        INVERTER_DBC_FR_AMK_RIT_SET6_FRAME_ID,
         INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_FL_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_FL_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_FL_AMK_RIT_SET2_FRAME_ID,
-        INVERTER_DBC_FL_AMK_RIT_SET3_FRAME_ID
+        INVERTER_DBC_FL_AMK_RIT_SET3_FRAME_ID,
+        INVERTER_DBC_FL_AMK_RIT_SET4_FRAME_ID,
+        INVERTER_DBC_FL_AMK_RIT_SET5_FRAME_ID,
+        INVERTER_DBC_FL_AMK_RIT_SET6_FRAME_ID
 };
 
 
@@ -67,6 +81,13 @@ bool CAN_init()
 bool CAN_tx_main()
 {
     core_CAN_send_from_tx_queue_task(CAN_MAIN);
+    return false;
+}
+
+bool CAN_tx_sense()
+{
+    rprintf("Starting CAN task\n");
+    core_CAN_send_from_tx_queue_task(CAN_SENSE);
     return false;
 }
 
@@ -95,8 +116,8 @@ void CAN_rx_main()
                 main_dbc_bms_status_unpack(&mainBus.bms_status, (uint8_t *) &canMessage.data, canMessage.dlc);
                 mainBus.bms_status.bms_status_pack_voltage *= PACK_VOLTAGE_SCALE; break;
 
-            case MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID:
-                main_dbc_bms_current_limit_unpack(&mainBus.bms_current_limit, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+            // case MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID:
+                // main_dbc_bms_current_limit_unpack(&mainBus.bms_current_limit, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_BMS_CURRENT_FRAME_ID:
                 main_dbc_bms_current_unpack(&mainBus.bms_current, (uint8_t *) &canMessage.data, canMessage.dlc);
@@ -104,7 +125,7 @@ void CAN_rx_main()
                 break;
 
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
-                main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+                main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, 8); break;
 
             case MAIN_DBC_VECTOR_NAV0_FRAME_ID:
                 main_dbc_vector_nav0_unpack(&mainBus.vn0, (uint8_t *) &canMessage.data, canMessage.dlc); break;
@@ -140,7 +161,8 @@ void CAN_Task_Update()
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, msg);
 
     // Inverters_send_timeout_times();
-    Inverters_echo_on_main();
+    //Inverters_echo_on_main();
+    vectornav_send_errors();
     send_CAN_errors();
     send_controls_params();
 }
@@ -186,8 +208,8 @@ static void send_controls_params()
 {
     mainBus.controls_const1.vc_long_factor = main_dbc_vc_controls_constants1_vc_long_factor_encode(CG_LONG_FACTOR);
     mainBus.controls_const1.vc_target_slip_ratio = main_dbc_vc_controls_constants1_vc_target_slip_ratio_encode(CG_TARGET_SR_NOMINAL);
-    mainBus.controls_const1.vc_k_p_slip_ratio = main_dbc_vc_controls_constants1_vc_k_p_slip_ratio_encode(CG_KP_SLIP_RATIO);
-    mainBus.controls_const1.vc_k_i_slip_ratio = main_dbc_vc_controls_constants1_vc_k_i_slip_ratio_encode(CG_KI_SLIP_RATIO);
+    mainBus.controls_const1.vc_k_p_slip_ratio = main_dbc_vc_controls_constants1_vc_k_p_slip_ratio_encode(fabsf(CG_KP_SLIP_RATIO));
+    mainBus.controls_const1.vc_k_i_slip_ratio = main_dbc_vc_controls_constants1_vc_k_i_slip_ratio_encode(fabsf(CG_KI_SLIP_RATIO));
     mainBus.controls_const1.vc_tc_activation_threshold = main_dbc_vc_controls_constants1_vc_tc_activation_threshold_encode(CG_TC_ACTIVATION_THRESHOLD);
     mainBus.controls_const1.vc_k_p_yaw_rate = main_dbc_vc_controls_constants1_vc_k_p_yaw_rate_encode(CG_KP_YAW_RATE);
     mainBus.controls_const1.vc_k_i_yaw_rate = main_dbc_vc_controls_constants1_vc_k_i_yaw_rate_encode(CG_KI_YAW_RATE);

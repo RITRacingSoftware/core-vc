@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include "rtt.h"
 #include "filter.h"
+#include "timeout.h"
+#include "FaultManager.h"
 
 #ifdef VC_TEST
 #include "vc_test.h"
@@ -16,13 +18,25 @@
 
 float prevTrq = 0;
 float prevRgn = 0;
+float prev_curr = 0;
+
 static rampup_t ramp;
 static core_filter_t setpoint;
+static core_timeout_t current_timeout;
+static void timeout_callback (core_timeout_t *timeout);
 
 void PowerLimit_init()
 {
     ramp.done = true;
-    ramp.step = 0.05;
+    ramp.step = 0.03;
+
+    current_timeout.module = NULL;
+    current_timeout.ref = FAULT_CURRENT_IRR;
+    current_timeout.timeout = CURRENT_TIMEOUT_MS;
+    current_timeout.callback = timeout_callback;
+    current_timeout.latching = 0;
+    current_timeout.single_shot = 0;
+    core_timeout_insert(&current_timeout);
 }
 
 void PowerLimit(float reqTrq, float *limitedMaxTrq)
@@ -47,7 +61,12 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     // float maxP = MIN((packV * maxCurrent), PL_MAX_POWER_W);
     float maxP = PL_MAX_POWER_W;
     float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
+    if ((amps != prev_curr) || (amps == 0)) {
+        core_timeout_reset(&current_timeout);
+        prev_curr = amps;
+    }
     float currP = packV * amps; 
+    //rprintf("amps: %d, currP: %d\n", (int)(amps), (int)(currP));
 
     float trqs[4];
     Inverters_get_torques(trqs);
@@ -118,24 +137,39 @@ float PowerLimit_short_current_limit(float min_V, float max_T)
 
 void RegenLimit(float reqRgn, float *limitedMaxRgn)
 {
+    float debug[2];
     float trqs[4];
     Inverters_get_torques(trqs);
     float totalTrq = (trqs[0] + trqs[1] + trqs[2] + trqs[3]) / 100;
 
     float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
 
+    if ((amps != prev_curr) || (amps == 0)) {
+        core_timeout_reset(&current_timeout);
+        prev_curr = amps;
+    }
+
     if (amps < (RL_THRESHOLD * MAX_REGEN_CURRENT_A))
     {
         float curr_tPerA = totalTrq/amps;                   // Positive
+        debug[0] = curr_tPerA;
         float conv_max = curr_tPerA * MAX_REGEN_CURRENT_A;  // Negative
         *limitedMaxRgn = MAX(reqRgn, conv_max);
+        debug[1] = *limitedMaxRgn;
     }
     else *limitedMaxRgn = reqRgn;
+
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 }
 
 void RegenLimit_set_prev_rgn(float rgn)
 {
     prevRgn = rgn;
+}
+
+static void timeout_callback (core_timeout_t *timeout)
+{
+    FaultManager_set(timeout->ref);
 }
 
 

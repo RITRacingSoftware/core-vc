@@ -47,10 +47,6 @@
 /********************** CAN PARAMETERS *************************/
 /***************************************************************/
 /**
-  * @brief  CAN bitrate in bits per second
-  */
-#define CORE_CAN_BITRATE 1000000
-/**
   * @brief  Number of CAN messages that can be stored in the CAN FreeRTOS queue
   */
 #define CORE_CAN_QUEUE_LENGTH 30
@@ -62,6 +58,14 @@
   * @brief  Disable CAN FreeRTOS TX queues
   */
 #define CORE_CAN_DISABLE_TX_QUEUE 0
+/**
+  * @brief  Disable CAN FreeRTOS RX queues
+  */
+#define CORE_CAN_DISABLE_RX_QUEUE 0
+/**
+  * @brief  Disable CAN FreeRTOS TX semaphores
+  */
+#define CORE_CAN_DISABLE_SEMAPHORE 0
 
 /**
   * @brief If set, calls to core_CAN_send_message will block
@@ -86,13 +90,14 @@
   * @brief  Timer that stores the upper bits of the CAN timestamp
   */
 #define CORE_CAN_TIMER  TIM2
+#define CORE_TIMESTAMP_MSB 12
 
 #define CORE_CAN_MSGBUF1_SIZE 1024
 #define CORE_CAN_MSGBUF2_SIZE 0
 #define CORE_CAN_MSGBUF3_SIZE 0
-#define CORE_FDCAN1_MSGBUF 1
-#define CORE_FDCAN2_MSGBUF 1
-#define CORE_FDCAN3_MSGBUF 1
+#define CORE_FDCAN1_MSGBUF 0
+#define CORE_FDCAN2_MSGBUF 0
+#define CORE_FDCAN3_MSGBUF 0
 
 // Ports and pins for CAN communication
 #define CORE_FDCAN1_TX_PORT GPIOA
@@ -125,7 +130,7 @@
 #define CORE_FDCAN3_MAX_EXTENDED_FILTER_NUM 8
 
 // Auto-retransmission config
-#define CORE_FDCAN1_AUTO_RETRANSMISSION 0
+#define CORE_FDCAN1_AUTO_RETRANSMISSION 1
 #define CORE_FDCAN2_AUTO_RETRANSMISSION 1
 #define CORE_FDCAN3_AUTO_RETRANSMISSION 0
 
@@ -224,12 +229,12 @@
   * @brief  Number of bits periods that must elapse since the most recent
   *         transmission for the receive interrupt to trigger
   */
-#define CORE_USART_RX_TIMEOUT 64
+#define CORE_USART_RX_TIMEOUT 16
 
 /**
   * @brief  Enable the uprintf function
   */
-#define CORE_USART_UPRINTF 1
+#define CORE_USART_UPRINTF 0
 /**
   * @brief  Size of the transmit buffer to which uprintf stores characters to
   *         be transmitted. The tranmit buffer is shared and is only defined 
@@ -251,10 +256,10 @@
 #define CORE_USART2_RX_PIN  GPIO_PIN_3
 #define CORE_USART2_RX_AF   7
 
-#define CORE_USART3_TX_PORT GPIOB
+#define CORE_USART3_TX_PORT GPIOC
 #define CORE_USART3_TX_PIN  GPIO_PIN_10
 #define CORE_USART3_TX_AF   7
-#define CORE_USART3_RX_PORT GPIOB
+#define CORE_USART3_RX_PORT GPIOC
 #define CORE_USART3_RX_PIN  GPIO_PIN_11
 #define CORE_USART3_RX_AF   7
 
@@ -309,7 +314,7 @@
 /**
  * @brief Number of timeouts used
  */
-#define CORE_TIMEOUT_NUM 20
+#define CORE_TIMEOUT_NUM 23
 
 
 

@@ -14,13 +14,12 @@
 #define INST_CURRENT_SCALE 0.001f
 #define BMS_OVERVIEW_SCALE 0.01f
 
-
 typedef struct
 {
     // Received by VC 
     struct main_dbc_bms_fault_vector_t bms_fault_vector;
     struct main_dbc_bms_status_t bms_status;
-    struct main_dbc_bms_current_limit_t bms_current_limit;
+    // struct main_dbc_bms_current_limit_t bms_current_limit;
     struct main_dbc_ssdb_front_t ssdb_front;
     struct main_dbc_vector_nav0_t vn0;
     struct main_dbc_vector_nav2_t vn2; 
@@ -41,31 +40,8 @@ typedef struct
     struct main_dbc_vc_controls_out4_t controls_out4;
     struct main_dbc_vc_controls_constants1_t controls_const1;
     struct main_dbc_vc_controls_constants2_t controls_const2;
+    struct main_dbc_vc_target_wheel_speeds_t target_wheel_speeds;
 
-    // Inv data sent by VC
-    struct main_dbc_vc_rl_amk_setpoints_t rl_setpoints;
-    struct main_dbc_vc_rl_amk_actual_1_t rl_actual;
-    struct main_dbc_vc_rl_info_1_t rl_info1;
-    struct main_dbc_vc_rl_info_2_t rl_info2;
-    struct main_dbc_vc_rl_info_3_t rl_info3;
-
-    struct main_dbc_vc_rr_amk_setpoints_t rr_setpoints;
-    struct main_dbc_vc_rr_amk_actual_1_t rr_actual;
-    struct main_dbc_vc_rr_info_1_t rr_info1;
-    struct main_dbc_vc_rr_info_2_t rr_info2;
-    struct main_dbc_vc_rr_info_3_t rr_info3;
-
-    struct main_dbc_vc_fl_amk_setpoints_t fl_setpoints;
-    struct main_dbc_vc_fl_amk_actual_1_t fl_actual;
-    struct main_dbc_vc_fl_info_1_t fl_info1;
-    struct main_dbc_vc_fl_info_2_t fl_info2;
-    struct main_dbc_vc_fl_info_3_t fl_info3;
-
-    struct main_dbc_vc_fr_amk_setpoints_t fr_setpoints;
-    struct main_dbc_vc_fr_amk_actual_1_t fr_actual;
-    struct main_dbc_vc_fr_info_1_t fr_info1;
-    struct main_dbc_vc_fr_info_2_t fr_info2;
-    struct main_dbc_vc_fr_info_3_t fr_info3;
 } MAIN_BUS;
 
 /*

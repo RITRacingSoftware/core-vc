@@ -47,7 +47,7 @@ static DP_State_e DP_State;
 
 static float lastSteer;
 
-void DriverInputs_init()
+bool DriverInputs_init()
 {
     if (!core_ADC_init(ADC5)) return false;
     if (!core_ADC_setup_pin(ACCEL_A_PORT, ACCEL_A_PIN, 1)) return false;
@@ -154,10 +154,9 @@ void Steer_process()
     {
         core_timeout_reset(&steer_irr_timeout);
 
-        uint16_t pos;
-        pos = SAT(rawPos, STEER_OFFSET_ADC, STEER_MAX_ADC);
-
-        float steerPct = -(((pos - STEER_OFFSET_ADC) / HALF_STEER_RANGE_ADC) - 1);
+        float steerPct = -((float)(rawPos - STEER_CENTER_ADC) / HALF_STEER_RANGE_ADC);
+        if (steerPct > 1.0f) steerPct = 1.0f;
+        if (steerPct < -1.0f) steerPct = -1.0f;
 
         // if ((fabs(steerPct - lastSteer) > STEER_DIFF_FAULT) && (VehicleState_get_state() > VehicleState_VC_NOT_READY)) FaultManager_set(FAULT_STEER_IRRA);
         // else lastSteer = steerPct;
@@ -228,12 +227,11 @@ void Accel_process()
 
     if (status == true)
     {
-        avgPos = ((accelAPos + accelBPos) / 2.0f);
-
+        avgPos = ((accelAPos + accelBPos) / 2.0f); 
 #if REGEN_ENABLED
         if (avgPos > ACCEL_DEADZONE_HIGH_PCT) avgPos = SCALE(avgPos, ACCEL_DEADZONE_HIGH_PCT, 1.0f, 0.0f, 1.0f);
-        else if (avgPos < ACCEL_DEADZONE_HIGH_PCT && avgPos > ACCEL_DEADZONE_LOW_PCT) avgPos = 0;
         else if (avgPos < ACCEL_DEADZONE_LOW_PCT) avgPos = SCALE(avgPos, 0.0f, ACCEL_DEADZONE_LOW_PCT, MAX_REGEN_PCT, 0.0f);
+        else avgPos = 0;
 #endif
 
     }
@@ -243,6 +241,7 @@ void Accel_process()
     {
         core_timeout_reset(&accel_disagree_timeout);
     } else status = false;
+    // core_timeout_reset(&accel_disagree_timeout);
 
     if (status == true)
     {

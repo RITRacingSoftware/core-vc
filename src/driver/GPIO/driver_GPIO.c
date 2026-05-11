@@ -69,6 +69,7 @@ bool GPIO_set_interlock_relay(bool on) {
 bool GPIO_get_TSMS() {return TSMS_state;}
 bool GPIO_get_RTD() {return RTD_state;}
 bool GPIO_get_ASMS() {return ASMS_state;}
+bool GPIO_get_LC() {return RTD_state;}
 
 void GPIO_set_activate_inv_relays(bool on)
 {

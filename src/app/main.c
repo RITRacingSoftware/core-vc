@@ -24,6 +24,13 @@ void task_CAN_tx_main(void *pvParameters)
     if (!CAN_tx_main()) hardfault_error_handler();
 }
 
+void task_CAN_tx_sense(void *pvParameters)
+{
+    (void) pvParameters;
+    CAN_tx_sense();
+    if (!CAN_tx_sense()) hardfault_error_handler();
+}
+
 void task_CAN_tx_inv(void *pvParameters)
 {
     (void) pvParameters;
@@ -61,7 +68,7 @@ void task_heartbeat(void *pvParameters)
     while(true)
     {
         toggle_heartbeat();
-        vTaskDelayUntil(&next_wake_time, 1000);
+        vTaskDelayUntil(&next_wake_time, 200);
     }
 }
 
@@ -73,7 +80,15 @@ int main(void)
 
     err = xTaskCreate(task_CAN_tx_main,
       "CAN_tx",
-      1000,
+      500,
+      NULL,
+      CAN_TX_PRIORITY,
+      NULL);
+    if (err != pdPASS) hardfault_error_handler();
+
+    err = xTaskCreate(task_CAN_tx_sense,
+      "CAN_tx",
+      500,
       NULL,
       CAN_TX_PRIORITY,
       NULL);
@@ -89,7 +104,7 @@ int main(void)
 
     err = xTaskCreate(task_CAN_rx_main,
       "CAN_rx",
-      5000,
+      2000,
       NULL,
       CAN_RX_PRIORITY,
       NULL);
@@ -97,7 +112,7 @@ int main(void)
 
     err = xTaskCreate(task_CAN_rx_inv,
       "CAN_rx",
-      5000,
+      2000,
       NULL,
       CAN_RX_PRIORITY,
       NULL);

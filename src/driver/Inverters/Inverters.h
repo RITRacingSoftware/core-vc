@@ -16,6 +16,7 @@
 #define INV_OVERSPEED_ERROR (2319)
 #define INV_ENCODER_COMMS_ERROR (2310)
 #define INV_OVER_CURRENT_ERROR (2334)
+#define INV_OVERLOAD_WARNING_ERROR (2357)
 
 typedef enum {
     InvState_NORMAL,
@@ -81,7 +82,6 @@ void Inverters_set_can_states();
 void Inverters_send_timeout_times();
 void Inverters_reset_setpoints();
 void Inverters_CAN_rx();
-void Inverters_echo_on_main();
 void Inverters_get_velocities_codegen(float *velArr);
 void Inverters_get_voltages(float *volArr);
 void Inverters_get_torques(float *trqArr);

@@ -23,6 +23,9 @@
 #define FAULT_VN_NO_LOCK          0x00020000
 #define FAULT_VN_IRR              0x00040000
 #define FAULT_RUNAWAY             0x00080000
+#define FAULT_CURRENT_IRR         0x00100000
+#define FAULT_VN_LOST             0x00200000
+
 
 
 void FaultManager_init();
@@ -32,3 +35,4 @@ void FaultManager_set(uint64_t faultCode);
 void FaultManager_reset(uint64_t faultCode);
 bool FaultManager_read(uint64_t faultCode);
 void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo);
+bool FaultManager_hardfault_active();

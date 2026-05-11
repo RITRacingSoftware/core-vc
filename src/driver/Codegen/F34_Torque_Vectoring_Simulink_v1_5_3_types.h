@@ -1,15 +1,15 @@
 /*
- * F34_Torque_Vectoring_Simulink_v1_5_types.h
+ * F34_Torque_Vectoring_Simulink_v1_5_3_types.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5".
+ * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3".
  *
- * Model version              : 1.341
+ * Model version              : 1.395
  * Simulink Coder version : 23.2 (R2023b) 01-Aug-2023
- * C source code generated on : Sun Jan 18 14:21:47 2026
+ * C source code generated on : Mon Apr 13 21:55:42 2026
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -18,8 +18,8 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_types_h_
-#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_types_h_
+#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_types_h_
+#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_types_h_
 #include "rtwtypes.h"
 #ifndef DEFINED_TYPEDEF_FOR_YawParams_
 #define DEFINED_TYPEDEF_FOR_YawParams_
@@ -60,6 +60,7 @@ typedef struct {
   real32_T kP_Slip_Ratio;
   real32_T kI_Slip_Ratio;
   real32_T kD_Slip_Ratio;
+  real32_T N_Slip_Ratio;
   real32_T TC_Activation_Threshold;
   real32_T Fx_est[4];
 } TCParams;
@@ -95,6 +96,7 @@ typedef struct {
   real32_T Y_accel;
   boolean_T Launch_Button;
   real32_T dt_loop;
+  real32_T Torque_Requests[4];
 } VariableInBus;
 
 #endif
@@ -174,4 +176,4 @@ typedef struct tag_RAmU1k0PIQA5gLwNsJpxQF dsp_simulink_MovingAverage_F3_T;
 /* Forward declaration for rtModel */
 typedef struct tag_RTM_F34_Torque_Vectoring__T RT_MODEL_F34_Torque_Vectoring_T;
 
-#endif              /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_types_h_ */
+#endif            /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_types_h_ */

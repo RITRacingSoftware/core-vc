@@ -314,7 +314,7 @@
 /**
  * @brief Number of timeouts used
  */
-#define CORE_TIMEOUT_NUM 23
+#define CORE_TIMEOUT_NUM 24
 
 
 

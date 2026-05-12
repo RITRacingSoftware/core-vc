@@ -10,6 +10,7 @@
 #include "usart.h"
 #include "rtt.h"
 #include "FaultManager.h"
+#include "driverless.h"
 
 static unsigned long precharge_time;
 static VehicleState_e state;
@@ -130,11 +131,17 @@ void VehicleState_Task_Update()
             // X140 binary input BE2 = 1
             GPIO_set_activate_inv_relays(true);
 
+#ifdef DRIVERLESS_ENABLED
+            if (GPIO_get_ASMS()) new_state(VehicleState_RTD_AS);
+            else new_state(VehicleState_RTD);
+#else
             new_state(VehicleState_RTD);
+#endif
             break;
 
         case VehicleState_RTD:
             break;
+
 #ifdef DRIVERLESS_ENABLED
         case VehicleState_RTD_AS:
             break;
@@ -185,12 +192,13 @@ void VehicleState_Task_Update()
             break;
     }
 
+    driverless_state_update();
+
     mainBus.vc_status.vc_status_vehicle_state = state;
     uint64_t msg;
     uint8_t dlc = main_dbc_vc_status_pack((uint8_t *)&msg, &mainBus.vc_status, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_STATUS_FRAME_ID, dlc, msg);
     core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_STATUS_FRAME_ID, dlc, msg);
-    core_CAN_add_message_to_tx_queue(CAN_SENSE, 7, 8, 0xfa55fa55);
 }
 
 void VehicleState_set_fault() {

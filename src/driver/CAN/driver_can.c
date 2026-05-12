@@ -142,6 +142,10 @@ void CAN_rx_main()
             case MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID:
                 main_dbc_bms_cell_overview_unpack(&mainBus.bms_cells, (uint8_t *) &canMessage.data, canMessage.dlc);
                 break;
+
+            case MAIN_DBC_DS_STATUS_FRAME_ID:
+                main_dbc_ds_status_unpack(&mainBus.ds_status, (uint8_t*)&canMessage.data, canMessage.dlc);
+                break;
         }
     }
 }

@@ -6,6 +6,8 @@
 
 #include "Controls.h"
 
+#define DRIVERLESS_ENABLE
+
 /********************** GENERAL **********************/
 /*****************************************************/
 #define LOW_SPEED_TASK_FREQ_HZ 100

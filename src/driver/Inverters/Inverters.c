@@ -13,7 +13,7 @@
 #include "driver_GPIO.h"
 #include "driver_can.h"
 #include "FaultManager.h"
-#include "usart.h"
+#include "driverless.h"
 #include "VehicleState.h"
 
 static Inverter_s invRR = {0};
@@ -77,12 +77,13 @@ void Inverters_init()
 void Inverters_Task_Update()
 {
     float debug[2];
+    VehicleState_e vs = VehicleState_get_state();
 
     check_errors();
     state_machine();
 
     // Check to see if we're in RTD
-    if (VehicleState_get_state() != VehicleState_RTD) {
+    if (vs != VehicleState_RTD) {
         for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
     }
 
@@ -458,29 +459,34 @@ static void send_setpoints()
 {
     uint64_t msg_data;
 
-    // RR
-    invRR.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRR.req_setpoint);
-    inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRR.setpoints, 8);
-    core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-    //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
+#ifdef DRIVERLESS_ENABLE
+    if (driverless_rear_enabled()) {
+#endif
+        // RR
+        invRR.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRR.req_setpoint);
+        inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRR.setpoints, 8);
+        core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
 
-    // RL
-    invRL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRL.req_setpoint);
-    inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRL.setpoints, 8);
-    core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-    //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
+        // RL
+        invRL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRL.req_setpoint);
+        inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRL.setpoints, 8);
+        core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
+#ifdef DRIVERLESS_ENABLE
+    }
+    if (driverless_front_enabled()) {
+#endif
+        // FR
+        invFR.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFR.req_setpoint);
+        inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFR.setpoints, 8);
+        core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
 
-    // FR
-    invFR.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFR.req_setpoint);
-    inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFR.setpoints, 8);
-    core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-    //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
-
-    // FL
-    invFL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFL.req_setpoint);
-    inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFL.setpoints, 8);
-    core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-    //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
+        // FL
+        invFL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFL.req_setpoint);
+        inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFL.setpoints, 8);
+        core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
+#ifdef DRIVERLESS_ENABLE
+    }
+#endif
 }
 
 static void check_regen()

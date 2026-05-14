@@ -109,7 +109,7 @@ void CAN_rx_main()
         {
             case MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID:
                 main_dbc_bms_fault_vector_unpack(&mainBus.bms_fault_vector, (uint8_t *) &canMessage.data, canMessage.dlc);
-                if (canMessage.data) FaultManager_set(FAULT_BMS);
+                if (canMessage.data & (~(1<<12))) FaultManager_set(FAULT_BMS);
                 break;
 
             case MAIN_DBC_BMS_STATUS_FRAME_ID:

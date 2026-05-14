@@ -102,6 +102,7 @@
 #define CS_TOTAL_GAIN           7.0f
 #define CS_LONG_FUNC(vel)       (0.00019f*vel*vel + 0.28f)
 #define CS_LAT_FUNC(vel)        (-0.00045f*vel*vel + 0.6f)
+#define CS_LONG_FUNC_BRAKE(vel)       (0.00023f*vel*vel + 0.5f)
 
 // Traction Control
 #define TC_SPEED_DIFF_MAX 1000
@@ -110,6 +111,10 @@
 #define TC_P_GAIN 0.000f
 #define TC_D_GAIN 0.005f
 #define TC_RESET_STEP 0.10f
+
+#define CS_ENABLE_RPM_LIMIT
+#define CS_RPM_LIMIT_GAIN 0.002
+#define CS_RPM_LIMIT_THRESHOLD ((float)(20/(0.2032*2*M_PI)*12.97*60))
 
 /** Inverters **/
 #define MAX_TORQUE 200

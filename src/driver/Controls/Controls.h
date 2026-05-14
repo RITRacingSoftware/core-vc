@@ -40,4 +40,5 @@ bool Controls_update_vn();
 
 void rampup_init(rampup_t *ramp);
 bool rampup_update(float target, float *out, rampup_t *ramp);
+bool rampdown_update(float target, float *out, rampup_t *ramp);
 void rampup_trigger(float val, rampup_t *ramp);

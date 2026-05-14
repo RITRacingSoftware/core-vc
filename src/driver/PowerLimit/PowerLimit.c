@@ -21,14 +21,20 @@ float prevRgn = 0;
 float prev_curr = 0;
 
 static rampup_t ramp;
+static rampup_t ramp_regen;
 static core_filter_t setpoint;
 static core_timeout_t current_timeout;
 static void timeout_callback (core_timeout_t *timeout);
+
+static float last_reqRgn = 0;
 
 void PowerLimit_init()
 {
     ramp.done = true;
     ramp.step = 0.03;
+
+    ramp_regen.done = true;
+    ramp_regen.step = 0.015;
 
     current_timeout.module = NULL;
     current_timeout.ref = FAULT_CURRENT_IRR;
@@ -89,6 +95,7 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
 #ifdef VC_TEST
     test((t_val) maxCurrent);
 #endif
+    last_reqRgn = 0;
 }
 
 void PowerLimit_set_prev_trq(float trq)
@@ -144,6 +151,10 @@ void RegenLimit(float reqRgn, float *limitedMaxRgn)
 
     float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
 
+    last_reqRgn -= 0.07;
+    reqRgn = MAX(last_reqRgn, reqRgn);
+    last_reqRgn = reqRgn;
+
     if ((amps != prev_curr) || (amps == 0)) {
         core_timeout_reset(&current_timeout);
         prev_curr = amps;
@@ -154,10 +165,15 @@ void RegenLimit(float reqRgn, float *limitedMaxRgn)
         float curr_tPerA = totalTrq/amps;                   // Positive
         debug[0] = curr_tPerA;
         float conv_max = curr_tPerA * MAX_REGEN_CURRENT_A;  // Negative
+        //*limitedMaxRgn = MAX(reqRgn, conv_max);
         *limitedMaxRgn = MAX(reqRgn, conv_max);
+
         debug[1] = *limitedMaxRgn;
+        rampup_trigger(*limitedMaxRgn, &ramp_regen);  
     }
-    else *limitedMaxRgn = reqRgn;
+    else {
+        rampdown_update(reqRgn, limitedMaxRgn, &ramp_regen);
+    }
 
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 }

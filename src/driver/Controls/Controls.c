@@ -135,6 +135,19 @@ void Controls_Task_Update()
 static void step_basic(float maxTrq, bool dynamic)
 {
     float tvTrqs[4];
+#ifdef CS_ENABLE_RPM_LIMIT
+    // Compute minimum velocity
+    float vel[4];
+    Inverters_get_velocities_codegen(vel);
+    float min_vel = vel[0];
+    for (uint8_t i=1; i < 4; i++) {
+        if (vel[i] < min_vel) min_vel = vel[i];
+    }
+    float vel_max_trq = CS_RPM_LIMIT_GAIN * (CS_RPM_LIMIT_THRESHOLD - min_vel);
+    if (vel_max_trq < 0) vel_max_trq = 0;
+    if (maxTrq > vel_max_trq) maxTrq = vel_max_trq;
+#endif
+
     TorqueVectoring(maxTrq, tvTrqs, dynamic);
 
     for (int i = 0; i < 4; i++) {
@@ -312,6 +325,21 @@ bool rampup_update(float target, float *out, rampup_t *ramp)
     {
         ramp->prev += (ramp->step * target);
         if (ramp->prev >= ramp->target) ramp->prev = ramp->target;
+        *out = ramp->prev;
+    }
+    return (ramp->prev == ramp->target);
+}
+
+bool rampdown_update(float target, float *out, rampup_t *ramp) {
+    ramp->target = target;
+    if (ramp->done) *out = ramp->target;
+    else {
+        ramp->prev += (ramp->step * target);
+        if (ramp->prev <= ramp->target) {
+            ramp->prev = ramp->target;
+            ramp->target = 0;
+            ramp->done = true;
+        }
         *out = ramp->prev;
     }
     return (ramp->prev == ramp->target);

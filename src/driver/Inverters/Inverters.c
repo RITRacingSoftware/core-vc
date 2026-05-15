@@ -459,7 +459,7 @@ static void send_setpoints()
 {
     uint64_t msg_data;
 
-#ifdef DRIVERLESS_ENABLE
+#ifdef DRIVERLESS_ENABLED
     if (driverless_rear_enabled()) {
 #endif
         // RR
@@ -471,7 +471,7 @@ static void send_setpoints()
         invRL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRL.req_setpoint);
         inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRL.setpoints, 8);
         core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-#ifdef DRIVERLESS_ENABLE
+#ifdef DRIVERLESS_ENABLED
     }
     if (driverless_front_enabled()) {
 #endif
@@ -484,7 +484,7 @@ static void send_setpoints()
         invFL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFL.req_setpoint);
         inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFL.setpoints, 8);
         core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
-#ifdef DRIVERLESS_ENABLE
+#ifdef DRIVERLESS_ENABLED
     }
 #endif
 }

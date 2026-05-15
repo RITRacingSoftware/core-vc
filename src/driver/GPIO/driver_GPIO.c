@@ -2,6 +2,7 @@
 #include "Inverters.h"
 #include "config.h"
 #include "gpio.h"
+#include "rtt.h"
 
 static uint8_t RTD_counter;
 static bool RTD_state;
@@ -95,4 +96,5 @@ void GPIO_Task_Update()
         if (++ASMS_counter >= ASMS_HOLD_SAMPLES) ASMS_state = !ASMS_state;
     }
     else ASMS_counter = 0;
+    rprintf("ASMS %d\n", ASMS_state);
 }

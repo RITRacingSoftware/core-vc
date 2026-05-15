@@ -104,7 +104,11 @@ void VehicleState_Task_Update()
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
             Inverters_set_torque_request(INV_FL, 0, 0, 0);
 
+#ifdef DRIVERLESS_ENABLED
+            if (GPIO_get_ASMS() ? mainBus.rss_pdo.rss_k3 : GPIO_get_RTD())
+#else
             if (GPIO_get_RTD())
+#endif
             {
                 new_state(VehicleState_STANDBY);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 1);

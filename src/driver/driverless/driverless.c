@@ -40,9 +40,9 @@ void driverless_state_update() {
 // the inverters. The case where the VC is not requesting setpoints from the
 // DS but the DS continues to claim the inverters is handled by the ds_timeout.
 bool driverless_rear_enabled() {
-    return !(mainBus.vc_status.vc_ds_rear_enable) && !(mainBus.ds_status.ds_rear_active);
+    return (!(mainBus.vc_status.vc_ds_rear_enable) /*&& !(mainBus.ds_status.ds_rear_active)*/) || (VehicleState_get_state() != VehicleState_RTD_AS);
 }
 
 bool driverless_front_enabled() {
-    return !(mainBus.vc_status.vc_ds_front_enable) && !(mainBus.ds_status.ds_front_active);
+    return (!(mainBus.vc_status.vc_ds_front_enable) /*&& !(mainBus.ds_status.ds_front_active)*/) || (VehicleState_get_state() != VehicleState_RTD_AS);
 }

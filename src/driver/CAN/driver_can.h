@@ -28,6 +28,7 @@ typedef struct
     struct main_dbc_bms_current_t bms_current;
     struct main_dbc_bms_cell_overview_t bms_cells;
     struct main_dbc_ds_status_t ds_status;
+    struct main_dbc_rss_pdo_t rss_pdo;
 
     // Sent by VC
     struct main_dbc_vc_rtds_request_t rtds_request;

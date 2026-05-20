@@ -28,7 +28,6 @@ static bool Brakes_init();
 static void Brakes_convert_pct(uint16_t fVal, uint16_t rVal, float *fPct, float *rPct);
 static void DoublePedal_state_machine();
 
-static core_timeout_t fssdb_lost_timeout;          // Brake pressure sensor not on CAN timeout
 static core_timeout_t double_pedal_timeout;     // Double pedal timeout
 static core_timeout_t accel_A_timeout;          // Accel A irrational timeout
 static core_timeout_t accel_B_timeout;          // Accel B irrational timeout
@@ -99,22 +98,13 @@ bool DriverInputs_init()
     double_pedal_timeout.single_shot = 0;
     // core_timeout_insert(&double_pedal_timeout);
 
-    /*** FSSDB ***/
-    fssdb_lost_timeout.module = CAN_MAIN;
-    fssdb_lost_timeout.ref = MAIN_DBC_SSDB_FRONT_FRAME_ID;
-    fssdb_lost_timeout.timeout = DI_TIMEOUT_MS;
-    fssdb_lost_timeout.callback = brake_timeout_callback;
-    fssdb_lost_timeout.latching = 0;
-    fssdb_lost_timeout.single_shot = 0;
-    // core_timeout_insert(&bps_CAN_timeout);
-
     /*** FBPS Irrational ***/
     fbps_irr_timeout.module = NULL;
     fbps_irr_timeout.ref = FAULT_FBPS_IRRA;
     fbps_irr_timeout.timeout = DI_TIMEOUT_MS;
     fbps_irr_timeout.callback = timeout_callback;
     fbps_irr_timeout.latching = 0;
-    fbps_irr_timeout.single_shot = 1.0;
+    fbps_irr_timeout.single_shot = 1;
     core_timeout_insert(&fbps_irr_timeout);
 
     /*** RBPS Irrational ***/
@@ -123,7 +113,7 @@ bool DriverInputs_init()
     rbps_irr_timeout.timeout = DI_TIMEOUT_MS;
     rbps_irr_timeout.callback = timeout_callback;
     rbps_irr_timeout.latching = 0;
-    rbps_irr_timeout.single_shot = 0;
+    rbps_irr_timeout.single_shot = 1;
     core_timeout_insert(&rbps_irr_timeout);
 
     /*** Steer Irrational ***/
@@ -283,28 +273,24 @@ void Brakes_process()
     float frontPct, rearPct;
     Brakes_convert_pct(frontVal, rearVal, &frontPct, &rearPct);
 
-    // If front isn't irrational and hasn't timed out
-    if (!(fssdb_lost_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT) &&
-        !(fbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
-    {
-        // If front isn't currently irrational
-        if (frontVal > BPS_F_IRRATIONAL_LOW_ADC && frontVal < BPS_F_IRRATIONAL_HIGH_ADC) {
-            core_timeout_reset(&fbps_irr_timeout);
-            driverInputs.brakePct = frontPct;
+    uint8_t brake_state = 0;
+    if (frontVal > BPS_F_IRRATIONAL_LOW_ADC && frontVal < BPS_F_IRRATIONAL_HIGH_ADC) {
+        core_timeout_reset(&fbps_irr_timeout);
+        brake_state |= 2;
+    }
+    if (rearVal < BPS_R_IRRATIONAL_HIGH_ADC && rearVal > BPS_R_IRRATIONAL_LOW_ADC) {
+        core_timeout_reset(&rbps_irr_timeout);
+        brake_state |= 1;
+    }
 
-            mainBus.processed_inputs.vc_p_inputs_brakes_pct = 
-                main_dbc_vc_processed_inputs_vc_p_inputs_brakes_pct_encode(frontPct * 100);
-        }
-    }
-    // If rear isn't timed out irrational
-    else if (!(rbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT))
-    {
-        // If rear isn't currently irrational
-        if (rearVal < BPS_R_IRRATIONAL_HIGH_ADC && rearVal > BPS_R_IRRATIONAL_LOW_ADC) {
-            core_timeout_reset(&rbps_irr_timeout);
-            driverInputs.brakePct = rearPct;
-        }
-    }
+    if ((brake_state & 2) && !(fssdb_lost_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT) && !(fbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT)) {
+        driverInputs.brakePct = frontPct;
+    } else if ((brake_state & 1) && !(rbps_irr_timeout.state & CORE_TIMEOUT_STATE_TIMED_OUT)) {
+        driverInputs.brakePct = rearPct;
+    } else driverInputs.brakePct = 0.0f;
+
+    mainBus.processed_inputs.vc_p_inputs_brakes_pct = 
+        main_dbc_vc_processed_inputs_vc_p_inputs_brakes_pct_encode(frontPct * 100);
 
 #ifdef VC_TEST
     test((t_val) frontPct);

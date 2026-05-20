@@ -109,7 +109,7 @@ void Controls_Task_Update()
     if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
     // else maxTotalTrq = reqTrq;
     else RegenLimit(reqTrq, &maxTotalTrq);
-    ControlsLevel = ControlsLevel_BASIC;
+    //ControlsLevel = ControlsLevel_BASIC;
     switch (ControlsLevel)
     {
         case ControlsLevel_ADVANCED:
@@ -130,6 +130,9 @@ void Controls_Task_Update()
     }
 
     mainBus.vc_status.vc_controls_level = ControlsLevel;
+    uint64_t msg = 0x69696969;
+    main_dbc_vc_endurance_info_pack((uint8_t*)(&msg), &(mainBus.endurance_info), 8);
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_ENDURANCE_INFO_FRAME_ID, 8, msg);
 }
 
 static void step_basic(float maxTrq, bool dynamic)

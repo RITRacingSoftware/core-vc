@@ -21,6 +21,8 @@ static void echo_on_main();
 static void send_CAN_errors();
 static void send_controls_params();
 
+core_timeout_t fssdb_lost_timeout;          // Brake pressure sensor not on CAN timeout
+
 int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID,
         MAIN_DBC_BMS_STATUS_FRAME_ID,
@@ -75,6 +77,16 @@ bool CAN_init()
     if (!core_CAN_init(CAN_MAIN, 1000000)) return false;
     if (!core_CAN_init(CAN_SENSE, 1000000)) return false;
     if (!CAN_add_filters()) return false;
+    
+    /*** FSSDB ***/
+    fssdb_lost_timeout.module = NULL;
+    fssdb_lost_timeout.ref = FAULT_FSSDB_LOST;
+    fssdb_lost_timeout.timeout = DI_TIMEOUT_MS;
+    //fssdb_lost_timeout.callback = brake_timeout_callback;
+    fssdb_lost_timeout.latching = 0;
+    fssdb_lost_timeout.single_shot = 0;
+    //core_timeout_insert(&fssdb_lost_timeout);
+
     return true;
 }
 
@@ -125,6 +137,7 @@ void CAN_rx_main()
                 break;
 
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
+                //core_timeout_reset(&fssdb_lost_timeout);
                 main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, 8); break;
 
             case MAIN_DBC_VECTOR_NAV0_FRAME_ID:

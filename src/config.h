@@ -11,7 +11,7 @@
 #define LOW_SPEED_TASK_FREQ_HZ 100
 #define MIN_PRECHARGE_VOL 400
 #define PRECHARGE_MIN_TIME_MS 4000
-#define PRECHARGE_MAX_TIME_MS 6000
+#define PRECHARGE_MAX_TIME_MS 7000
 #define OVERSPEED_RPM 20000
 #define RTD_HOLD_TIME 1000
 #define TSMS_HOLD_SAMPLES 10
@@ -48,7 +48,10 @@
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02
 #define VN_LOST_TIMEOUT_MS 100
-#define CONTROLS_MAX_LEVEL ControlsLevel_BASIC
+#define CONTROLS_MAX_LEVEL ControlsLevel_BASIC_VEL
+
+#define ENDURANCE_MAX_ENERGY    5.5f
+#define ENDURANCE_DISTANCE      22500.0f
 
 #define CG_STATIC_LONG_SPLIT 0.50f
 #define CG_LONG_FACTOR 0.0f
@@ -101,7 +104,7 @@
 #define CS_LONG_SPLIT_BRAKE     0.65f
 #define CS_TOTAL_GAIN           7.0f
 #define CS_LONG_FUNC(vel)       (0.00019f*vel*vel + 0.28f)
-#define CS_LAT_FUNC(vel)        (-0.00045f*vel*vel + 0.6f)
+#define CS_LAT_FUNC(vel)        (-0.0003f*vel*vel + 0.6f)
 #define CS_LONG_FUNC_BRAKE(vel)       (0.00023f*vel*vel + 0.5f)
 
 // Traction Control
@@ -144,9 +147,9 @@
 #define ACCEL_POS_TOL 1
 
 // Regen
-#define ACCEL_DEADZONE_HIGH_PCT 0.31f
-#define ACCEL_DEADZONE_LOW_PCT 0.30f
-#define MAX_REGEN_PCT -0.4f
+#define ACCEL_DEADZONE_HIGH_PCT 0.25f
+#define ACCEL_DEADZONE_LOW_PCT 0.20f
+#define MAX_REGEN_PCT -0.2f
 
 // Hysteresis because when it regens at low speeds and cuts out it jitters.
 // Releasing regen causes the wheels to spin more, which feeds back into more regen.
@@ -157,17 +160,17 @@
 // 0.5 - 4.5v maps to 0 - 3000 psi
 #define BPS_F_IRRATIONAL_HIGH_ADC 2300
 #define BPS_F_MAX_ADC 1600
-#define BPS_F_OFFSET_ADC 500
+#define BPS_F_OFFSET_ADC 380
 #define BPS_F_RANGE_ADC (BPS_F_MAX_ADC - BPS_F_OFFSET_ADC)
-#define BPS_F_IRRATIONAL_LOW_ADC 100
+#define BPS_F_IRRATIONAL_LOW_ADC 50
 #define BPS_F_MAX_PSI 1300
 #define BPS_F_MIN_PRESSURE_PSI 0
 
 #define BPS_R_IRRATIONAL_HIGH_ADC 2000
 #define BPS_R_MAX_ADC 900
-#define BPS_R_OFFSET_ADC 300
+#define BPS_R_OFFSET_ADC 420
 #define BPS_R_RANGE_ADC (BPS_R_MAX_ADC - BPS_R_OFFSET_ADC)
-#define BPS_R_IRRATIONAL_LOW_ADC 200
+#define BPS_R_IRRATIONAL_LOW_ADC 50
 #define BPS_R_MAX_PSI 1300
 
 #define BPS_SOFT_PRESSED_PCT 0.3
@@ -176,7 +179,7 @@
 #define BPS_PSI_TOL 1
 
 /** DriverInputs **/
-#define DI_TIMEOUT_MS 100
+#define DI_TIMEOUT_MS 200
 #define DI_ACCEL_IRRATIONAL_TIMEOUT_MS 100
 #define DI_ACCEL_DISAGREE_TIMEOUT_MS 100
 #define DI_BPS_IRRATIONAL_TIMEOUT_MS 100

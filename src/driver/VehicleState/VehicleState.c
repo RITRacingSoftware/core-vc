@@ -103,7 +103,7 @@ void VehicleState_Task_Update()
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
             Inverters_set_torque_request(INV_FL, 0, 0, 0);
 
-            if (GPIO_get_RTD())
+            if (GPIO_get_RTD() && (inputs.brakePct > 0.05))
             {
                 new_state(VehicleState_STANDBY);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 1);

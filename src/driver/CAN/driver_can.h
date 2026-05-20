@@ -6,6 +6,7 @@
 #include "inverter_dbc.h"
 #include "main_dbc.h"
 #include "sensor_dbc.h"
+#include "timeout.h"
 
 #define INV_ERROR_RESET_BIT ((uint64_t)(1 << 11))
 #define FEEDBACK_VEL_SCALE 0.0001f
@@ -41,6 +42,7 @@ typedef struct
     struct main_dbc_vc_controls_constants1_t controls_const1;
     struct main_dbc_vc_controls_constants2_t controls_const2;
     struct main_dbc_vc_target_wheel_speeds_t target_wheel_speeds;
+    struct main_dbc_vc_endurance_info_t endurance_info;
 
 } MAIN_BUS;
 
@@ -81,6 +83,7 @@ typedef struct
 */
 
 extern MAIN_BUS mainBus;
+extern core_timeout_t fssdb_lost_timeout;          // Brake pressure sensor not on CAN timeout
 
 bool CAN_init();
 void CAN_Task_Update();

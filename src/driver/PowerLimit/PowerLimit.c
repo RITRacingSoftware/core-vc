@@ -11,6 +11,7 @@
 #include "filter.h"
 #include "timeout.h"
 #include "FaultManager.h"
+#include "Controls.h"
 
 #ifdef VC_TEST
 #include "vc_test.h"
@@ -27,6 +28,9 @@ static core_timeout_t current_timeout;
 static void timeout_callback (core_timeout_t *timeout);
 
 static float last_reqRgn = 0;
+
+static float distance_traveled = 0.0f;
+static float estimated_soc = 0.0f;
 
 void PowerLimit_init()
 {
@@ -72,6 +76,11 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
         prev_curr = amps;
     }
     float currP = packV * amps; 
+    
+    // SoC and distance traveled
+    distance_traveled += sqrtf(velX.val*velX.val + velY.val*velY.val)*(0.01f/ENDURANCE_DISTANCE);
+    estimated_soc += currP*(0.01f/(3.6e6f*ENDURANCE_MAX_ENERGY));
+
     //rprintf("amps: %d, currP: %d\n", (int)(amps), (int)(currP));
 
     float trqs[4];
@@ -96,6 +105,8 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     test((t_val) maxCurrent);
 #endif
     last_reqRgn = 0;
+    mainBus.endurance_info.vc_relative_distance = 65536*distance_traveled;
+    mainBus.endurance_info.vc_estimated_soc = 65536*estimated_soc;
 }
 
 void PowerLimit_set_prev_trq(float trq)

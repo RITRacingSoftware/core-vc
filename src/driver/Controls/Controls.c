@@ -15,7 +15,7 @@
 #include "FaultManager.h"
 #include "timeout.h"
 #include "driver_can.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5_3.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_2.h"
 #include "rtt.h"
 #include "vectornav.h"
 
@@ -56,7 +56,7 @@ void Controls_init()
     runaway_timeout.single_shot = 0;
     core_timeout_insert(&runaway_timeout);
 
-    F34_Torque_Vectoring_Simulink_v1_5_3_initialize();
+    F34_Torque_Vectoring_Simulink_v1_5_3_2_initialize();
     
     ControlsLevel = CONTROLS_MAX_LEVEL;
 
@@ -109,7 +109,9 @@ void Controls_Task_Update()
     if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
     // else maxTotalTrq = reqTrq;
     else RegenLimit(reqTrq, &maxTotalTrq);
-    //ControlsLevel = ControlsLevel_BASIC;
+
+    //ControlsLevel = ControlsLevel_BASIC_VEL;
+    //velX.val = 10.0f;
     switch (ControlsLevel)
     {
         case ControlsLevel_ADVANCED:
@@ -153,6 +155,8 @@ static void step_basic(float maxTrq, bool dynamic)
 
     TorqueVectoring(maxTrq, tvTrqs, dynamic);
 
+    //if (dynamic) TractionControl_test(velX.val, tvTrqs);
+
     for (int i = 0; i < 4; i++) {
         Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
@@ -171,7 +175,7 @@ static void step_advanced(float maxTrq)
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = GPIO_get_RTD();
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.dt_loop = 0.01f;
     float tvArr[4];    
-    TorqueVectoring(maxTrq, tvArr, false);
+    TorqueVectoring(maxTrq, tvArr, true);
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[0] = tvArr[3] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[1] = tvArr[1] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[2] = tvArr[2] * 9.8f;
@@ -183,7 +187,7 @@ static void step_advanced(float maxTrq)
     //rprintf("avail %d\n", (int)(maxTrq*100));
     update_controls_params();
 
-    F34_Torque_Vectoring_Simulink_v1_5_3_step();
+    F34_Torque_Vectoring_Simulink_v1_5_3_2_step();
 
     send_logging_outputs();
 
@@ -232,7 +236,7 @@ static void update_controls_params()
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos = inputs.accelPct;
 
     // In the steering angle, -1 = full right, +1 = full left because that's what Jared wanted for some reason.
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle = 0; //SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle = inputs.steerPct; //SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
     // Invert angular rate Z so when it is turning counterclockwise it is positive
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Yaw_Rate = -1 * angRateZ.val;
     float velArr[4];

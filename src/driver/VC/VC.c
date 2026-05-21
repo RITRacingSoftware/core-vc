@@ -23,6 +23,7 @@
 #include "TractionControl.h"
 #include "PowerLimit.h"
 #include "vectornav.h"
+#include "DRS.h"
 
 #include "adc.h"
 #include "spi.h"
@@ -50,6 +51,7 @@ bool VC_init()
     TractionControl_init();
     PowerLimit_init();
     Controls_init();
+    DRS_init();
 
     core_timeout_start_all();
 
@@ -66,6 +68,7 @@ void VC_Task_Update()
     Inverters_Task_Update();
     CAN_Task_Update();
     GPIO_Task_Update();
+    DRS_task();
 }
 
 void toggle_heartbeat()

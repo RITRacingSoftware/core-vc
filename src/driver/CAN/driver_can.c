@@ -10,6 +10,7 @@
 #include "DriverInputs.h"
 #include "FaultManager.h"
 #include "vectornav.h"
+#include "DRS.h"
 #include <math.h>
 
 MAIN_BUS mainBus = {0};
@@ -154,6 +155,10 @@ void CAN_rx_main()
 
             case MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID:
                 main_dbc_bms_cell_overview_unpack(&mainBus.bms_cells, (uint8_t *) &canMessage.data, canMessage.dlc);
+                break;
+
+            case 510:
+                DRS_set(canMessage.data & 0xffff, (canMessage.data >> 16) & 0xffff);
                 break;
         }
     }

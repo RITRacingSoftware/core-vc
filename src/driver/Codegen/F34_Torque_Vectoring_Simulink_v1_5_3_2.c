@@ -1,30 +1,33 @@
 /*
- * F34_Torque_Vectoring_Simulink_v1_5_3.c
+ * F34_Torque_Vectoring_Simulink_v1_5_3_2.c
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3".
+ * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_2".
  *
- * Model version              : 1.395
+ * Model version              : 1.421
  * Simulink Coder version : 23.2 (R2023b) 01-Aug-2023
- * C source code generated on : Mon Apr 13 21:55:42 2026
+ * C source code generated on : Wed May 20 19:55:38 2026
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
- * Embedded hardware selection: Intel->x86-64 (Windows64)
+ * Embedded hardware selection: ARM Compatible->ARM Cortex-M
  * Code generation objective: Debugging
  * Validation result: Not run
  */
 
-#include "F34_Torque_Vectoring_Simulink_v1_5_3.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_types.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_2.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_2_types.h"
 #include "rtwtypes.h"
 #include <math.h>
 #include "rt_nonfinite.h"
 #include <string.h>
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_capi.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_2_capi.h"
+
+/* Block signals (default storage) */
+B_F34_Torque_Vectoring_Simuli_T F34_Torque_Vectoring_Simulink_B;
 
 /* Block states (default storage) */
 DW_F34_Torque_Vectoring_Simul_T F34_Torque_Vectoring_Simulin_DW;
@@ -56,7 +59,7 @@ static void F34_Torque_Vec_SystemCore_setup(dsp_simulink_MovingAverage_F3_T *obj
 }
 
 /* Model step function */
-void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
+void F34_Torque_Vectoring_Simulink_v1_5_3_2_step(void)
 {
   /* local block i/o variables */
   boolean_T rtb_Memory;
@@ -68,15 +71,14 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
   real32_T csumrev[2];
   real32_T rtb_AddConstant;
   real32_T rtb_BodyVelocityms;
-  real32_T rtb_HalfLateralTorqueBiasNm;
   real32_T rtb_Max;
-  real32_T rtb_RightSideTorqueNm;
-  real32_T rtb_Switch2_idx_0;
-  real32_T rtb_Switch2_idx_1;
-  real32_T rtb_Switch2_idx_2;
-  real32_T rtb_Switch2_idx_3;
-  real32_T rtb_Switch2_tmp;
+  real32_T rtb_PctRear01;
   real32_T rtb_XAccelG;
+  real32_T rtb_torques_idx_0;
+  real32_T rtb_torques_idx_1;
+  real32_T rtb_torques_idx_2;
+  real32_T rtb_torques_idx_3;
+  real32_T steer_pct;
   uint32_T tmp;
   int8_T tmp_0;
   int8_T tmp_1;
@@ -101,10 +103,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
    */
   if (fabsf(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle) >
       5.0F) {
-    rtb_Switch2_idx_0 =
+    rtb_torques_idx_0 =
       F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle;
   } else {
-    rtb_Switch2_idx_0 = 0.0F;
+    rtb_torques_idx_0 = 0.0F;
   }
 
   /* Outputs for IfAction SubSystem: '<Root>/Advanced Controls' incorporates:
@@ -114,7 +116,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
    *  Math: '<S2>/Math Function'
    *  Math: '<S7>/Square'
    */
-  rtb_RightSideTorqueNm = rtb_BodyVelocityms * rtb_BodyVelocityms;
+  steer_pct = rtb_BodyVelocityms * rtb_BodyVelocityms;
 
   /* End of Outputs for SubSystem: '<Root>/Advanced Controls' */
 
@@ -133,10 +135,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
    *  Switch: '<S5>/Switch'
    *  Trigonometry: '<S2>/Trigonometric Function'
    */
-  rtb_Max = sinf(0.270833343F * rtb_Switch2_idx_0 * 0.0174532924F * 0.5F) * 2.0F
+  rtb_Max = sinf(0.270833343F * rtb_torques_idx_0 * 0.0174532924F * 0.5F) * 2.0F
     * rtb_BodyVelocityms / (100000.0F *
-    F34_Torque_Vectoring_Simulink_U.YawParams_d.Understeer_Gradient *
-    rtb_RightSideTorqueNm + 1.5748F);
+    F34_Torque_Vectoring_Simulink_U.YawParams_d.Understeer_Gradient * steer_pct
+    + 1.5748F);
 
   /* RateLimiter: '<S2>/Desired Yaw Rate Limiter' */
   rtb_AddConstant = rtb_Max - F34_Torque_Vectoring_Simulin_DW.PrevY;
@@ -160,247 +162,67 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
    *  ActionPort: '<S1>/Action Port'
    */
   /* If: '<Root>/If' incorporates:
-   *  Abs: '<S9>/Abs'
    *  Bias: '<S7>/Add Constant'
-   *  Constant: '<S9>/Constant'
-   *  Constant: '<S9>/One'
-   *  Gain: '<Root>/Y Accel [G]'
+   *  DeadZone: '<S1>/Dead Zone'
    *  Gain: '<S7>/Gain'
-   *  Inport: '<Root>/TCParams'
-   *  Inport: '<Root>/VariableInBus'
-   *  Product: '<S9>/Product1'
-   *  Product: '<S9>/Product2'
-   *  RateLimiter: '<S9>/Target S.R. Rate Limiter'
-   *  RelationalOperator: '<S14>/LowerRelop1'
-   *  RelationalOperator: '<S14>/UpperRelop'
-   *  RelationalOperator: '<S15>/LowerRelop1'
-   *  RelationalOperator: '<S15>/UpperRelop'
-   *  RelationalOperator: '<S16>/LowerRelop1'
-   *  RelationalOperator: '<S16>/UpperRelop'
-   *  SignalConversion generated from: '<S9>/Vector Concatenate1'
-   *  Sum: '<S9>/Add'
-   *  Sum: '<S9>/Add1'
-   *  Sum: '<S9>/Add3'
-   *  Sum: '<S9>/Front TC Long'
-   *  Sum: '<S9>/Rear TC Long'
-   *  Switch: '<S14>/Switch'
-   *  Switch: '<S14>/Switch2'
-   *  Switch: '<S15>/Switch'
-   *  Switch: '<S15>/Switch2'
-   *  Switch: '<S16>/Switch'
-   *  Switch: '<S16>/Switch2'
-   */
-  rtb_AddConstant = rtb_RightSideTorqueNm * 0.00019F + 0.2F;
-  rtb_RightSideTorqueNm = (rtb_XAccelG -
-    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ax_min) *
-    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Long;
-  rtb_Switch2_idx_0 =
-    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR -
-    rtb_RightSideTorqueNm;
-  rtb_RightSideTorqueNm +=
-    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR;
-  rtb_HalfLateralTorqueBiasNm = fabsf(0.101971619F *
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_accel);
-  if (rtb_HalfLateralTorqueBiasNm > 10.0F) {
-    rtb_HalfLateralTorqueBiasNm = 10.0F;
-  } else if (rtb_HalfLateralTorqueBiasNm <
-             F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ay_min) {
-    /* Switch: '<S14>/Switch' */
-    rtb_HalfLateralTorqueBiasNm =
-      F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ay_min;
-  }
-
-  rtb_HalfLateralTorqueBiasNm = (rtb_HalfLateralTorqueBiasNm -
-    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ay_min) *
-    F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Lat;
-  if (rtb_HalfLateralTorqueBiasNm > 1.0F) {
-    rtb_HalfLateralTorqueBiasNm = 1.0F;
-  } else if (rtb_HalfLateralTorqueBiasNm <
-             F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Lat_min) {
-    /* Switch: '<S15>/Switch' */
-    rtb_HalfLateralTorqueBiasNm =
-      F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Lat_min;
-  }
-
-  rtb_Switch2_tmp = rtb_Switch2_idx_0 + rtb_HalfLateralTorqueBiasNm;
-  rtb_Switch2_idx_0 = rtb_Switch2_tmp;
-  if (rtb_Switch2_tmp > F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max;
-  } else if (rtb_Switch2_tmp <
-             F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min) {
-    /* Switch: '<S16>/Switch' */
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min;
-  }
-
-  rtb_Switch2_idx_1 = rtb_Switch2_idx_0 -
-    F34_Torque_Vectoring_Simulin_DW.PrevY_g[0];
-  if (rtb_Switch2_idx_1 > 0.0008F) {
-    /* Outport: '<Root>/Target_Slip_Ratios_' */
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.PrevY_g[0] + 0.0008F;
-  } else if (rtb_Switch2_idx_1 < -0.0008F) {
-    /* Outport: '<Root>/Target_Slip_Ratios_' */
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.PrevY_g[0] - 0.0008F;
-  }
-
-  /* End of Outputs for SubSystem: '<Root>/Advanced Controls' */
-
-  /* Outport: '<Root>/Target_Slip_Ratios_' */
-  F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[0] = rtb_Switch2_idx_0;
-
-  /* Outputs for IfAction SubSystem: '<Root>/Advanced Controls' incorporates:
-   *  ActionPort: '<S1>/Action Port'
-   */
-  /* If: '<Root>/If' incorporates:
-   *  Inport: '<Root>/TCParams'
-   *  Outport: '<Root>/Target_Slip_Ratios_'
-   *  RateLimiter: '<S9>/Target S.R. Rate Limiter'
-   *  RelationalOperator: '<S16>/LowerRelop1'
-   *  RelationalOperator: '<S16>/UpperRelop'
-   *  SignalConversion generated from: '<S9>/Vector Concatenate1'
-   *  Sum: '<S9>/Add1'
-   *  Switch: '<S16>/Switch'
-   *  Switch: '<S16>/Switch2'
-   */
-  F34_Torque_Vectoring_Simulin_DW.PrevY_g[0] = rtb_Switch2_idx_0;
-  rtb_RightSideTorqueNm += rtb_HalfLateralTorqueBiasNm;
-  rtb_Switch2_idx_0 = rtb_RightSideTorqueNm;
-  if (rtb_RightSideTorqueNm >
-      F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max;
-  } else if (rtb_RightSideTorqueNm <
-             F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min) {
-    /* Switch: '<S16>/Switch' */
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min;
-  }
-
-  rtb_Switch2_idx_1 = rtb_Switch2_idx_0 -
-    F34_Torque_Vectoring_Simulin_DW.PrevY_g[1];
-  if (rtb_Switch2_idx_1 > 0.0008F) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.PrevY_g[1] + 0.0008F;
-  } else if (rtb_Switch2_idx_1 < -0.0008F) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.PrevY_g[1] - 0.0008F;
-  }
-
-  /* End of Outputs for SubSystem: '<Root>/Advanced Controls' */
-
-  /* Outport: '<Root>/Target_Slip_Ratios_' */
-  F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[1] = rtb_Switch2_idx_0;
-
-  /* Outputs for IfAction SubSystem: '<Root>/Advanced Controls' incorporates:
-   *  ActionPort: '<S1>/Action Port'
-   */
-  /* If: '<Root>/If' incorporates:
-   *  Inport: '<Root>/TCParams'
-   *  Outport: '<Root>/Target_Slip_Ratios_'
-   *  RateLimiter: '<S9>/Target S.R. Rate Limiter'
-   *  RelationalOperator: '<S16>/LowerRelop1'
-   *  RelationalOperator: '<S16>/UpperRelop'
-   *  Sum: '<S9>/Add1'
-   *  Switch: '<S16>/Switch'
-   *  Switch: '<S16>/Switch2'
-   */
-  F34_Torque_Vectoring_Simulin_DW.PrevY_g[1] = rtb_Switch2_idx_0;
-  rtb_Switch2_idx_0 = rtb_Switch2_tmp;
-  if (rtb_Switch2_tmp > F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max;
-  } else if (rtb_Switch2_tmp <
-             F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min) {
-    /* Switch: '<S16>/Switch' */
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min;
-  }
-
-  rtb_Switch2_idx_1 = rtb_Switch2_idx_0 -
-    F34_Torque_Vectoring_Simulin_DW.PrevY_g[2];
-  if (rtb_Switch2_idx_1 > 0.0008F) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.PrevY_g[2] + 0.0008F;
-  } else if (rtb_Switch2_idx_1 < -0.0008F) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.PrevY_g[2] - 0.0008F;
-  }
-
-  /* End of Outputs for SubSystem: '<Root>/Advanced Controls' */
-
-  /* Outport: '<Root>/Target_Slip_Ratios_' */
-  F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[2] = rtb_Switch2_idx_0;
-
-  /* Outputs for IfAction SubSystem: '<Root>/Advanced Controls' incorporates:
-   *  ActionPort: '<S1>/Action Port'
-   */
-  /* If: '<Root>/If' incorporates:
-   *  Inport: '<Root>/TCParams'
-   *  Outport: '<Root>/Target_Slip_Ratios_'
-   *  RateLimiter: '<S9>/Target S.R. Rate Limiter'
-   *  RelationalOperator: '<S16>/LowerRelop1'
-   *  RelationalOperator: '<S16>/UpperRelop'
-   *  Sum: '<S9>/Add1'
-   *  Switch: '<S16>/Switch'
-   *  Switch: '<S16>/Switch2'
-   */
-  F34_Torque_Vectoring_Simulin_DW.PrevY_g[2] = rtb_Switch2_idx_0;
-  rtb_Switch2_idx_0 = rtb_RightSideTorqueNm;
-  if (rtb_RightSideTorqueNm >
-      F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max;
-  } else if (rtb_RightSideTorqueNm <
-             F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min) {
-    /* Switch: '<S16>/Switch' */
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_min;
-  }
-
-  rtb_Switch2_idx_1 = rtb_Switch2_idx_0 -
-    F34_Torque_Vectoring_Simulin_DW.PrevY_g[3];
-  if (rtb_Switch2_idx_1 > 0.0008F) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.PrevY_g[3] + 0.0008F;
-  } else if (rtb_Switch2_idx_1 < -0.0008F) {
-    rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.PrevY_g[3] - 0.0008F;
-  }
-
-  /* End of Outputs for SubSystem: '<Root>/Advanced Controls' */
-
-  /* Outport: '<Root>/Target_Slip_Ratios_' */
-  F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[3] = rtb_Switch2_idx_0;
-
-  /* Outputs for IfAction SubSystem: '<Root>/Advanced Controls' incorporates:
-   *  ActionPort: '<S1>/Action Port'
-   */
-  /* If: '<Root>/If' incorporates:
-   *  Bias: '<S9>/Add Constant'
-   *  Constant: '<S9>/Constant1'
-   *  Gain: '<S9>/m//s to Motor Speed [RPM]'
    *  If: '<S1>/Velocity < 0.3 m//sec?'
    *  Inport: '<Root>/LCParams'
+   *  Inport: '<Root>/TCParams'
    *  Inport: '<Root>/VariableInBus'
    *  MATLAB Function: '<S1>/LC_State_Machine'
+   *  MATLAB Function: '<S1>/Target SR Calculator'
    *  MATLABSystem: '<S10>/Moving Average'
-   *  MinMax: '<S4>/Max'
-   *  MinMax: '<S9>/Max'
    *  Outport: '<Root>/LC_blend_pct'
    *  Outport: '<Root>/LC_ramp_pct'
    *  Outport: '<Root>/Lateral Torque Bias [Nm]'
    *  Outport: '<Root>/Launch Control State'
    *  Outport: '<Root>/Target Motor Speeds [RPM]'
    *  Outport: '<Root>/Target_Slip_Ratios_'
-   *  Product: '<S9>/Product'
    *  RateLimiter: '<S1>/Lt Trq Bias Rate Limiter'
-   *  RateLimiter: '<S9>/Target S.R. Rate Limiter'
    *  RelationalOperator: '<S1>/IsFinite'
    *  Switch: '<S1>/NaN Inf Rejection'
    *  Switch: '<S1>/TC Selector'
    */
-  F34_Torque_Vectoring_Simulin_DW.PrevY_g[3] = rtb_Switch2_idx_0;
-  rtb_Switch2_tmp = fmaxf
-    (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity, 0.5F);
-  F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[0] =
-    (F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[0] + 1.0F) *
-    rtb_Switch2_tmp * 609.540222F;
-  F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[1] =
-    (F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[1] + 1.0F) *
-    rtb_Switch2_tmp * 609.540222F;
-  F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[2] =
-    (F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[2] + 1.0F) *
-    rtb_Switch2_tmp * 609.540222F;
-  F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[3] =
-    (F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[3] + 1.0F) *
-    rtb_Switch2_tmp * 609.540222F;
+  rtb_AddConstant = steer_pct * 0.00019F + 0.2F;
+  if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle > 0.03F) {
+    rtb_torques_idx_0 =
+      F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle - 0.03F;
+  } else if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle >=
+             -0.03F) {
+    rtb_torques_idx_0 = 0.0F;
+  } else {
+    rtb_torques_idx_0 =
+      F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle - -0.03F;
+  }
+
+  steer_pct = fabsf(rtb_torques_idx_0);
+  rtb_PctRear01 = (1.0F - steer_pct) *
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR;
+  F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[0] = rtb_PctRear01;
+  rtb_torques_idx_0 = 1.0F - steer_pct * 0.5F;
+  rtb_torques_idx_1 = rtb_torques_idx_0 *
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR;
+  F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[1] = rtb_torques_idx_1;
+  F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[2] = rtb_PctRear01;
+  F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[3] = rtb_torques_idx_1;
+  F34_Torque_Vectoring_Simulink_B.Fx[0] = (1.0F - steer_pct) *
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[0];
+  F34_Torque_Vectoring_Simulink_B.Fx[1] = rtb_torques_idx_0 *
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[1];
+  F34_Torque_Vectoring_Simulink_B.Fx[2] = (1.0F - steer_pct) *
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[2];
+  F34_Torque_Vectoring_Simulink_B.Fx[3] = rtb_torques_idx_0 *
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[3];
+  steer_pct = fmaxf(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity,
+                    0.5F);
+  rtb_PctRear01 = (F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[0] + 1.0F)
+    * steer_pct * (12.97F * 60.0F / 1.2767F);
+  F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[0] = rtb_PctRear01;
+  steer_pct = (F34_Torque_Vectoring_Simulink_Y.Target_Slip_Ratios_[1] + 1.0F) *
+    steer_pct * (12.97F * 60.0F / 1.2767F);
+  F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[1] = steer_pct;
+  F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[2] = rtb_PctRear01;
+  F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[3] = steer_pct;
 
   /* Outputs for Iterator SubSystem: '<S1>/Traction Control (For Each)' incorporates:
    *  ForEach: '<S11>/For Each'
@@ -410,7 +232,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
      *  ForEachSliceSelector generated from: '<S11>/Feedback Motor Speed'
      *  ForEachSliceSelector generated from: '<S11>/Target Motor Speed'
      */
-    rtb_RightSideTorqueNm =
+    rtb_PctRear01 =
       F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[ForEach_itr] -
       F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[ForEach_itr];
 
@@ -418,8 +240,8 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     rtb_Memory = F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
       Memory_PreviousInput;
 
-    /* DiscreteIntegrator: '<S51>/Integrator' incorporates:
-     *  DiscreteIntegrator: '<S46>/Filter'
+    /* DiscreteIntegrator: '<S48>/Integrator' incorporates:
+     *  DiscreteIntegrator: '<S43>/Filter'
      */
     tmp_2 = !rtb_Memory;
     if ((rtb_Memory && (F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
@@ -430,7 +252,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
         0.0F;
     }
 
-    /* DiscreteIntegrator: '<S46>/Filter' */
+    /* DiscreteIntegrator: '<S43>/Filter' */
     if ((rtb_Memory && (F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
                         Filter_PrevResetState <= 0)) || (tmp_2 &&
          (F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
@@ -439,53 +261,54 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
         0.0F;
     }
 
-    /* Product: '<S54>/NProd Out' incorporates:
-     *  DiscreteIntegrator: '<S46>/Filter'
-     *  Inport: '<Root>/TCParams'
-     *  Product: '<S45>/DProd Out'
-     *  Sum: '<S46>/SumD'
+    /* Product: '<S51>/NProd Out' incorporates:
+     *  DiscreteIntegrator: '<S43>/Filter'
+     *  Product: '<S42>/DProd Out'
+     *  Sum: '<S43>/SumD'
      */
-    rtb_Switch2_idx_1 = (rtb_RightSideTorqueNm *
+    rtb_torques_idx_1 = (rtb_PctRear01 *
                          F34_Torque_Vectoring_Simulink_U.TCParams_i.kD_Slip_Ratio
                          - F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr]
                          .Filter_DSTATE) *
       F34_Torque_Vectoring_Simulink_U.TCParams_i.N_Slip_Ratio;
 
-    /* Sum: '<S60>/Sum' incorporates:
-     *  DiscreteIntegrator: '<S51>/Integrator'
-     *  Inport: '<Root>/TCParams'
-     *  Product: '<S56>/PProd Out'
+    /* Sum: '<S57>/Sum' incorporates:
+     *  DiscreteIntegrator: '<S48>/Integrator'
+     *  Product: '<S53>/PProd Out'
      */
-    rtb_Switch2_idx_0 = (rtb_RightSideTorqueNm *
+    rtb_torques_idx_2 = (rtb_PctRear01 *
                          F34_Torque_Vectoring_Simulink_U.TCParams_i.kP_Slip_Ratio
                          + F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr]
-                         .Integrator_DSTATE) + rtb_Switch2_idx_1;
+                         .Integrator_DSTATE) + rtb_torques_idx_1;
 
-    /* DeadZone: '<S44>/DeadZone' incorporates:
-     *  Saturate: '<S58>/Saturation'
+    /* Saturate: '<S55>/Saturation' incorporates:
+     *  DeadZone: '<S41>/DeadZone'
      */
-    if (rtb_Switch2_idx_0 > 21.0F) {
-      rtb_HalfLateralTorqueBiasNm = rtb_Switch2_idx_0 - 21.0F;
-      rtb_Switch2_idx_0 = 21.0F;
+    if (rtb_torques_idx_2 > 21.0F) {
+      rtb_torques_idx_0 = 21.0F;
+      rtb_torques_idx_2 -= 21.0F;
     } else {
-      if (rtb_Switch2_idx_0 >= 0.0F) {
-        rtb_HalfLateralTorqueBiasNm = 0.0F;
+      if (rtb_torques_idx_2 < 0.0F) {
+        rtb_torques_idx_0 = 0.0F;
       } else {
-        rtb_HalfLateralTorqueBiasNm = rtb_Switch2_idx_0;
+        rtb_torques_idx_0 = rtb_torques_idx_2;
       }
 
-      if (rtb_Switch2_idx_0 < 0.0F) {
-        rtb_Switch2_idx_0 = 0.0F;
+      if (rtb_torques_idx_2 >= 0.0F) {
+        rtb_torques_idx_2 = 0.0F;
       }
     }
 
-    /* End of DeadZone: '<S44>/DeadZone' */
-
-    /* Product: '<S48>/IProd Out' incorporates:
-     *  Inport: '<Root>/TCParams'
+    /* Sum: '<S11>/Add' incorporates:
+     *  ForEachSliceSelector generated from: '<S11>/Fx_est'
+     *  Gain: '<S11>/Fx to Trq'
+     *  Saturate: '<S55>/Saturation'
      */
-    rtb_RightSideTorqueNm *=
-      F34_Torque_Vectoring_Simulink_U.TCParams_i.kI_Slip_Ratio;
+    steer_pct = F34_Torque_Vectoring_Simulink_P.r_tire / 12.97F *
+      F34_Torque_Vectoring_Simulink_B.Fx[ForEach_itr] + rtb_torques_idx_0;
+
+    /* Product: '<S45>/IProd Out' */
+    rtb_PctRear01 *= F34_Torque_Vectoring_Simulink_U.TCParams_i.kI_Slip_Ratio;
 
     /* Update for Memory: '<S11>/Memory' incorporates:
      *  ForEachSliceSelector generated from: '<S11>/Wheel Torque [Nm]'
@@ -494,68 +317,68 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Memory_PreviousInput
       =
       (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[ForEach_itr]
-       < rtb_Switch2_idx_0);
+       < steer_pct);
 
-    /* Switch: '<S42>/Switch1' incorporates:
-     *  Constant: '<S42>/Clamping_zero'
-     *  Constant: '<S42>/Constant'
-     *  Constant: '<S42>/Constant2'
-     *  RelationalOperator: '<S42>/fix for DT propagation issue'
+    /* Switch: '<S39>/Switch1' incorporates:
+     *  Constant: '<S39>/Clamping_zero'
+     *  Constant: '<S39>/Constant'
+     *  Constant: '<S39>/Constant2'
+     *  RelationalOperator: '<S39>/fix for DT propagation issue'
      */
-    if (rtb_HalfLateralTorqueBiasNm > 0.0F) {
+    if (rtb_torques_idx_2 > 0.0F) {
       tmp_0 = 1;
     } else {
       tmp_0 = -1;
     }
 
-    /* Switch: '<S42>/Switch2' incorporates:
-     *  Constant: '<S42>/Clamping_zero'
-     *  Constant: '<S42>/Constant3'
-     *  Constant: '<S42>/Constant4'
-     *  RelationalOperator: '<S42>/fix for DT propagation issue1'
+    /* Switch: '<S39>/Switch2' incorporates:
+     *  Constant: '<S39>/Clamping_zero'
+     *  Constant: '<S39>/Constant3'
+     *  Constant: '<S39>/Constant4'
+     *  RelationalOperator: '<S39>/fix for DT propagation issue1'
      */
-    if (rtb_RightSideTorqueNm > 0.0F) {
+    if (rtb_PctRear01 > 0.0F) {
       tmp_1 = 1;
     } else {
       tmp_1 = -1;
     }
 
-    /* Switch: '<S42>/Switch' incorporates:
-     *  Constant: '<S42>/Clamping_zero'
-     *  Constant: '<S42>/Constant1'
-     *  Logic: '<S42>/AND3'
-     *  RelationalOperator: '<S42>/Equal1'
-     *  RelationalOperator: '<S42>/Relational Operator'
-     *  Switch: '<S42>/Switch1'
-     *  Switch: '<S42>/Switch2'
+    /* Switch: '<S39>/Switch' incorporates:
+     *  Constant: '<S39>/Clamping_zero'
+     *  Constant: '<S39>/Constant1'
+     *  Logic: '<S39>/AND3'
+     *  RelationalOperator: '<S39>/Equal1'
+     *  RelationalOperator: '<S39>/Relational Operator'
+     *  Switch: '<S39>/Switch1'
+     *  Switch: '<S39>/Switch2'
      */
-    if ((rtb_HalfLateralTorqueBiasNm != 0.0F) && (tmp_0 == tmp_1)) {
-      rtb_RightSideTorqueNm = 0.0F;
+    if ((rtb_torques_idx_2 != 0.0F) && (tmp_0 == tmp_1)) {
+      rtb_PctRear01 = 0.0F;
     }
 
-    /* Update for DiscreteIntegrator: '<S51>/Integrator' incorporates:
-     *  Switch: '<S42>/Switch'
+    /* Update for DiscreteIntegrator: '<S48>/Integrator' incorporates:
+     *  Switch: '<S39>/Switch'
      */
     F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Integrator_DSTATE +=
-      rtb_RightSideTorqueNm;
+      rtb_PctRear01;
     if (F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
         Integrator_DSTATE > 21.0F) {
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Integrator_DSTATE =
         21.0F;
     } else if (F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
-               Integrator_DSTATE < 0.0F) {
+               Integrator_DSTATE < -21.0F) {
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Integrator_DSTATE =
-        0.0F;
+        -21.0F;
     }
 
     F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
       Integrator_PrevResetState = (int8_T)rtb_Memory;
 
-    /* Update for DiscreteIntegrator: '<S46>/Filter' incorporates:
-     *  DiscreteIntegrator: '<S51>/Integrator'
+    /* Update for DiscreteIntegrator: '<S43>/Filter' incorporates:
+     *  DiscreteIntegrator: '<S48>/Integrator'
      */
     F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Filter_DSTATE +=
-      0.01F * rtb_Switch2_idx_1;
+      0.01F * rtb_torques_idx_1;
     F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
       Filter_PrevResetState = (int8_T)rtb_Memory;
 
@@ -565,7 +388,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
      */
     rtb_ImpAsg_InsertedFor_MotorTor[ForEach_itr] = fminf
       (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[ForEach_itr],
-       rtb_Switch2_idx_0);
+       steer_pct);
   }
 
   /* End of Outputs for SubSystem: '<S1>/Traction Control (For Each)' */
@@ -583,30 +406,28 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
 
   if (!F34_Torque_Vectoring_Simulin_DW.s_not_empty) {
     F34_Torque_Vectoring_Simulin_DW.s_not_empty = true;
-    rtb_RightSideTorqueNm =
-      F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Preload_Torque * 0.5F;
-    rtb_HalfLateralTorqueBiasNm = rtb_RightSideTorqueNm * rtb_AddConstant;
-    F34_Torque_Vectoring_Simulin_DW.preloadTorques[0] =
-      rtb_HalfLateralTorqueBiasNm;
-    rtb_RightSideTorqueNm *= 1.0F - rtb_AddConstant;
-    F34_Torque_Vectoring_Simulin_DW.preloadTorques[1] = rtb_RightSideTorqueNm;
-    F34_Torque_Vectoring_Simulin_DW.preloadTorques[2] =
-      rtb_HalfLateralTorqueBiasNm;
-    F34_Torque_Vectoring_Simulin_DW.preloadTorques[3] = rtb_RightSideTorqueNm;
+    steer_pct = F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Preload_Torque *
+      0.5F;
+    rtb_PctRear01 = steer_pct * rtb_AddConstant;
+    F34_Torque_Vectoring_Simulin_DW.preloadTorques[0] = rtb_PctRear01;
+    steer_pct *= 1.0F - rtb_AddConstant;
+    F34_Torque_Vectoring_Simulin_DW.preloadTorques[1] = steer_pct;
+    F34_Torque_Vectoring_Simulin_DW.preloadTorques[2] = rtb_PctRear01;
+    F34_Torque_Vectoring_Simulin_DW.preloadTorques[3] = steer_pct;
   }
 
-  rtb_Switch2_idx_0 = 0.0F;
-  rtb_Switch2_idx_1 = 0.0F;
-  rtb_Switch2_idx_2 = 0.0F;
-  rtb_Switch2_idx_3 = 0.0F;
-  rtb_HalfLateralTorqueBiasNm = 0.0F;
-  rtb_RightSideTorqueNm = 0.0F;
+  rtb_torques_idx_0 = 0.0F;
+  rtb_torques_idx_1 = 0.0F;
+  rtb_torques_idx_2 = 0.0F;
+  rtb_torques_idx_3 = 0.0F;
+  steer_pct = 0.0F;
+  rtb_PctRear01 = 0.0F;
   switch (F34_Torque_Vectoring_Simulin_DW.s) {
    case 0U:
-    rtb_Switch2_idx_0 = rtb_ImpAsg_InsertedFor_MotorTor[0];
-    rtb_Switch2_idx_1 = rtb_ImpAsg_InsertedFor_MotorTor[1];
-    rtb_Switch2_idx_2 = rtb_ImpAsg_InsertedFor_MotorTor[2];
-    rtb_Switch2_idx_3 = rtb_ImpAsg_InsertedFor_MotorTor[3];
+    rtb_torques_idx_0 = rtb_ImpAsg_InsertedFor_MotorTor[0];
+    rtb_torques_idx_1 = rtb_ImpAsg_InsertedFor_MotorTor[1];
+    rtb_torques_idx_2 = rtb_ImpAsg_InsertedFor_MotorTor[2];
+    rtb_torques_idx_3 = rtb_ImpAsg_InsertedFor_MotorTor[3];
     if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity <
         F34_Torque_Vectoring_Simulin_DW.v_enable) {
       F34_Torque_Vectoring_Simulin_DW.s = 1U;
@@ -616,10 +437,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
    case 1U:
     if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity >
         F34_Torque_Vectoring_Simulin_DW.v_lockout) {
-      rtb_Switch2_idx_0 = rtb_ImpAsg_InsertedFor_MotorTor[0];
-      rtb_Switch2_idx_1 = rtb_ImpAsg_InsertedFor_MotorTor[1];
-      rtb_Switch2_idx_2 = rtb_ImpAsg_InsertedFor_MotorTor[2];
-      rtb_Switch2_idx_3 = rtb_ImpAsg_InsertedFor_MotorTor[3];
+      rtb_torques_idx_0 = rtb_ImpAsg_InsertedFor_MotorTor[0];
+      rtb_torques_idx_1 = rtb_ImpAsg_InsertedFor_MotorTor[1];
+      rtb_torques_idx_2 = rtb_ImpAsg_InsertedFor_MotorTor[2];
+      rtb_torques_idx_3 = rtb_ImpAsg_InsertedFor_MotorTor[3];
       F34_Torque_Vectoring_Simulin_DW.s = 0U;
     } else if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button &&
                (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos >
@@ -627,10 +448,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
       F34_Torque_Vectoring_Simulin_DW.s = 2U;
       F34_Torque_Vectoring_Simulin_DW.counter = 0U;
     } else if (!F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button) {
-      rtb_Switch2_idx_0 = rtb_ImpAsg_InsertedFor_MotorTor[0];
-      rtb_Switch2_idx_1 = rtb_ImpAsg_InsertedFor_MotorTor[1];
-      rtb_Switch2_idx_2 = rtb_ImpAsg_InsertedFor_MotorTor[2];
-      rtb_Switch2_idx_3 = rtb_ImpAsg_InsertedFor_MotorTor[3];
+      rtb_torques_idx_0 = rtb_ImpAsg_InsertedFor_MotorTor[0];
+      rtb_torques_idx_1 = rtb_ImpAsg_InsertedFor_MotorTor[1];
+      rtb_torques_idx_2 = rtb_ImpAsg_InsertedFor_MotorTor[2];
+      rtb_torques_idx_3 = rtb_ImpAsg_InsertedFor_MotorTor[3];
     }
     break;
 
@@ -648,15 +469,15 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
                F34_Torque_Vectoring_Simulin_DW.preloadTime) {
       F34_Torque_Vectoring_Simulin_DW.s = 3U;
       F34_Torque_Vectoring_Simulin_DW.counter = 0U;
-      rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
-      rtb_Switch2_idx_1 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
-      rtb_Switch2_idx_2 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
-      rtb_Switch2_idx_3 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
+      rtb_torques_idx_0 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
+      rtb_torques_idx_1 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
+      rtb_torques_idx_2 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
+      rtb_torques_idx_3 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
     } else {
-      rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
-      rtb_Switch2_idx_1 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
-      rtb_Switch2_idx_2 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
-      rtb_Switch2_idx_3 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
+      rtb_torques_idx_0 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
+      rtb_torques_idx_1 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
+      rtb_torques_idx_2 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
+      rtb_torques_idx_3 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
     }
     break;
 
@@ -672,71 +493,71 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     } else if (!F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button) {
       F34_Torque_Vectoring_Simulin_DW.t0 = F34_Torque_Vectoring_Simulin_DW.t;
       F34_Torque_Vectoring_Simulin_DW.s = 4U;
-      rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
-      rtb_Switch2_idx_1 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
-      rtb_Switch2_idx_2 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
-      rtb_Switch2_idx_3 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
+      rtb_torques_idx_0 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
+      rtb_torques_idx_1 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
+      rtb_torques_idx_2 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
+      rtb_torques_idx_3 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
     } else {
-      rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
-      rtb_Switch2_idx_1 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
-      rtb_Switch2_idx_2 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
-      rtb_Switch2_idx_3 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
+      rtb_torques_idx_0 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
+      rtb_torques_idx_1 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
+      rtb_torques_idx_2 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
+      rtb_torques_idx_3 = F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
     }
     break;
 
    case 4U:
     if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity >
         F34_Torque_Vectoring_Simulin_DW.v_lockout) {
-      rtb_Switch2_idx_0 = rtb_ImpAsg_InsertedFor_MotorTor[0];
-      rtb_Switch2_idx_1 = rtb_ImpAsg_InsertedFor_MotorTor[1];
-      rtb_Switch2_idx_2 = rtb_ImpAsg_InsertedFor_MotorTor[2];
-      rtb_Switch2_idx_3 = rtb_ImpAsg_InsertedFor_MotorTor[3];
+      rtb_torques_idx_0 = rtb_ImpAsg_InsertedFor_MotorTor[0];
+      rtb_torques_idx_1 = rtb_ImpAsg_InsertedFor_MotorTor[1];
+      rtb_torques_idx_2 = rtb_ImpAsg_InsertedFor_MotorTor[2];
+      rtb_torques_idx_3 = rtb_ImpAsg_InsertedFor_MotorTor[3];
       F34_Torque_Vectoring_Simulin_DW.s = 0U;
     } else if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Throttle_Pos <
                F34_Torque_Vectoring_Simulin_DW.LC_pre_APPS) {
       F34_Torque_Vectoring_Simulin_DW.s = 1U;
     } else {
-      rtb_Switch2_idx_0 = F34_Torque_Vectoring_Simulin_DW.t -
+      rtb_torques_idx_0 = F34_Torque_Vectoring_Simulin_DW.t -
         F34_Torque_Vectoring_Simulin_DW.t0;
-      if (rtb_Switch2_idx_0 <=
+      if (rtb_torques_idx_0 <=
           F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend1) {
-        rtb_HalfLateralTorqueBiasNm = fminf(fmaxf(rtb_Switch2_idx_0 /
+        steer_pct = fminf(fmaxf(rtb_torques_idx_0 /
           F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend1, 0.0F), 1.0F);
-        rtb_Switch2_idx_1 = rtb_HalfLateralTorqueBiasNm *
+        rtb_torques_idx_1 = steer_pct *
           F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax;
-        rtb_Switch2_idx_2 = 0.5F * rtb_AddConstant * rtb_Switch2_idx_1;
-        rtb_Switch2_idx_0 = rtb_Switch2_idx_2 +
+        rtb_torques_idx_2 = 0.5F * rtb_AddConstant * rtb_torques_idx_1;
+        rtb_torques_idx_0 = rtb_torques_idx_2 +
           F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
-        rtb_AddConstant = (1.0F - rtb_AddConstant) * 0.5F * rtb_Switch2_idx_1;
-        rtb_Switch2_idx_1 = rtb_AddConstant +
+        rtb_AddConstant = (1.0F - rtb_AddConstant) * 0.5F * rtb_torques_idx_1;
+        rtb_torques_idx_1 = rtb_AddConstant +
           F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
-        rtb_Switch2_idx_2 += F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
-        rtb_Switch2_idx_3 = rtb_AddConstant +
+        rtb_torques_idx_2 += F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
+        rtb_torques_idx_3 = rtb_AddConstant +
           F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
       } else {
-        rtb_RightSideTorqueNm = fmaxf(fminf((rtb_Switch2_idx_0 -
+        rtb_PctRear01 = fmaxf(fminf((rtb_torques_idx_0 -
           F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend1) /
           (F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend2 -
            F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend1), 1.0F), 0.0F);
-        rtb_Switch2_idx_2 = F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax *
+        rtb_torques_idx_2 = F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax *
           0.5F;
-        rtb_Switch2_idx_3 = rtb_Switch2_idx_2 * rtb_AddConstant;
-        rtb_Switch2_idx_0 = (rtb_Switch2_idx_3 +
+        rtb_torques_idx_3 = rtb_torques_idx_2 * rtb_AddConstant;
+        rtb_torques_idx_0 = (rtb_torques_idx_3 +
                              F34_Torque_Vectoring_Simulin_DW.preloadTorques[0]) *
-          (1.0F - rtb_RightSideTorqueNm) + rtb_RightSideTorqueNm *
+          (1.0F - rtb_PctRear01) + rtb_PctRear01 *
           rtb_ImpAsg_InsertedFor_MotorTor[0];
-        rtb_AddConstant = (1.0F - rtb_AddConstant) * rtb_Switch2_idx_2;
-        rtb_Switch2_idx_1 = (rtb_AddConstant +
+        rtb_AddConstant = (1.0F - rtb_AddConstant) * rtb_torques_idx_2;
+        rtb_torques_idx_1 = (rtb_AddConstant +
                              F34_Torque_Vectoring_Simulin_DW.preloadTorques[1]) *
-          (1.0F - rtb_RightSideTorqueNm) + rtb_RightSideTorqueNm *
+          (1.0F - rtb_PctRear01) + rtb_PctRear01 *
           rtb_ImpAsg_InsertedFor_MotorTor[1];
-        rtb_Switch2_idx_2 = (rtb_Switch2_idx_3 +
+        rtb_torques_idx_2 = (rtb_torques_idx_3 +
                              F34_Torque_Vectoring_Simulin_DW.preloadTorques[2]) *
-          (1.0F - rtb_RightSideTorqueNm) + rtb_RightSideTorqueNm *
+          (1.0F - rtb_PctRear01) + rtb_PctRear01 *
           rtb_ImpAsg_InsertedFor_MotorTor[2];
-        rtb_Switch2_idx_3 = (rtb_AddConstant +
+        rtb_torques_idx_3 = (rtb_AddConstant +
                              F34_Torque_Vectoring_Simulin_DW.preloadTorques[3]) *
-          (1.0F - rtb_RightSideTorqueNm) + rtb_RightSideTorqueNm *
+          (1.0F - rtb_PctRear01) + rtb_PctRear01 *
           rtb_ImpAsg_InsertedFor_MotorTor[3];
       }
     }
@@ -753,8 +574,8 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
   }
 
   F34_Torque_Vectoring_Simulin_DW.counter = (uint16_T)tmp;
-  F34_Torque_Vectoring_Simulink_Y.LC_ramp_pct = rtb_HalfLateralTorqueBiasNm;
-  F34_Torque_Vectoring_Simulink_Y.LC_blend_pct = rtb_RightSideTorqueNm;
+  F34_Torque_Vectoring_Simulink_Y.LC_ramp_pct = steer_pct;
+  F34_Torque_Vectoring_Simulink_Y.LC_blend_pct = rtb_PctRear01;
   if (rtb_BodyVelocityms < 0.3F) {
     /* Outputs for IfAction SubSystem: '<S1>/Zero Lat. Trq. Bias' incorporates:
      *  ActionPort: '<S13>/Action Port'
@@ -762,7 +583,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     /* SignalConversion generated from: '<S13>/In1' incorporates:
      *  Constant: '<S1>/Constant'
      */
-    rtb_RightSideTorqueNm = 0.0F;
+    steer_pct = 0.0F;
 
     /* End of Outputs for SubSystem: '<S1>/Zero Lat. Trq. Bias' */
   } else {
@@ -828,9 +649,9 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
      *  RelationalOperator: '<S12>/isfinite'
      */
     if ((!rtIsNaNF(rtb_AddConstant)) && (!rtIsInfF(rtb_AddConstant))) {
-      rtb_RightSideTorqueNm = rtb_AddConstant;
+      steer_pct = rtb_AddConstant;
     } else {
-      rtb_RightSideTorqueNm = 0.0F;
+      steer_pct = 0.0F;
     }
 
     /* End of Switch: '<S12>/NaN Inf Rejection' */
@@ -856,8 +677,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     /* End of Outputs for SubSystem: '<S1>/Yaw Rate Controller' */
   }
 
-  rtb_AddConstant = rtb_RightSideTorqueNm -
-    F34_Torque_Vectoring_Simulin_DW.PrevY_b;
+  rtb_AddConstant = steer_pct - F34_Torque_Vectoring_Simulin_DW.PrevY_b;
   if (rtb_AddConstant > 1.0F) {
     F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasNm =
       F34_Torque_Vectoring_Simulin_DW.PrevY_b + 1.0F;
@@ -865,14 +685,14 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasNm =
       F34_Torque_Vectoring_Simulin_DW.PrevY_b - 1.0F;
   } else {
-    F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasNm = rtb_RightSideTorqueNm;
+    F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasNm = steer_pct;
   }
 
   F34_Torque_Vectoring_Simulin_DW.PrevY_b =
     F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasNm;
-  if ((!rtIsNaNF(rtb_Switch2_idx_0)) && (!rtIsInfF(rtb_Switch2_idx_0))) {
+  if ((!rtIsNaNF(rtb_torques_idx_0)) && (!rtIsInfF(rtb_torques_idx_0))) {
     /* Outport: '<Root>/Wheel Torque Requests [Nm]' */
-    F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0] = rtb_Switch2_idx_0;
+    F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0] = rtb_torques_idx_0;
   } else {
     /* Outport: '<Root>/Wheel Torque Requests [Nm]' incorporates:
      *  Constant: '<S1>/Zero'
@@ -880,9 +700,9 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0] = 0.0F;
   }
 
-  if ((!rtIsNaNF(rtb_Switch2_idx_1)) && (!rtIsInfF(rtb_Switch2_idx_1))) {
+  if ((!rtIsNaNF(rtb_torques_idx_1)) && (!rtIsInfF(rtb_torques_idx_1))) {
     /* Outport: '<Root>/Wheel Torque Requests [Nm]' */
-    F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1] = rtb_Switch2_idx_1;
+    F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1] = rtb_torques_idx_1;
   } else {
     /* Outport: '<Root>/Wheel Torque Requests [Nm]' incorporates:
      *  Constant: '<S1>/Zero'
@@ -890,9 +710,9 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1] = 0.0F;
   }
 
-  if ((!rtIsNaNF(rtb_Switch2_idx_2)) && (!rtIsInfF(rtb_Switch2_idx_2))) {
+  if ((!rtIsNaNF(rtb_torques_idx_2)) && (!rtIsInfF(rtb_torques_idx_2))) {
     /* Outport: '<Root>/Wheel Torque Requests [Nm]' */
-    F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2] = rtb_Switch2_idx_2;
+    F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2] = rtb_torques_idx_2;
   } else {
     /* Outport: '<Root>/Wheel Torque Requests [Nm]' incorporates:
      *  Constant: '<S1>/Zero'
@@ -900,9 +720,9 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
     F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2] = 0.0F;
   }
 
-  if ((!rtIsNaNF(rtb_Switch2_idx_3)) && (!rtIsInfF(rtb_Switch2_idx_3))) {
+  if ((!rtIsNaNF(rtb_torques_idx_3)) && (!rtIsInfF(rtb_torques_idx_3))) {
     /* Outport: '<Root>/Wheel Torque Requests [Nm]' */
-    F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3] = rtb_Switch2_idx_3;
+    F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3] = rtb_torques_idx_3;
   } else {
     /* Outport: '<Root>/Wheel Torque Requests [Nm]' incorporates:
      *  Constant: '<S1>/Zero'
@@ -935,7 +755,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
   rtb_AddConstant = obj->pCumSum;
   csumrev[0] = obj->pCumSumRev[0];
   csumrev[1] = obj->pCumSumRev[1];
-  rtb_HalfLateralTorqueBiasNm = obj->pModValueRev;
+  steer_pct = obj->pModValueRev;
   rtb_AddConstant += rtb_XAccelG;
   csumrev[(int32_T)rtb_BodyVelocityms - 1] = rtb_XAccelG;
   if (rtb_BodyVelocityms != 2.0F) {
@@ -950,8 +770,8 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
   obj->pCumSumRev[0] = csumrev[0];
   obj->pCumSumRev[1] = csumrev[1];
   obj->pCumRevIndex = rtb_BodyVelocityms;
-  if (rtb_HalfLateralTorqueBiasNm > 0.0F) {
-    obj->pModValueRev = rtb_HalfLateralTorqueBiasNm - 1.0F;
+  if (steer_pct > 0.0F) {
+    obj->pModValueRev = steer_pct - 1.0F;
   } else {
     obj->pModValueRev = 0.0F;
   }
@@ -961,6 +781,13 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
   /* Outport: '<Root>/Desired_Yaw_Rate_rads' */
   F34_Torque_Vectoring_Simulink_Y.Desired_Yaw_Rate_rads = rtb_Max;
 
+  /* MinMax: '<S4>/Max' incorporates:
+   *  Constant: '<S4>/Constant'
+   *  Inport: '<Root>/VariableInBus'
+   */
+  rtb_Max = fmaxf(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity,
+                  0.5F);
+
   /* Outport: '<Root>/Slip_Ratios_' incorporates:
    *  Gain: '<S4>/Wheel Speed [m//s]'
    *  Inport: '<Root>/VariableInBus'
@@ -969,24 +796,20 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_step(void)
    */
   F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[0] = (0.00164058083F *
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[0] -
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity) /
-    rtb_Switch2_tmp;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity) / rtb_Max;
   F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[1] = (0.00164058083F *
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[1] -
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity) /
-    rtb_Switch2_tmp;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity) / rtb_Max;
   F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[2] = (0.00164058083F *
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[2] -
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity) /
-    rtb_Switch2_tmp;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity) / rtb_Max;
   F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[3] = (0.00164058083F *
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[3] -
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity) /
-    rtb_Switch2_tmp;
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_velocity) / rtb_Max;
 }
 
 /* Model initialize function */
-void F34_Torque_Vectoring_Simulink_v1_5_3_initialize(void)
+void F34_Torque_Vectoring_Simulink_v1_5_3_2_initialize(void)
 {
   /* Registration code */
 
@@ -996,6 +819,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_initialize(void)
   /* initialize real-time model */
   (void) memset((void *)F34_Torque_Vectoring_Simulin_M, 0,
                 sizeof(RT_MODEL_F34_Torque_Vectoring_T));
+
+  /* block I/O */
+  (void) memset(((void *) &F34_Torque_Vectoring_Simulink_B), 0,
+                sizeof(B_F34_Torque_Vectoring_Simuli_T));
 
   /* states (dwork) */
   (void) memset((void *)&F34_Torque_Vectoring_Simulin_DW, 0,
@@ -1010,7 +837,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_initialize(void)
                (ExtY_F34_Torque_Vectoring_Sim_T));
 
   /* Initialize DataMapInfo substructure containing ModelMap for C API */
-  F34_Torque_Vectoring_Simulink_v1_5_3_InitializeDataMapInfo();
+  F34_Torque_Vectoring_Simulink_v1_5_3_2_InitializeDataMapInfo();
 
   {
     /* local scratch DWork variables */
@@ -1021,12 +848,6 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_initialize(void)
     F34_Torque_Vectoring_Simulin_DW.PrevY = 0.0F;
 
     /* SystemInitialize for IfAction SubSystem: '<Root>/Advanced Controls' */
-    /* InitializeConditions for RateLimiter: '<S9>/Target S.R. Rate Limiter' */
-    F34_Torque_Vectoring_Simulin_DW.PrevY_g[0] = 0.1F;
-    F34_Torque_Vectoring_Simulin_DW.PrevY_g[1] = 0.1F;
-    F34_Torque_Vectoring_Simulin_DW.PrevY_g[2] = 0.1F;
-    F34_Torque_Vectoring_Simulin_DW.PrevY_g[3] = 0.1F;
-
     /* InitializeConditions for RateLimiter: '<S1>/Lt Trq Bias Rate Limiter' */
     F34_Torque_Vectoring_Simulin_DW.PrevY_b = 0.0F;
 
@@ -1036,13 +857,13 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_initialize(void)
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
         Memory_PreviousInput = false;
 
-      /* InitializeConditions for DiscreteIntegrator: '<S51>/Integrator' */
+      /* InitializeConditions for DiscreteIntegrator: '<S48>/Integrator' */
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Integrator_DSTATE =
         0.0F;
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
         Integrator_PrevResetState = 2;
 
-      /* InitializeConditions for DiscreteIntegrator: '<S46>/Filter' */
+      /* InitializeConditions for DiscreteIntegrator: '<S43>/Filter' */
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Filter_DSTATE =
         0.0F;
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
@@ -1176,7 +997,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_initialize(void)
 }
 
 /* Model terminate function */
-void F34_Torque_Vectoring_Simulink_v1_5_3_terminate(void)
+void F34_Torque_Vectoring_Simulink_v1_5_3_2_terminate(void)
 {
   h_dsp_internal_SlidingWindowA_T *obj;
 

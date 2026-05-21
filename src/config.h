@@ -19,6 +19,10 @@
 #define LC_HOLD_SAMPLES 10
 #define PACK_IRR_V 380
 
+#define VEHICLE_RATIO 12.97
+#define VEHICLE_TIRE_SIZE 0.2032
+#define VEHICLE_TIRE_INERTIA 0.195
+
 /******************** POWER LIMIT ********************/
 /*****************************************************/
 #define PL_THRESHOLD 0.30f
@@ -41,9 +45,15 @@
 #define NUM_IDS_MAIN 10
 #define NUM_IDS_INV 32
 
+/************************ DRS ************************/
+/*****************************************************/
+#define DRS_ENABLED
+#define DRS_SERVO2_CLOSED 4860
+#define DRS_SERVO1_CLOSED 3600
+
 /********************** CONTROLS *********************/
 /*****************************************************/
-#define REGEN_ENABLED 1
+#define REGEN_ENABLED 0
 #define RUNAWAY_TIMEOUT_MS 100
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02
@@ -62,10 +72,10 @@
 #define CG_KI_YAW_RATE 10.0f
 #define CG_KF_YAW_RATE 5.53f
 
-#define CG_TC_FX_REAR               0.0f
-#define CG_TC_FX_FRONT              0.0f
+#define CG_TC_FX_REAR               700.0f
+#define CG_TC_FX_FRONT              350.0f
 #define CG_TC_N_SLIP_RATIO          1
-#define CG_TARGET_SR_NOMINAL        0.15f
+#define CG_TARGET_SR_NOMINAL        0.1f
 #define CG_TARGET_SR_AX_MIN         0.1f
 #define CG_TARGET_SR_AY_MIN         0.1f
 #define CG_TARGET_SR_MAX            0.22f
@@ -73,12 +83,12 @@
 #define CG_TARGET_SR_LAT            0.0f
 #define CG_TARGET_SR_LONG           0.0f
 #define CG_TARGET_SR_LAT_MIN        0.0f
-#define CG_KP_SLIP_RATIO            (0.001f)
-#define CG_KI_SLIP_RATIO            (0.005f)
-#define CG_KD_SLIP_RATIO            (0.0f)
+#define CG_KP_SLIP_RATIO            (0.005f)
+#define CG_KI_SLIP_RATIO            (0.002f)
+#define CG_KD_SLIP_RATIO            (0.0001f)
 #define CG_TC_ACTIVATION_THRESHOLD  0.2f // Unit: Pct 0 -> 1
 #define CG_LC_PRELOAD               0.35f
-#define CG_LC_TMAX                  50.0f
+#define CG_LC_TMAX                  45.0f
 #define CG_LC_WDOT_MAX              1000.0f
 #define CG_LC_TBLEND1               0.2f
 #define CG_LC_TBLEND2               0.4f
@@ -105,6 +115,7 @@
 #define CS_TOTAL_GAIN           7.0f
 #define CS_LONG_FUNC(vel)       (0.00019f*vel*vel + 0.28f)
 #define CS_LAT_FUNC(vel)        (-0.0003f*vel*vel + 0.6f)
+//#define CS_LAT_FUNC(vel)        (-0.000f)
 #define CS_LONG_FUNC_BRAKE(vel)       (0.00023f*vel*vel + 0.5f)
 
 // Traction Control
@@ -115,7 +126,7 @@
 #define TC_D_GAIN 0.005f
 #define TC_RESET_STEP 0.10f
 
-#define CS_ENABLE_RPM_LIMIT
+//#define CS_ENABLE_RPM_LIMIT
 #define CS_RPM_LIMIT_GAIN 0.002
 #define CS_RPM_LIMIT_THRESHOLD ((float)(20/(0.2032*2*M_PI)*12.97*60))
 

@@ -1,15 +1,15 @@
 /*
- * F34_Torque_Vectoring_Simulink_v1_5_3_2_capi.c
+ * F34_Torque_Vectoring_Simulink_v1_5_3_4_capi.c
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_2".
+ * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_4".
  *
- * Model version              : 1.421
+ * Model version              : 1.454
  * Simulink Coder version : 23.2 (R2023b) 01-Aug-2023
- * C source code generated on : Wed May 20 19:55:38 2026
+ * C source code generated on : Fri May 22 16:15:57 2026
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -20,25 +20,25 @@
 
 #include "rtw_capi.h"
 #ifdef HOST_CAPI_BUILD
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_2_capi_host.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_4_capi_host.h"
 #define sizeof(s)                      ((size_t)(0xFFFF))
 #undef rt_offsetof
 #define rt_offsetof(s,el)              ((uint16_T)(0xFFFF))
 #define TARGET_CONST
 #define TARGET_STRING(s)               (s)
 #ifndef SS_UINT64
-#define SS_UINT64                      23
+#define SS_UINT64                      22
 #endif
 
 #ifndef SS_INT64
-#define SS_INT64                       24
+#define SS_INT64                       23
 #endif
 
 #else                                  /* HOST_CAPI_BUILD */
 #include "builtin_typeid_types.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_2.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_2_capi.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_2_private.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_4.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_4_capi.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_4_private.h"
 #ifdef LIGHT_WEIGHT_CAPI
 #define TARGET_CONST
 #define TARGET_STRING(s)               ((NULL))
@@ -150,17 +150,17 @@ static rtwCAPI_ModelMappingStaticInfo mmiStatic = {
     rtElementMap, rtSampleTimeMap, rtDimensionArray },
   "float",
 
-  { 3571472388U,
-    3068967080U,
-    2076602389U,
-    2930020591U },
+  { 3585453319U,
+    4014416809U,
+    1743560731U,
+    4129813455U },
   (NULL), 0,
   (boolean_T)0
 };
 
 /* Function to get C API Model Mapping Static Info */
 const rtwCAPI_ModelMappingStaticInfo*
-  F34_Torque_Vectoring_Simulink_v1_5_3_2_GetCAPIStaticMap(void)
+  F34_Torque_Vectoring_Simulink_v1_5_3_4_GetCAPIStaticMap(void)
 {
   return &mmiStatic;
 }
@@ -168,7 +168,7 @@ const rtwCAPI_ModelMappingStaticInfo*
 /* Cache pointers into DataMapInfo substructure of RTModel */
 #ifndef HOST_CAPI_BUILD
 
-void F34_Torque_Vectoring_Simulink_v1_5_3_2_InitializeDataMapInfo(void)
+void F34_Torque_Vectoring_Simulink_v1_5_3_4_InitializeDataMapInfo(void)
 {
   /* Set C-API version */
   rtwCAPI_SetVersion(F34_Torque_Vectoring_Simulin_M->DataMapInfo.mmi, 1);
@@ -207,8 +207,8 @@ extern "C"
 
 #endif
 
-  void F34_Torque_Vectoring_Simulink_v1_5_3_2_host_InitializeDataMapInfo
-    (F34_Torque_Vectoring_Simulink_v1_5_3_2_host_DataMapInfo_T *dataMap, const
+  void F34_Torque_Vectoring_Simulink_v1_5_3_4_host_InitializeDataMapInfo
+    (F34_Torque_Vectoring_Simulink_v1_5_3_4_host_DataMapInfo_T *dataMap, const
      char *path)
   {
     /* Set C-API version */
@@ -239,4 +239,4 @@ extern "C"
 #endif
 #endif                                 /* HOST_CAPI_BUILD */
 
-/* EOF: F34_Torque_Vectoring_Simulink_v1_5_3_2_capi.c */
+/* EOF: F34_Torque_Vectoring_Simulink_v1_5_3_4_capi.c */

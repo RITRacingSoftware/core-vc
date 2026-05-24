@@ -1,9 +1,10 @@
 #ifndef DRS_H
 #define DRS_H
 #include <stdint.h>
+#include <stdbool.h>
 
 void DRS_init();
-void DRS_set(uint16_t pwm1, uint16_t pwm2);
+void DRS_set_position(bool open);
 void DRS_task();
 
 #endif

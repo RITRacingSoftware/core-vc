@@ -43,6 +43,8 @@ typedef struct
     struct main_dbc_vc_controls_constants2_t controls_const2;
     struct main_dbc_vc_target_wheel_speeds_t target_wheel_speeds;
     struct main_dbc_vc_endurance_info_t endurance_info;
+    int16_t motor_temps[4];
+    int16_t inverter_temps[4];
 
 } MAIN_BUS;
 

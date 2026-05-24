@@ -224,6 +224,11 @@ void Inverters_set_can_states()
     mainBus.inverter_status.vc_rl_status = invRL.state;
     mainBus.inverter_status.vc_fr_status = invFR.state;
     mainBus.inverter_status.vc_fl_status = invFL.state;
+
+    for (int i=0; i < 4; i++) {
+        mainBus.inverter_temps[i] = invArr[i]->actual2.temp_inverter;
+        mainBus.motor_temps[i] = invArr[i]->actual2.temp_motor;
+    }
 }
 
 void Inverters_send_timeout_times()

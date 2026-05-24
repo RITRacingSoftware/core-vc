@@ -1,9 +1,13 @@
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "stm32g4xx_hal.h"
 #include "core.h"
 #include "config.h"
 
+#include "sensor_dbc.h"
+
+static struct sensor_dbc_vc_drs_status_t drs_status;
 
 void DRS_init() {
 #ifdef DRS_ENABLED
@@ -43,11 +47,44 @@ void DRS_init() {
 #endif
 }
 
-void DRS_set(uint16_t pwm1, uint16_t pwm2) {
+static void DRS_set(uint16_t pwm1, uint16_t pwm2) {
     TIM1->CCR2 = pwm1;
     TIM1->CCR3 = pwm2;
 }
 
+void DRS_set_position(bool open) {
+    if (open) drs_status.vc_drs_ramp_set = DRS_RAMP_TIME;
+    else drs_status.vc_drs_ramp_set = 0;
+}
+
 void DRS_task() {
-    core_CAN_add_message_to_tx_queue(CAN_SENSE, 7, 8, (TIM1->CCR2) | (((uint32_t)TIM1->CCR3) << 16));
+    uint64_t msg;
+    int servo1_offset = DRS_SERVO1_CLOSED, servo1_range = DRS_SERVO1_OPEN - DRS_SERVO1_CLOSED;
+    int servo2_offset = DRS_SERVO2_CLOSED, servo2_range = DRS_SERVO2_OPEN - DRS_SERVO2_CLOSED;
+    if (drs_status.vc_drs_ramp_set > drs_status.vc_drs_ramp_count) {
+        // Opening
+        drs_status.vc_drs_ramp_count++;
+        drs_status.vc_drs_overdrive_count = DRS_OVERDRIVE_TIME;
+    }
+    else if (drs_status.vc_drs_ramp_set < drs_status.vc_drs_ramp_count) {
+        // Closing
+        drs_status.vc_drs_ramp_count--;
+        drs_status.vc_drs_overdrive_count = DRS_OVERDRIVE_TIME;
+    }
+    if (drs_status.vc_drs_overdrive_count) {
+        servo1_offset = DRS_SERVO1_CLOSED + DRS_SERVO1_CLOSED_OVERDRIVE;
+        servo2_offset = DRS_SERVO2_CLOSED + DRS_SERVO2_CLOSED_OVERDRIVE;
+        servo1_range = DRS_SERVO1_OPEN - DRS_SERVO1_CLOSED + DRS_SERVO1_OPEN_OVERDRIVE - DRS_SERVO1_CLOSED_OVERDRIVE;
+        servo2_range = DRS_SERVO2_OPEN - DRS_SERVO2_CLOSED + DRS_SERVO2_OPEN_OVERDRIVE - DRS_SERVO2_CLOSED_OVERDRIVE;
+        drs_status.vc_drs_overdrive_count--;
+    }
+    if (drs_status.vc_drs_ramp_count < 0) drs_status.vc_drs_ramp_count = 0;
+    if (drs_status.vc_drs_ramp_count > DRS_RAMP_TIME) drs_status.vc_drs_ramp_count = DRS_RAMP_TIME;
+    int servo1 = servo1_offset + (servo1_range*drs_status.vc_drs_ramp_count)/DRS_RAMP_TIME;
+    int servo2 = servo2_offset + (servo2_range*drs_status.vc_drs_ramp_count)/DRS_RAMP_TIME;
+    DRS_set(servo1, servo2);
+    drs_status.vc_drs1_setting = servo1;
+    drs_status.vc_drs2_setting = servo2;
+    sensor_dbc_vc_drs_status_pack((uint8_t *)&msg, &drs_status, 8);
+    core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_DRS_STATUS_FRAME_ID, 8, msg);
 }

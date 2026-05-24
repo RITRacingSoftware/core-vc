@@ -15,7 +15,7 @@
 #include "FaultManager.h"
 #include "timeout.h"
 #include "driver_can.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_2.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_4.h"
 #include "rtt.h"
 #include "vectornav.h"
 
@@ -46,6 +46,20 @@ vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &accelY, &
 
 core_timeout_t runaway_timeout;
 
+static const TCParams tc_params = {
+    .Nominal_Target_SR = {CG_TARGET_SR_NOMINAL_FRONT, CG_TARGET_SR_NOMINAL_REAR, CG_TARGET_SR_NOMINAL_FRONT, CG_TARGET_SR_NOMINAL_REAR},
+    .TC_SR_max = CG_TARGET_SR_MAX,
+    .TC_SR_min = CG_TARGET_SR_MIN,
+    .TC_Lat = CG_TARGET_SR_LAT,
+    .TC_Long = CG_TARGET_SR_LONG,
+    .kP_Slip_Ratio = CG_KP_SLIP_RATIO,
+    .kI_Slip_Ratio = CG_KI_SLIP_RATIO,
+    .kD_Slip_Ratio = CG_KD_SLIP_RATIO,
+    .N_Slip_Ratio = CG_TC_N_SLIP_RATIO,
+    .TC_Activation_Threshold = CG_TC_ACTIVATION_THRESHOLD,
+    .Fx_est = {CG_TC_FX_FRONT, CG_TC_FX_REAR, CG_TC_FX_FRONT, CG_TC_FX_REAR}
+};
+
 void Controls_init()
 {
     runaway_timeout.module = NULL;
@@ -56,7 +70,7 @@ void Controls_init()
     runaway_timeout.single_shot = 0;
     core_timeout_insert(&runaway_timeout);
 
-    F34_Torque_Vectoring_Simulink_v1_5_3_2_initialize();
+    F34_Torque_Vectoring_Simulink_v1_5_3_4_initialize();
     
     ControlsLevel = CONTROLS_MAX_LEVEL;
 
@@ -71,7 +85,10 @@ void Controls_init()
     F34_Torque_Vectoring_Simulink_U.LongParams_g.Throttle_Long_Factor = CS_LONG_FACTOR_ACC;
     F34_Torque_Vectoring_Simulink_U.LongParams_g.Regen_Long_Split = 0;
     F34_Torque_Vectoring_Simulink_U.LongParams_g.Regen_Long_Factor = 0;
-    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR = CG_TARGET_SR_NOMINAL;
+    /*F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR[0] = CG_TARGET_SR_NOMINAL_FRONT;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR[1] = CG_TARGET_SR_NOMINAL_REAR;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR[2] = CG_TARGET_SR_NOMINAL_FRONT;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.Nominal_Target_SR[3] = CG_TARGET_SR_NOMINAL_REAR;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ax_min = CG_TARGET_SR_AX_MIN;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Ay_min = CG_TARGET_SR_AY_MIN;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_SR_max = CG_TARGET_SR_MAX;
@@ -87,7 +104,8 @@ void Controls_init()
     F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[1] = CG_TC_FX_REAR;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[2] = CG_TC_FX_FRONT;
     F34_Torque_Vectoring_Simulink_U.TCParams_i.Fx_est[3] = CG_TC_FX_REAR;
-    F34_Torque_Vectoring_Simulink_U.TCParams_i.N_Slip_Ratio = CG_TC_N_SLIP_RATIO;
+    F34_Torque_Vectoring_Simulink_U.TCParams_i.N_Slip_Ratio = CG_TC_N_SLIP_RATIO;*/
+    F34_Torque_Vectoring_Simulink_U.TCParams_i = tc_params;
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Preload_Torque = CG_LC_PRELOAD;
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax = CG_LC_TMAX;
     F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wdot_max = CG_LC_WDOT_MAX;
@@ -187,7 +205,7 @@ static void step_advanced(float maxTrq)
     //rprintf("avail %d\n", (int)(maxTrq*100));
     update_controls_params();
 
-    F34_Torque_Vectoring_Simulink_v1_5_3_2_step();
+    F34_Torque_Vectoring_Simulink_v1_5_3_4_step();
 
     send_logging_outputs();
 
@@ -200,7 +218,7 @@ static void step_advanced(float maxTrq)
     // rprintf("totalTrq: %d\n", (int)(totalTrq * 100));
     // rprintf("%d %d %d %d\n", (int)(rrReqMn * 100), (int)(rlReqMn * 100), (int)(frReqMn * 100), (int)(flReqMn * 100));
 
-    if (totalTrq <= maxTrq * RUNAWAY_PCT) {
+    if (fabsf(totalTrq) <= fabsf(maxTrq) * RUNAWAY_PCT) {
         flPrev = flReqMn;
         rlPrev = rlReqMn;
         frPrev = frReqMn;

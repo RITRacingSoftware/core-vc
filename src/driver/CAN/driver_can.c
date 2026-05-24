@@ -1,26 +1,25 @@
 #include "driver_can.h"
 #include "config.h"
-#include "can.h"
-#include "usart.h"
 #include "Inverters.h"
 #include "inverter_dbc.h"
 #include "main_dbc.h"
-#include "rtt.h"
 #include "VC.h"
 #include "DriverInputs.h"
 #include "FaultManager.h"
 #include "vectornav.h"
 #include "DRS.h"
+#include "core.h"
 #include <math.h>
+#include <string.h>
 
 MAIN_BUS mainBus = {0};
 // SENSE_BUS senseBus = {0};
 
 static bool CAN_add_filters();
-static void pack_and_send_main_echoes(int id);
-static void echo_on_main();
 static void send_CAN_errors();
 static void send_controls_params();
+
+static int dash_msg_divider = 0;
 
 core_timeout_t fssdb_lost_timeout;          // Brake pressure sensor not on CAN timeout
 
@@ -158,7 +157,7 @@ void CAN_rx_main()
                 break;
 
             case 510:
-                DRS_set(canMessage.data & 0xffff, (canMessage.data >> 16) & 0xffff);
+                DRS_set_position(canMessage.data >> 32);
                 break;
         }
     }
@@ -177,6 +176,15 @@ void CAN_Task_Update()
 
     main_dbc_vc_pedal_inputs_raw_pack((uint8_t *)&msg, &mainBus.pedal_inputs_raw, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, msg);
+    
+    // Dash temperature messages
+    if ((++dash_msg_divider) == 100) {
+        memcpy(&msg, mainBus.motor_temps, 8);
+        core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_MOTOR_TEMPS_FRAME_ID, 8, msg);
+        memcpy(&msg, mainBus.inverter_temps, 8);
+        core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_INVERTER_TEMPS_FRAME_ID, 8, msg);
+        dash_msg_divider = 0;
+    }
 
     // Inverters_send_timeout_times();
     //Inverters_echo_on_main();
@@ -225,7 +233,7 @@ static bool CAN_add_filters()
 static void send_controls_params()
 {
     mainBus.controls_const1.vc_long_factor = main_dbc_vc_controls_constants1_vc_long_factor_encode(CG_LONG_FACTOR);
-    mainBus.controls_const1.vc_target_slip_ratio = main_dbc_vc_controls_constants1_vc_target_slip_ratio_encode(CG_TARGET_SR_NOMINAL);
+    //mainBus.controls_const1.vc_target_slip_ratio = main_dbc_vc_controls_constants1_vc_target_slip_ratio_encode(CG_TARGET_SR_NOMINAL);
     mainBus.controls_const1.vc_k_p_slip_ratio = main_dbc_vc_controls_constants1_vc_k_p_slip_ratio_encode(fabsf(CG_KP_SLIP_RATIO));
     mainBus.controls_const1.vc_k_i_slip_ratio = main_dbc_vc_controls_constants1_vc_k_i_slip_ratio_encode(fabsf(CG_KI_SLIP_RATIO));
     mainBus.controls_const1.vc_tc_activation_threshold = main_dbc_vc_controls_constants1_vc_tc_activation_threshold_encode(CG_TC_ACTIVATION_THRESHOLD);

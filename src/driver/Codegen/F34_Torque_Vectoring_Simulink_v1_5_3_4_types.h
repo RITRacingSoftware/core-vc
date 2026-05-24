@@ -1,15 +1,15 @@
 /*
- * F34_Torque_Vectoring_Simulink_v1_5_3_2_types.h
+ * F34_Torque_Vectoring_Simulink_v1_5_3_4_types.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_2".
+ * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_4".
  *
- * Model version              : 1.421
+ * Model version              : 1.454
  * Simulink Coder version : 23.2 (R2023b) 01-Aug-2023
- * C source code generated on : Wed May 20 19:55:38 2026
+ * C source code generated on : Fri May 22 16:15:57 2026
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -18,8 +18,8 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_2_types_h_
-#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_2_types_h_
+#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_4_types_h_
+#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_4_types_h_
 #include "rtwtypes.h"
 #ifndef DEFINED_TYPEDEF_FOR_YawParams_
 #define DEFINED_TYPEDEF_FOR_YawParams_
@@ -49,7 +49,7 @@ typedef struct {
 #define DEFINED_TYPEDEF_FOR_TCParams_
 
 typedef struct {
-  real32_T Nominal_Target_SR;
+  real32_T Nominal_Target_SR[4];
   real32_T TC_Ax_min;
   real32_T TC_Ay_min;
   real32_T TC_SR_max;
@@ -101,76 +101,12 @@ typedef struct {
 
 #endif
 
-#ifndef struct_tag_6fE9ChnDKXM9x7a8HfxB0D
-#define struct_tag_6fE9ChnDKXM9x7a8HfxB0D
-
-struct tag_6fE9ChnDKXM9x7a8HfxB0D
-{
-  int32_T isInitialized;
-  boolean_T isSetupComplete;
-  real32_T pCumSum;
-  real32_T pCumSumRev[2];
-  real32_T pCumRevIndex;
-  real32_T pModValueRev;
-};
-
-#endif                                 /* struct_tag_6fE9ChnDKXM9x7a8HfxB0D */
-
-#ifndef typedef_h_dsp_internal_SlidingWindowA_T
-#define typedef_h_dsp_internal_SlidingWindowA_T
-
-typedef struct tag_6fE9ChnDKXM9x7a8HfxB0D h_dsp_internal_SlidingWindowA_T;
-
-#endif                             /* typedef_h_dsp_internal_SlidingWindowA_T */
-
-#ifndef struct_tag_BlgwLpgj2bjudmbmVKWwDE
-#define struct_tag_BlgwLpgj2bjudmbmVKWwDE
-
-struct tag_BlgwLpgj2bjudmbmVKWwDE
-{
-  uint32_T f1[8];
-};
-
-#endif                                 /* struct_tag_BlgwLpgj2bjudmbmVKWwDE */
-
-#ifndef typedef_cell_wrap_F34_Torque_Vectorin_T
-#define typedef_cell_wrap_F34_Torque_Vectorin_T
-
-typedef struct tag_BlgwLpgj2bjudmbmVKWwDE cell_wrap_F34_Torque_Vectorin_T;
-
-#endif                             /* typedef_cell_wrap_F34_Torque_Vectorin_T */
-
-#ifndef struct_tag_RAmU1k0PIQA5gLwNsJpxQF
-#define struct_tag_RAmU1k0PIQA5gLwNsJpxQF
-
-struct tag_RAmU1k0PIQA5gLwNsJpxQF
-{
-  boolean_T matlabCodegenIsDeleted;
-  int32_T isInitialized;
-  boolean_T isSetupComplete;
-  boolean_T TunablePropsChanged;
-  cell_wrap_F34_Torque_Vectorin_T inputVarSize;
-  h_dsp_internal_SlidingWindowA_T *pStatistic;
-  int32_T NumChannels;
-  int32_T FrameLength;
-  h_dsp_internal_SlidingWindowA_T _pobj0;
-};
-
-#endif                                 /* struct_tag_RAmU1k0PIQA5gLwNsJpxQF */
-
-#ifndef typedef_dsp_simulink_MovingAverage_F3_T
-#define typedef_dsp_simulink_MovingAverage_F3_T
-
-typedef struct tag_RAmU1k0PIQA5gLwNsJpxQF dsp_simulink_MovingAverage_F3_T;
-
-#endif                             /* typedef_dsp_simulink_MovingAverage_F3_T */
-
 #ifndef SS_UINT64
-#define SS_UINT64                      23
+#define SS_UINT64                      22
 #endif
 
 #ifndef SS_INT64
-#define SS_INT64                       24
+#define SS_INT64                       23
 #endif
 
 /* Parameters (default storage) */
@@ -179,4 +115,4 @@ typedef struct P_F34_Torque_Vectoring_Simuli_T_ P_F34_Torque_Vectoring_Simuli_T;
 /* Forward declaration for rtModel */
 typedef struct tag_RTM_F34_Torque_Vectoring__T RT_MODEL_F34_Torque_Vectoring_T;
 
-#endif          /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_2_types_h_ */
+#endif          /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_4_types_h_ */

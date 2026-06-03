@@ -283,7 +283,7 @@ bool vectornav_parse(const uint8_t *buf, uint16_t buflen, vectornav_result_t *da
 void vectornav_handler(uint8_t *rxbuf, uint32_t rxbuflen) {
     vectornav_packets++;
     if (vectornav_parse(rxbuf, rxbuflen, &vn_data_raw)) {
-        if (!Controls_update_vn()) core_timeout_reset(&vn_timeout);
+        if (!Controls_update_vn()) core_timeout_resume(&vn_timeout);
     } else vectornav_errors++;
 }
 
@@ -315,4 +315,5 @@ void vectornav_init() {
     vn_timeout.latching = 0;
     vn_timeout.single_shot = 0;
     core_timeout_insert(&vn_timeout);
+    core_timeout_suspend(&vn_timeout);
 }

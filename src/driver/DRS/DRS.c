@@ -1,9 +1,13 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "stm32g4xx_hal.h"
 #include "core.h"
 #include "config.h"
+#include "DriverInputs.h"
+#include "FaultManager.h"
+#include "Controls.h"
 
 #include "sensor_dbc.h"
 
@@ -59,6 +63,28 @@ void DRS_set_position(bool open) {
 
 void DRS_task() {
     uint64_t msg;
+    DriverInputs_s di;
+    // Determine DRS position
+#ifdef DRS_ACCEL_MODE_ENABLED
+    if (velX.val > DRS_ACCEL_VELOCITY) {
+        if (drs_status.vc_drs_condition_count < DRS_ACCEL_DELAY) {
+            drs_status.vc_drs_condition_count++;
+        }
+    } else drs_status.vc_drs_condition_count = 0;
+    drs_status.vc_drs_state = (drs_status.vc_drs_condition_count == DRS_ACCEL_DELAY) && !(FaultManager_read(FAULT_VN_IRR | FAULT_VN_LOST));
+#else
+    DriverInputs_get_driver_inputs(&di);
+    if ((di.accelPct > DRS_ACCEL_THRESHOLD) && (di.brakePct < DRS_BRAKE_THRESHOLD) && (fabsf(di.steerPct) < DRS_STEER_THRESHOLD) /*&& (fabsf(accelY.val) < DRS_LAT_ACCEL_THRESHOLD)*/) {
+        if (drs_status.vc_drs_condition_count < DRS_ACTUATION_DELAY) {
+            drs_status.vc_drs_condition_count++;
+        }
+    } else drs_status.vc_drs_condition_count = 0;
+    drs_status.vc_drs_state = (drs_status.vc_drs_condition_count == DRS_ACTUATION_DELAY) && !(FaultManager_read(FAULT_STEER_IRRA | FAULT_VN_IRR | FAULT_VN_LOST));
+#endif
+    drs_status.vc_drs_state = 0;
+    DRS_set_position(drs_status.vc_drs_state);
+
+    // Servo ramping and overdrive
     int servo1_offset = DRS_SERVO1_CLOSED, servo1_range = DRS_SERVO1_OPEN - DRS_SERVO1_CLOSED;
     int servo2_offset = DRS_SERVO2_CLOSED, servo2_range = DRS_SERVO2_OPEN - DRS_SERVO2_CLOSED;
     if (drs_status.vc_drs_ramp_set > drs_status.vc_drs_ramp_count) {
@@ -72,13 +98,17 @@ void DRS_task() {
         drs_status.vc_drs_overdrive_count = DRS_OVERDRIVE_TIME;
     }
     if (drs_status.vc_drs_overdrive_count) {
-        servo1_offset = DRS_SERVO1_CLOSED + DRS_SERVO1_CLOSED_OVERDRIVE;
-        servo2_offset = DRS_SERVO2_CLOSED + DRS_SERVO2_CLOSED_OVERDRIVE;
-        servo1_range = DRS_SERVO1_OPEN - DRS_SERVO1_CLOSED + DRS_SERVO1_OPEN_OVERDRIVE - DRS_SERVO1_CLOSED_OVERDRIVE;
-        servo2_range = DRS_SERVO2_OPEN - DRS_SERVO2_CLOSED + DRS_SERVO2_OPEN_OVERDRIVE - DRS_SERVO2_CLOSED_OVERDRIVE;
+        if (drs_status.vc_drs_state) {
+            servo1_range = DRS_SERVO1_OPEN - DRS_SERVO1_CLOSED + DRS_SERVO1_OPEN_OVERDRIVE;
+            servo2_range = DRS_SERVO2_OPEN - DRS_SERVO2_CLOSED + DRS_SERVO2_OPEN_OVERDRIVE;
+        } else {
+            servo1_offset = DRS_SERVO1_CLOSED + DRS_SERVO1_CLOSED_OVERDRIVE;
+            servo2_offset = DRS_SERVO2_CLOSED + DRS_SERVO2_CLOSED_OVERDRIVE;
+            servo1_range = DRS_SERVO1_OPEN - DRS_SERVO1_CLOSED - DRS_SERVO1_CLOSED_OVERDRIVE;
+            servo2_range = DRS_SERVO2_OPEN - DRS_SERVO2_CLOSED - DRS_SERVO2_CLOSED_OVERDRIVE;
+        }
         drs_status.vc_drs_overdrive_count--;
     }
-    if (drs_status.vc_drs_ramp_count < 0) drs_status.vc_drs_ramp_count = 0;
     if (drs_status.vc_drs_ramp_count > DRS_RAMP_TIME) drs_status.vc_drs_ramp_count = DRS_RAMP_TIME;
     int servo1 = servo1_offset + (servo1_range*drs_status.vc_drs_ramp_count)/DRS_RAMP_TIME;
     int servo2 = servo2_offset + (servo2_range*drs_status.vc_drs_ramp_count)/DRS_RAMP_TIME;

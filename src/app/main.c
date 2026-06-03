@@ -13,6 +13,7 @@
 
 #define VC_100HZ_PRIORITY (tskIDLE_PRIORITY + 1)
 #define CAN_RX_PRIORITY (tskIDLE_PRIORITY + 2)
+#define CAN_RX_SEC_PRIORITY (tskIDLE_PRIORITY + 2)
 #define CAN_TX_PRIORITY (tskIDLE_PRIORITY + 2)
 
 void hardfault_error_handler();
@@ -132,6 +133,9 @@ int main(void)
       NULL,
       VC_100HZ_PRIORITY,
       NULL);
+    if (err != pdPASS) hardfault_error_handler();
+
+    err = xTaskCreate(CAN_rx_secondary, "CAN_rx_sec", 1000, NULL, CAN_RX_SEC_PRIORITY, NULL);
     if (err != pdPASS) hardfault_error_handler();
 
     NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);

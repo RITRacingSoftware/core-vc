@@ -53,6 +53,7 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
 {
     float min_V = mainBus.bms_cells.bms_overview_volt_min * BMS_OVERVIEW_SCALE;
     float max_T = mainBus.bms_cells.bms_overview_temp_max;
+    float debug[2];
 
     // Calculate pack voltage
     float vol[4];
@@ -91,6 +92,7 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     {
         float curr_conv = totalTrq/currP;
         float convMax = (curr_conv * maxP);
+        debug[0] = curr_conv; debug[1] = convMax;
         *limitedMaxTrq = MIN(convMax, reqTrq);
         rampup_trigger(*limitedMaxTrq, &ramp);    
     }
@@ -107,6 +109,8 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     last_reqRgn = 0;
     mainBus.endurance_info.vc_relative_distance = 65536*distance_traveled;
     mainBus.endurance_info.vc_estimated_soc = 65536*estimated_soc;
+
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 }
 
 void PowerLimit_set_prev_trq(float trq)
@@ -185,8 +189,6 @@ void RegenLimit(float reqRgn, float *limitedMaxRgn)
     else {
         rampdown_update(reqRgn, limitedMaxRgn, &ramp_regen);
     }
-
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 }
 
 void RegenLimit_set_prev_rgn(float rgn)

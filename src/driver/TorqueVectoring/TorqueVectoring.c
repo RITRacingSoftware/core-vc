@@ -74,6 +74,29 @@ void TorqueVectoring(float maxTotalTorque, float *trqs, bool dynamic)
     CAN_send_trqs();
 }
 
+void TorqueVectoring_skidpad(float maxTotalTorque, float *trqs) {
+    DriverInputs_get_driver_inputs(&inputs);
+    steerPct = inputs.steerPct / CS_SKIDPAD_MAX_STEER;
+    if (steerPct > 1.0f) steerPct = 1.0f;
+    if (steerPct < -1.0f) steerPct = -1.0f;
+
+    if (inputs.accelPct > 0) {
+        invArr[0] = maxTotalTorque * (1.0f-CS_SKIDPAD_LONG_SPLIT) * (0.5f + CS_SKIDPAD_REAR_LAT_SPLIT*steerPct);
+        invArr[1] = maxTotalTorque * (1.0f-CS_SKIDPAD_LONG_SPLIT) * (0.5f - CS_SKIDPAD_REAR_LAT_SPLIT*steerPct);
+        invArr[2] = maxTotalTorque * (CS_SKIDPAD_LONG_SPLIT) * (0.5f + CS_SKIDPAD_FRONT_LAT_SPLIT*steerPct);
+        invArr[3] = maxTotalTorque * (CS_SKIDPAD_LONG_SPLIT) * (0.5f - CS_SKIDPAD_FRONT_LAT_SPLIT*steerPct);
+    }
+    else {
+        for (int i=0; i < 4; i++) invArr[i] = 0;
+    }
+    
+    for (int i = 0; i < 4; i++) { 
+        trqs[i] = invArr[i];
+    }
+
+    CAN_send_trqs();
+}
+
 static void setSplits(float trqPctTotal)
 {
     invArr[3] = trqPctTotal * (totalPctLeft * totalPctFront);

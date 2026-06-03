@@ -13,7 +13,8 @@ typedef enum {
     ControlsLevel_OFF,          // Default to 50/50 lat split, configured long split
     ControlsLevel_BASIC,        // Steering angle-based controls
     ControlsLevel_BASIC_VEL,    // Velocity-dependent lat and long splits
-    ControlsLevel_ADVANCED      // Simulink-based controls
+    ControlsLevel_ADVANCED,     // Simulink-based controls
+    ControlsLevel_SKIDPAD,      // Fixed torque distribution when steering
 } ControlsLevel_e;
 
 typedef struct{
@@ -29,8 +30,6 @@ extern vn_input_t angRateZ;
 extern vn_input_t accelX;
 extern vn_input_t accelY;
 extern vn_input_t yaw;
-
-#define ControlsLevel_NO_VN     ControlsLevel_BASIC
 
 void Controls_init();
 void Controls_Task_Update();

@@ -35,7 +35,7 @@
 #define TEMP_STEADY_LIMIT 37.06f
 
 #define RL_THRESHOLD 0.50f
-#define MAX_REGEN_CURRENT_A -30.0f
+#define MAX_REGEN_CURRENT_A -35.0f
 
 /************************ CAN ************************/
 /*****************************************************/
@@ -48,26 +48,37 @@
 /************************ DRS ************************/
 /*****************************************************/
 #define DRS_ENABLED
-#define DRS_SERVO1_CLOSED 3600
+#define DRS_SERVO1_CLOSED 3325
 #define DRS_SERVO1_OPEN 5050
-#define DRS_SERVO1_CLOSED_OVERDRIVE (-400)
+#define DRS_SERVO1_CLOSED_OVERDRIVE (-125)
 #define DRS_SERVO1_OPEN_OVERDRIVE 100
-#define DRS_SERVO2_CLOSED 4850
+#define DRS_SERVO2_CLOSED 5025
 #define DRS_SERVO2_OPEN 3400
-#define DRS_SERVO2_CLOSED_OVERDRIVE (350)
+#define DRS_SERVO2_CLOSED_OVERDRIVE (75)
 #define DRS_SERVO2_OPEN_OVERDRIVE (-150)
-#define DRS_RAMP_TIME 30
-#define DRS_OVERDRIVE_TIME 30
+#define DRS_RAMP_TIME 60
+#define DRS_OVERDRIVE_TIME 50
+
+#define DRS_ACCEL_MODE_ENABLED
+#define DRS_ACCEL_VELOCITY      20
+#define DRS_ACCEL_DELAY         5
+
+#define DRS_ACCEL_THRESHOLD 0.5f
+#define DRS_BRAKE_THRESHOLD 0.1f
+#define DRS_STEER_THRESHOLD 0.1f
+#define DRS_LAT_ACCEL_THRESHOLD 4.5f
+#define DRS_ACTUATION_DELAY 50
 
 /********************** CONTROLS *********************/
 /*****************************************************/
-#define REGEN_ENABLED 1
+#define REGEN_ENABLED 0
 #define RUNAWAY_TIMEOUT_MS 100
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02
 #define VN_LOST_TIMEOUT_MS 100
 #define CONTROLS_MAX_LEVEL ControlsLevel_ADVANCED
 
+#define ENDURANCE_MAX_CHARGE    39600.0f
 #define ENDURANCE_MAX_ENERGY    5.5f
 #define ENDURANCE_DISTANCE      22500.0f
 
@@ -115,9 +126,9 @@
 #define VN_IRR_YAW 360                 // deg
 
 // Torque Vectoring
-#define CS_LAT_FACTOR_ACC       0.35f
+#define CS_LAT_FACTOR_ACC       0.65f
 #define CS_LONG_FACTOR_ACC      0.0f
-#define CS_LONG_SPLIT_ACC       0.30f
+#define CS_LONG_SPLIT_ACC       0.5f
 #define CS_LAT_FACTOR_BRAKE     0.25f
 #define CS_LONG_FACTOR_BRAKE    0.1f
 #define CS_LONG_SPLIT_BRAKE     0.65f
@@ -126,6 +137,11 @@
 #define CS_LAT_FUNC(vel)        (-0.0003f*vel*vel + 0.6f)
 //#define CS_LAT_FUNC(vel)        (-0.000f)
 #define CS_LONG_FUNC_BRAKE(vel)       (0.00023f*vel*vel + 0.5f)
+
+#define CS_SKIDPAD_LONG_SPLIT       0.3f
+#define CS_SKIDPAD_REAR_LAT_SPLIT   0.4f
+#define CS_SKIDPAD_FRONT_LAT_SPLIT  0.4f
+#define CS_SKIDPAD_MAX_STEER        0.2f
 
 // Traction Control
 #define TC_SPEED_DIFF_MAX 1000
@@ -137,7 +153,7 @@
 
 //#define CS_ENABLE_RPM_LIMIT
 #define CS_RPM_LIMIT_GAIN 0.002
-#define CS_RPM_LIMIT_THRESHOLD ((float)(20/(0.2032*2*M_PI)*12.97*60))
+#define CS_RPM_LIMIT_THRESHOLD ((float)(18.5/(0.2032*2*M_PI)*12.97*60))
 
 /** Inverters **/
 #define MAX_TORQUE 200
@@ -169,7 +185,7 @@
 // Regen
 #define ACCEL_DEADZONE_HIGH_PCT 0.25f
 #define ACCEL_DEADZONE_LOW_PCT 0.20f
-#define MAX_REGEN_PCT -0.2f
+#define MAX_REGEN_PCT -0.2857f
 
 // Hysteresis because when it regens at low speeds and cuts out it jitters.
 // Releasing regen causes the wheels to spin more, which feeds back into more regen.
@@ -206,7 +222,8 @@
 #define DI_DOUBLE_PEDAL_TIMEOUT_MS 100
 #define DI_DOUBLE_PEDAL_RESET_PCT 0.03f
 
-#define STEER_CENTER_ADC            1865
+//#define STEER_CENTER_ADC            1865
+#define STEER_CENTER_ADC            1889
 #define HALF_STEER_RANGE_ADC        850
 #define STEER_IRRATIONAL_MAX_ADC    4000
 #define STEER_IRRATIONAL_MIN_ADC    1000

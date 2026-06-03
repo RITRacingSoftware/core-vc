@@ -28,7 +28,6 @@ static void update_controls_params();
 static void step_advanced(float maxTrq);
 static void step_basic(float maxTrq, bool dynamic);
 static void send_logging_outputs();
-static float trq_power_limit();
 static void timeout_callback();
 
 static float rrPrev;
@@ -114,10 +113,6 @@ void Controls_init()
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Power_Limit_Flag = 0;
 }
 
-void Controls_set_max_level(ControlsLevel_e l) {
-    if (l < CONTROLS_MAX_LEVEL) ControlsLevel = l;
-}
-
 void Controls_Task_Update()
 {
     DriverInputs_get_driver_inputs(&inputs); 
@@ -130,8 +125,24 @@ void Controls_Task_Update()
 
     //ControlsLevel = ControlsLevel_BASIC_VEL;
     //velX.val = 10.0f;
+    if (FaultManager_read(FAULT_VN_LOST | FAULT_VN_IRR) && ((ControlsLevel == ControlsLevel_ADVANCED) || (ControlsLevel == ControlsLevel_BASIC_VEL))) {
+        ControlsLevel = ControlsLevel_BASIC;
+    }
+    if (FaultManager_read(FAULT_STEER_IRRA)) {
+        ControlsLevel = ControlsLevel_OFF;
+    }
     switch (ControlsLevel)
     {
+        case ControlsLevel_SKIDPAD: {
+            float tvTrqs[4];
+            TorqueVectoring_skidpad(maxTotalTrq, tvTrqs);
+            for (int i = 0; i < 4; i++) {
+                Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+            }
+            core_timeout_reset(&runaway_timeout);
+            break;
+        }
+
         case ControlsLevel_ADVANCED:
             step_advanced(maxTotalTrq); break;
         
@@ -187,23 +198,30 @@ static float fault_max = 0;
 
 static void step_advanced(float maxTrq)
 {
+    float tvArr[4];    
     // Controls uses torque in Nm, so have to convert from %Mn to Nm. Torque is represented 0 -> 1 = 0 -> 100%.
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Total_Torque_Request = maxTrq * 9.8f;
     // Use RTD as launch control button
-    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = GPIO_get_RTD();
+    F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = mainBus.dash_buttons & 0x01;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.dt_loop = 0.01f;
-    float tvArr[4];    
+    update_controls_params();
+#ifdef CS_ENABLE_RPM_LIMIT
+    // Compute minimum velocity
+    float min_vel = F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[0];
+    for (uint8_t i=1; i < 4; i++) {
+        if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[i] < min_vel) {
+            min_vel = F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[i];
+        }
+    }
+    float vel_max_trq = CS_RPM_LIMIT_GAIN * (CS_RPM_LIMIT_THRESHOLD - min_vel);
+    if (vel_max_trq < 0) vel_max_trq = 0;
+    if (maxTrq > vel_max_trq) maxTrq = vel_max_trq;
+#endif
     TorqueVectoring(maxTrq, tvArr, true);
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[0] = tvArr[3] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[1] = tvArr[1] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[2] = tvArr[2] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[3] = tvArr[0] * 9.8f;
-    float v[2];
-    v[0] = tvArr[3] * 9.8f;
-    v[1] = tvArr[1] * 9.8f;
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t*)(&v)));
-    //rprintf("avail %d\n", (int)(maxTrq*100));
-    update_controls_params();
 
     F34_Torque_Vectoring_Simulink_v1_5_3_4_step();
 
@@ -235,7 +253,6 @@ static void step_advanced(float maxTrq)
     Inverters_set_torque_request(INV_FR, frPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     Inverters_set_torque_request(INV_RR, rrPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
 
-    float debug[2] = {totalTrq, maxTrq};
     float rear[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1]};
     float front[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0]};
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CODEGEN_OUT_REAR_FRAME_ID, 8, *((uint64_t *)rear));
@@ -257,7 +274,6 @@ static void update_controls_params()
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle = inputs.steerPct; //SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
     // Invert angular rate Z so when it is turning counterclockwise it is positive
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Yaw_Rate = -1 * angRateZ.val;
-    float velArr[4];
     Inverters_get_velocities_codegen(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds);
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_accel = accelX.val;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_accel = 0; //accelY.val;
@@ -326,14 +342,6 @@ static void send_logging_outputs()
     mainBus.target_wheel_speeds.vc_fl_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[3];
     main_dbc_vc_target_wheel_speeds_pack((uint8_t*)(&msg), &(mainBus.target_wheel_speeds), 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_TARGET_WHEEL_SPEEDS_FRAME_ID, 8, msg);
-}
-
-static float trq_power_limit()
-{
-    // float max_current = 165.0;
-    // int current = mainBus.bms_current_limit.d1_max_discharge_current;
-    // float mul = (current/max_current);
-    // return mul;
 }
 
 static void timeout_callback() {

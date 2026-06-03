@@ -157,8 +157,25 @@ void CAN_rx_main()
                 break;
 
             case 510:
-                DRS_set_position(canMessage.data >> 32);
+                //DRS_set_position(canMessage.data >> 32);
                 break;
+        }
+    }
+}
+
+void CAN_rx_secondary(void *arg) {
+    (void) arg;
+    CanExtendedMessage_s msg;
+    while (1) {
+        if (core_CAN_receive_extended_from_queue(CAN_SENSE, &msg)) {
+            switch (msg.id) {
+                case SENSOR_DBC_DASH_INPUTS_FRAME_ID:
+                    rprintf("DASH %x\n", msg.data[0]);
+                    mainBus.dash_buttons = msg.data[0] ^ 0x01;
+                    break;
+                 default:
+                    break;
+            }
         }
     }
 }
@@ -226,6 +243,8 @@ static bool CAN_add_filters()
         if (inv_id_arr[i] > maxFilter) maxFilter = inv_id_arr[i];
     }
     status = (status && core_CAN_add_filter(CAN_INV, false, minFilter, maxFilter));
+
+    status = (status && core_CAN_add_filter(CAN_SENSE, false, SENSOR_DBC_DASH_INPUTS_FRAME_ID, SENSOR_DBC_DASH_INPUTS_FRAME_ID));
    
     return status;
 }

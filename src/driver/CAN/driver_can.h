@@ -45,6 +45,7 @@ typedef struct
     struct main_dbc_vc_endurance_info_t endurance_info;
     int16_t motor_temps[4];
     int16_t inverter_temps[4];
+    uint8_t dash_buttons;
 
 } MAIN_BUS;
 
@@ -95,3 +96,4 @@ bool CAN_tx_sense();
 void CAN_rx_main();
 void CAN_rx_inv();
 void CAN_send_driver_inputs();
+void CAN_rx_secondary(void *arg);

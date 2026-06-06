@@ -26,7 +26,7 @@
 /******************** POWER LIMIT ********************/
 /*****************************************************/
 #define PL_THRESHOLD 0.30f
-#define PL_MAX_POWER_W 30000
+#define PL_MAX_POWER_W 80000
 #define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_VOLT_CURRENT_LIMIT_CUTOFF 3.6f
@@ -48,6 +48,7 @@
 /************************ DRS ************************/
 /*****************************************************/
 #define DRS_ENABLED
+#define DRS_FORCE_CLOSED
 #define DRS_SERVO1_CLOSED 3325
 #define DRS_SERVO1_OPEN 5050
 #define DRS_SERVO1_CLOSED_OVERDRIVE (-125)
@@ -76,7 +77,7 @@
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02f
 #define VN_LOST_TIMEOUT_MS 100
-#define CONTROLS_MAX_LEVEL ControlsLevel_ADVANCED
+#define CONTROLS_MAX_LEVEL ControlsLevel_SKIDPAD
 
 #define ENDURANCE_MAX_CHARGE    39600.0f
 #define ENDURANCE_MAX_ENERGY    5.5f
@@ -144,9 +145,9 @@
 #define CS_SKIDPAD_REAR_LAT_SPLIT   0.45f
 #define CS_SKIDPAD_FRONT_LAT_SPLIT  0.45f
 #define CS_SKIDPAD_MAX_STEER        0.2f
-#define CS_SKIDPAD_BETA_HIGH        0.12f
-#define CS_SKIDPAD_BETA_LOW         (-0.12f)
-#define CS_SKIDPAD_BETA_RAMP        (-0.06f)
+#define CS_SKIDPAD_BETA_HIGH        0.18f
+#define CS_SKIDPAD_BETA_LOW         (-0.18f)
+#define CS_SKIDPAD_BETA_RAMP        (0.06f)
 #define CS_SKIDPAD_LAT_MIN          0.2f
 
 // Traction Control
@@ -157,7 +158,7 @@
 #define TC_D_GAIN 0.005f
 #define TC_RESET_STEP 0.10f
 
-#define CS_ENABLE_RPM_LIMIT
+//#define CS_ENABLE_RPM_LIMIT
 #define CS_RPM_LIMIT_GAIN 0.002
 #define CS_RPM_LIMIT_THRESHOLD ((float)(19/(0.2032*2*M_PI)*12.97*60))
 

@@ -87,7 +87,9 @@ void TorqueVectoring_skidpad(float maxTotalTorque, float *trqs) {
         if (beta_diff > CS_SKIDPAD_BETA_HIGH) stab = (CS_SKIDPAD_BETA_HIGH + CS_SKIDPAD_BETA_RAMP - beta_diff) * (1.0f / CS_SKIDPAD_BETA_RAMP);
         if (beta_diff < CS_SKIDPAD_BETA_LOW) stab = (beta_diff - CS_SKIDPAD_BETA_LOW + CS_SKIDPAD_BETA_RAMP) * (1.0f / CS_SKIDPAD_BETA_RAMP);
         if (stab < CS_SKIDPAD_LAT_MIN) stab = CS_SKIDPAD_LAT_MIN;
+        if (stab > 1) stab = 1;
     }
+    steerPct *= stab;
     float debug[2] = {beta_diff, stab};
     core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 

@@ -81,7 +81,7 @@ void DRS_task() {
     } else drs_status.vc_drs_condition_count = 0;
     drs_status.vc_drs_state = (drs_status.vc_drs_condition_count == DRS_ACTUATION_DELAY) && !(FaultManager_read(FAULT_STEER_IRRA | FAULT_VN_IRR | FAULT_VN_LOST));
 #endif
-    drs_status.vc_drs_state = 0;
+    //drs_status.vc_drs_state = 0;
     DRS_set_position(drs_status.vc_drs_state);
 
     // Servo ramping and overdrive

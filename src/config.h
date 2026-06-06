@@ -26,7 +26,7 @@
 /******************** POWER LIMIT ********************/
 /*****************************************************/
 #define PL_THRESHOLD 0.30f
-#define PL_MAX_POWER_W 80000
+#define PL_MAX_POWER_W 30000
 #define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_VOLT_CURRENT_LIMIT_CUTOFF 3.6f
@@ -59,7 +59,7 @@
 #define DRS_RAMP_TIME 60
 #define DRS_OVERDRIVE_TIME 50
 
-#define DRS_ACCEL_MODE_ENABLED
+//#define DRS_ACCEL_MODE_ENABLED
 #define DRS_ACCEL_VELOCITY      20
 #define DRS_ACCEL_DELAY         5
 
@@ -67,19 +67,20 @@
 #define DRS_BRAKE_THRESHOLD 0.1f
 #define DRS_STEER_THRESHOLD 0.1f
 #define DRS_LAT_ACCEL_THRESHOLD 4.5f
-#define DRS_ACTUATION_DELAY 50
+#define DRS_ACTUATION_DELAY 25
 
 /********************** CONTROLS *********************/
 /*****************************************************/
-#define REGEN_ENABLED 0
+#define REGEN_ENABLED 1
 #define RUNAWAY_TIMEOUT_MS 100
 #define RUNAWAY_PCT 1.05f
-#define RUNAWAY_OFFSET 0.02
+#define RUNAWAY_OFFSET 0.02f
 #define VN_LOST_TIMEOUT_MS 100
 #define CONTROLS_MAX_LEVEL ControlsLevel_ADVANCED
 
 #define ENDURANCE_MAX_CHARGE    39600.0f
 #define ENDURANCE_MAX_ENERGY    5.5f
+#define ENDURANCE_MAX_TEMP      55.0f
 #define ENDURANCE_DISTANCE      22500.0f
 
 #define CG_STATIC_LONG_SPLIT 0.50f
@@ -128,20 +129,25 @@
 // Torque Vectoring
 #define CS_LAT_FACTOR_ACC       0.65f
 #define CS_LONG_FACTOR_ACC      0.0f
-#define CS_LONG_SPLIT_ACC       0.5f
+#define CS_LONG_SPLIT_ACC       0.35f
 #define CS_LAT_FACTOR_BRAKE     0.25f
 #define CS_LONG_FACTOR_BRAKE    0.1f
 #define CS_LONG_SPLIT_BRAKE     0.65f
 #define CS_TOTAL_GAIN           7.0f
 #define CS_LONG_FUNC(vel)       (0.00019f*vel*vel + 0.28f)
-#define CS_LAT_FUNC(vel)        (-0.0003f*vel*vel + 0.6f)
+//#define CS_LAT_FUNC(vel)        (-0.0003f*vel*vel + 0.6f) // TODO: increase low-speed lat split
+#define CS_LAT_FUNC(vel)        (-0.00058f*vel*vel + 0.70f) // Increased zero-speed lat split with crossover at 19m/s
 //#define CS_LAT_FUNC(vel)        (-0.000f)
 #define CS_LONG_FUNC_BRAKE(vel)       (0.00023f*vel*vel + 0.5f)
 
 #define CS_SKIDPAD_LONG_SPLIT       0.3f
-#define CS_SKIDPAD_REAR_LAT_SPLIT   0.4f
-#define CS_SKIDPAD_FRONT_LAT_SPLIT  0.4f
+#define CS_SKIDPAD_REAR_LAT_SPLIT   0.45f
+#define CS_SKIDPAD_FRONT_LAT_SPLIT  0.45f
 #define CS_SKIDPAD_MAX_STEER        0.2f
+#define CS_SKIDPAD_BETA_HIGH        0.12f
+#define CS_SKIDPAD_BETA_LOW         (-0.12f)
+#define CS_SKIDPAD_BETA_RAMP        (-0.06f)
+#define CS_SKIDPAD_LAT_MIN          0.2f
 
 // Traction Control
 #define TC_SPEED_DIFF_MAX 1000
@@ -151,9 +157,9 @@
 #define TC_D_GAIN 0.005f
 #define TC_RESET_STEP 0.10f
 
-//#define CS_ENABLE_RPM_LIMIT
+#define CS_ENABLE_RPM_LIMIT
 #define CS_RPM_LIMIT_GAIN 0.002
-#define CS_RPM_LIMIT_THRESHOLD ((float)(18.5/(0.2032*2*M_PI)*12.97*60))
+#define CS_RPM_LIMIT_THRESHOLD ((float)(19/(0.2032*2*M_PI)*12.97*60))
 
 /** Inverters **/
 #define MAX_TORQUE 200
@@ -223,10 +229,11 @@
 #define DI_DOUBLE_PEDAL_RESET_PCT 0.03f
 
 //#define STEER_CENTER_ADC            1865
-#define STEER_CENTER_ADC            1889
+#define STEER_CENTER_ADC            1870
 #define HALF_STEER_RANGE_ADC        850
 #define STEER_IRRATIONAL_MAX_ADC    4000
 #define STEER_IRRATIONAL_MIN_ADC    1000
+#define STEER_RADIANS               0.3f
 
 #define DI_UPDATE_FREQ LOW_SPEED_TASK_FREQ_HZ
 #define DI_ACCEL_SOFT_DP_THRESHOLD 0.15f

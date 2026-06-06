@@ -80,6 +80,17 @@ void TorqueVectoring_skidpad(float maxTotalTorque, float *trqs) {
     if (steerPct > 1.0f) steerPct = 1.0f;
     if (steerPct < -1.0f) steerPct = -1.0f;
 
+    float stab = 1.0f;
+    float beta_diff = 0.0f;
+    if (velX.val > 5) {
+        beta_diff = atan2f(velY.val, velX.val) - atanf(tanf(STEER_RADIANS * inputs.steerPct) / 2);
+        if (beta_diff > CS_SKIDPAD_BETA_HIGH) stab = (CS_SKIDPAD_BETA_HIGH + CS_SKIDPAD_BETA_RAMP - beta_diff) * (1.0f / CS_SKIDPAD_BETA_RAMP);
+        if (beta_diff < CS_SKIDPAD_BETA_LOW) stab = (beta_diff - CS_SKIDPAD_BETA_LOW + CS_SKIDPAD_BETA_RAMP) * (1.0f / CS_SKIDPAD_BETA_RAMP);
+        if (stab < CS_SKIDPAD_LAT_MIN) stab = CS_SKIDPAD_LAT_MIN;
+    }
+    float debug[2] = {beta_diff, stab};
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
+
     if (inputs.accelPct > 0) {
         invArr[0] = maxTotalTorque * (1.0f-CS_SKIDPAD_LONG_SPLIT) * (0.5f + CS_SKIDPAD_REAR_LAT_SPLIT*steerPct);
         invArr[1] = maxTotalTorque * (1.0f-CS_SKIDPAD_LONG_SPLIT) * (0.5f - CS_SKIDPAD_REAR_LAT_SPLIT*steerPct);

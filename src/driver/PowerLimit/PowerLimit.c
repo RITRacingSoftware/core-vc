@@ -31,6 +31,8 @@ static float last_reqRgn = 0;
 
 static float distance_traveled = 0.0f;
 static float estimated_soc = 0.0f;
+static float endurance_initial_temp = 0.0f;
+static bool endurance_initial_temp_valid = false;
 
 void PowerLimit_init()
 {
@@ -49,12 +51,14 @@ void PowerLimit_init()
     core_timeout_insert(&current_timeout);
 }
 
-void PowerLimit(float reqTrq, float *limitedMaxTrq)
-{
-    float min_V = mainBus.bms_cells.bms_overview_volt_min * BMS_OVERVIEW_SCALE;
-    float max_T = mainBus.bms_cells.bms_overview_temp_max;
-    float debug[2];
+void PowerLimit_set_initial_temp() {
+    if (!endurance_initial_temp_valid) {
+        endurance_initial_temp = mainBus.bms_cells.bms_overview_temp_max*0.1f;
+        endurance_initial_temp_valid = true;
+    }
+}
 
+void PowerLimit(float reqTrq, float *limitedMaxTrq) {
     // Calculate pack voltage
     float vol[4];
     Inverters_get_voltages(vol);
@@ -62,6 +66,31 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
 
     if (packV < PACK_IRR_V) packV = mainBus.bms_status.bms_status_pack_voltage;
     
+    float amps = INST_CURRENT_SCALE * mainBus.bms_current.bms_inst_current_filt;
+    if ((amps != prev_curr) || (amps == 0)) {
+        core_timeout_reset(&current_timeout);
+        prev_curr = amps;
+    }
+    
+    // SoC and distance traveled
+    distance_traveled += sqrtf(velX.val*velX.val + velY.val*velY.val)*(0.01f/ENDURANCE_DISTANCE);
+    estimated_soc += amps*(0.01f/ENDURANCE_MAX_CHARGE);
+    mainBus.endurance_info.vc_relative_distance = (int)(65536*distance_traveled);
+    mainBus.endurance_info.vc_estimated_soc = (int)(65536*estimated_soc);
+    mainBus.endurance_info.vc_pack_temp = (int)(256*((mainBus.bms_cells.bms_overview_temp_max*0.1f - endurance_initial_temp)/(ENDURANCE_MAX_TEMP - endurance_initial_temp)));
+    mainBus.endurance_info.vc_pack_temp_valid = endurance_initial_temp_valid && (FaultManager_read(FAULT_BMS) == 0);
+
+
+    if (reqTrq >= 0) PowerLimit_deploy(reqTrq, limitedMaxTrq, packV, amps);
+    // else maxTotalTrq = reqTrq;
+    else RegenLimit(reqTrq, limitedMaxTrq, packV, amps);
+}
+
+void PowerLimit_deploy(float reqTrq, float *limitedMaxTrq, float packV, float amps) {
+    float min_V = mainBus.bms_cells.bms_overview_volt_min * BMS_OVERVIEW_SCALE;
+    float max_T = mainBus.bms_cells.bms_overview_temp_max;
+    float debug[2] = {0};
+
     // Calculate max current
 #if ENDURANCE_CURRENT_LIMIT
     float maxCurrent = PowerLimit_endurance_current_limit(min_V, max_T);
@@ -71,17 +100,8 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
 
     // float maxP = MIN((packV * maxCurrent), PL_MAX_POWER_W);
     float maxP = PL_MAX_POWER_W;
-    float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
-    if ((amps != prev_curr) || (amps == 0)) {
-        core_timeout_reset(&current_timeout);
-        prev_curr = amps;
-    }
     float currP = packV * amps; 
     
-    // SoC and distance traveled
-    distance_traveled += sqrtf(velX.val*velX.val + velY.val*velY.val)*(0.01f/ENDURANCE_DISTANCE);
-    estimated_soc += currP*(0.01f/(3.6e6f*ENDURANCE_MAX_ENERGY));
-
     //rprintf("amps: %d, currP: %d\n", (int)(amps), (int)(currP));
 
     float trqs[4];
@@ -107,10 +127,7 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq)
     test((t_val) maxCurrent);
 #endif
     last_reqRgn = 0;
-    mainBus.endurance_info.vc_relative_distance = 65536*distance_traveled;
-    mainBus.endurance_info.vc_estimated_soc = 65536*estimated_soc;
 
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 }
 
 void PowerLimit_set_prev_trq(float trq)
@@ -157,23 +174,16 @@ float PowerLimit_short_current_limit(float min_V, float max_T)
     return current_limit;
 }
 
-void RegenLimit(float reqRgn, float *limitedMaxRgn)
+void RegenLimit(float reqRgn, float *limitedMaxRgn, float packV, float amps)
 {
     float debug[2];
     float trqs[4];
     Inverters_get_torques(trqs);
     float totalTrq = (trqs[0] + trqs[1] + trqs[2] + trqs[3]) / 100;
 
-    float amps = mainBus.bms_current.bms_inst_current_filt * INST_CURRENT_SCALE;
-
     last_reqRgn -= 0.07;
     reqRgn = MAX(last_reqRgn, reqRgn);
     last_reqRgn = reqRgn;
-
-    if ((amps != prev_curr) || (amps == 0)) {
-        core_timeout_reset(&current_timeout);
-        prev_curr = amps;
-    }
 
     if (amps < (RL_THRESHOLD * MAX_REGEN_CURRENT_A))
     {

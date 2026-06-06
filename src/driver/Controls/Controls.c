@@ -25,8 +25,8 @@ static DriverInputs_s inputs;
 static ControlsLevel_e ControlsLevel = CONTROLS_MAX_LEVEL;
 
 static void update_controls_params();
-static void step_advanced(float maxTrq);
-static void step_basic(float maxTrq, bool dynamic);
+static void step_advanced(float maxTrq, float *tvTrqs);
+static void step_basic(float maxTrq, bool dynamic, float *tvTrqs);
 static void send_logging_outputs();
 static void timeout_callback();
 
@@ -34,6 +34,7 @@ static float rrPrev;
 static float rlPrev;
 static float frPrev;
 static float flPrev;
+static float trqPrev[4];
 
 vn_input_t velX = {.val=0, .p_msg=&(vn_data_raw.VelBodyX), .irrVal = VN_IRR_VEL_X, .irrCnt=0};
 vn_input_t velY = {.val=0, .p_msg=&(vn_data_raw.VelBodyY), .irrVal = VN_IRR_VEL_Y, .irrCnt=0};
@@ -118,10 +119,9 @@ void Controls_Task_Update()
     DriverInputs_get_driver_inputs(&inputs); 
     float reqTrq = inputs.accelPct * CS_TOTAL_GAIN; 
     float maxTotalTrq;
+    float tvTrqs[4];
 
-    if (reqTrq >= 0) PowerLimit(reqTrq, &maxTotalTrq);
-    // else maxTotalTrq = reqTrq;
-    else RegenLimit(reqTrq, &maxTotalTrq);
+    PowerLimit(reqTrq, &maxTotalTrq);
 
     //ControlsLevel = ControlsLevel_BASIC_VEL;
     //velX.val = 10.0f;
@@ -134,41 +134,50 @@ void Controls_Task_Update()
     switch (ControlsLevel)
     {
         case ControlsLevel_SKIDPAD: {
-            float tvTrqs[4];
             TorqueVectoring_skidpad(maxTotalTrq, tvTrqs);
-            for (int i = 0; i < 4; i++) {
-                Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-            }
-            core_timeout_reset(&runaway_timeout);
             break;
         }
 
         case ControlsLevel_ADVANCED:
-            step_advanced(maxTotalTrq); break;
+            step_advanced(maxTotalTrq, tvTrqs); break;
         
         case ControlsLevel_BASIC:
-            step_basic(maxTotalTrq, false); break;
+            step_basic(maxTotalTrq, false, tvTrqs); break;
         
         case ControlsLevel_BASIC_VEL:
-            step_basic(maxTotalTrq, true); break;
+            step_basic(maxTotalTrq, true, tvTrqs); 
+            break;
 
         case ControlsLevel_OFF: 
-            core_timeout_reset(&runaway_timeout);
-            Inverters_set_torque_request(INV_RR, (maxTotalTrq * 0.5 * (1 - CS_LONG_SPLIT_ACC)) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-            Inverters_set_torque_request(INV_RL, (maxTotalTrq * 0.5 * (1 - CS_LONG_SPLIT_ACC)) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-            Inverters_set_torque_request(INV_FR, (maxTotalTrq * 0.5 * CS_LONG_SPLIT_ACC) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-            Inverters_set_torque_request(INV_FL, (maxTotalTrq * 0.5 * CS_LONG_SPLIT_ACC) * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+            tvTrqs[0] = tvTrqs[1] = (maxTotalTrq * 0.5 * (1 - CS_LONG_SPLIT_ACC));
+            tvTrqs[2] = tvTrqs[3] = (maxTotalTrq * 0.5 * CS_LONG_SPLIT_ACC);
+            break;
+    }
+
+    // Runaway plausibility check
+    float total_torque = tvTrqs[0] + tvTrqs[1] + tvTrqs[2] + tvTrqs[3];
+    if (((maxTotalTrq >= 0) && (total_torque >= 0) && (total_torque < maxTotalTrq+RUNAWAY_OFFSET)) || 
+        ((maxTotalTrq <= 0) && (total_torque <= 0) && (total_torque > maxTotalTrq-RUNAWAY_OFFSET))) {
+        memcpy(trqPrev, tvTrqs, sizeof(trqPrev));
+        core_timeout_reset(&runaway_timeout);
+    }
+    //float debug[2];
+    //debug[0] = maxTotalTrq;
+    //debug[1] = total_torque;
+    //core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t*)debug));
+
+    for (int i = 0; i < 4; i++) {
+        Inverters_set_torque_request(i, (trqPrev[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
     }
 
     mainBus.vc_status.vc_controls_level = ControlsLevel;
     uint64_t msg = 0x69696969;
-    main_dbc_vc_endurance_info_pack((uint8_t*)(&msg), &(mainBus.endurance_info), 8);
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_ENDURANCE_INFO_FRAME_ID, 8, msg);
+    sensor_dbc_vc_endurance_info_pack((uint8_t*)(&msg), &(mainBus.endurance_info), 8);
+    core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_ENDURANCE_INFO_FRAME_ID, 8, msg);
 }
 
-static void step_basic(float maxTrq, bool dynamic)
+static void step_basic(float maxTrq, bool dynamic, float *tvTrqs)
 {
-    float tvTrqs[4];
 #ifdef CS_ENABLE_RPM_LIMIT
     // Compute minimum velocity
     float vel[4];
@@ -186,17 +195,13 @@ static void step_basic(float maxTrq, bool dynamic)
 
     //if (dynamic) TractionControl_test(velX.val, tvTrqs);
 
-    for (int i = 0; i < 4; i++) {
-        Inverters_set_torque_request(i, (tvTrqs[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-    }
-    core_timeout_reset(&runaway_timeout);
 }
 
 static int faulted = 0;
 static float fault_total = 0;
 static float fault_max = 0;
 
-static void step_advanced(float maxTrq)
+static void step_advanced(float maxTrq, float *tvTrqs)
 {
     float tvArr[4];    
     // Controls uses torque in Nm, so have to convert from %Mn to Nm. Torque is represented 0 -> 1 = 0 -> 100%.
@@ -228,30 +233,10 @@ static void step_advanced(float maxTrq)
     send_logging_outputs();
 
     // Gets torque requests in %Mn/100 format from Nm. 9.8Nm = 1
-    float flReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0] / 9.8f;
-    float rlReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1] / 9.8f;
-    float frReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2] / 9.8f;
-    float rrReqMn = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3] / 9.8f;
-    float totalTrq = flReqMn + rlReqMn + frReqMn + rrReqMn;
-    // rprintf("totalTrq: %d\n", (int)(totalTrq * 100));
-    // rprintf("%d %d %d %d\n", (int)(rrReqMn * 100), (int)(rlReqMn * 100), (int)(frReqMn * 100), (int)(flReqMn * 100));
-
-    if (fabsf(totalTrq) <= fabsf(maxTrq) * RUNAWAY_PCT) {
-        flPrev = flReqMn;
-        rlPrev = rlReqMn;
-        frPrev = frReqMn;
-        rrPrev = rrReqMn;
-        core_timeout_reset(&runaway_timeout);
-    }
-    else {
-        fault_total = totalTrq;
-        fault_max = maxTrq;
-    }
-
-    Inverters_set_torque_request(INV_FL, flPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-    Inverters_set_torque_request(INV_RL, rlPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-    Inverters_set_torque_request(INV_FR, frPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
-    Inverters_set_torque_request(INV_RR, rrPrev * 100, NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+    tvTrqs[3] = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0] / 9.8f;
+    tvTrqs[1] = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1] / 9.8f;
+    tvTrqs[2] = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2] / 9.8f;
+    tvTrqs[0] = F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3] / 9.8f;
 
     float rear[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[3], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[1]};
     float front[2] = {F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[2], F34_Torque_Vectoring_Simulink_Y.WheelTorqueRequestsNm[0]};

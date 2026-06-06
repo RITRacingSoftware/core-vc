@@ -10,6 +10,7 @@
 #include "usart.h"
 #include "rtt.h"
 #include "FaultManager.h"
+#include "PowerLimit.h"
 
 static unsigned long precharge_time;
 static VehicleState_e state;
@@ -105,6 +106,7 @@ void VehicleState_Task_Update()
 
             if (GPIO_get_RTD() && (inputs.brakePct > 0.05))
             {
+                PowerLimit_set_initial_temp();
                 new_state(VehicleState_STANDBY);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 1);
                 core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 1);

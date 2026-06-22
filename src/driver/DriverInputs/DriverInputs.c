@@ -123,6 +123,7 @@ bool DriverInputs_init()
     steer_irr_timeout.callback = timeout_callback;
     steer_irr_timeout.latching = 0;
     steer_irr_timeout.single_shot = 0;
+    core_timeout_insert(&steer_irr_timeout);
 
     /************************************************/
 }

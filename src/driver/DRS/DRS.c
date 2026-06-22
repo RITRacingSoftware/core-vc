@@ -64,17 +64,17 @@ void DRS_set_position(bool open) {
 void DRS_task() {
     uint64_t msg;
     DriverInputs_s di;
+    DriverInputs_get_driver_inputs(&di);
     // Determine DRS position
 #ifdef DRS_ACCEL_MODE_ENABLED
-    if (velX.val > DRS_ACCEL_VELOCITY) {
+    if ((velX.val > DRS_ACCEL_VELOCITY) && (di.accelPct > DRS_ACCEL_THROTTLE)) {
         if (drs_status.vc_drs_condition_count < DRS_ACCEL_DELAY) {
             drs_status.vc_drs_condition_count++;
         }
     } else drs_status.vc_drs_condition_count = 0;
     drs_status.vc_drs_state = (drs_status.vc_drs_condition_count == DRS_ACCEL_DELAY) && !(FaultManager_read(FAULT_VN_IRR | FAULT_VN_LOST));
 #else
-    DriverInputs_get_driver_inputs(&di);
-    if ((di.accelPct > DRS_ACCEL_THRESHOLD) && (di.brakePct < DRS_BRAKE_THRESHOLD) && (fabsf(di.steerPct) < DRS_STEER_THRESHOLD) /*&& (fabsf(accelY.val) < DRS_LAT_ACCEL_THRESHOLD)*/) {
+    if ((di.accelPct > DRS_THROTTLE_THRESHOLD) && (di.brakePct < DRS_BRAKE_THRESHOLD) && (fabsf(di.steerPct) < DRS_STEER_THRESHOLD) /*&& (fabsf(accelY.val) < DRS_LAT_ACCEL_THRESHOLD)*/) {
         if (drs_status.vc_drs_condition_count < DRS_ACTUATION_DELAY) {
             drs_status.vc_drs_condition_count++;
         }

@@ -26,7 +26,7 @@
 /******************** POWER LIMIT ********************/
 /*****************************************************/
 #define PL_THRESHOLD 0.30f
-#define PL_MAX_POWER_W 80000
+#define PL_MAX_POWER_W 30000
 #define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_VOLT_CURRENT_LIMIT_CUTOFF 3.6f
@@ -48,7 +48,7 @@
 /************************ DRS ************************/
 /*****************************************************/
 #define DRS_ENABLED
-#define DRS_FORCE_CLOSED
+//#define DRS_FORCE_CLOSED
 #define DRS_SERVO1_CLOSED 3325
 #define DRS_SERVO1_OPEN 5050
 #define DRS_SERVO1_CLOSED_OVERDRIVE (-125)
@@ -61,10 +61,11 @@
 #define DRS_OVERDRIVE_TIME 50
 
 //#define DRS_ACCEL_MODE_ENABLED
-#define DRS_ACCEL_VELOCITY      20
+#define DRS_ACCEL_VELOCITY      18
+#define DRS_ACCEL_THROTTLE      0.5f
 #define DRS_ACCEL_DELAY         5
 
-#define DRS_ACCEL_THRESHOLD 0.5f
+#define DRS_THROTTLE_THRESHOLD 0.5f
 #define DRS_BRAKE_THRESHOLD 0.1f
 #define DRS_STEER_THRESHOLD 0.1f
 #define DRS_LAT_ACCEL_THRESHOLD 4.5f
@@ -77,7 +78,9 @@
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02f
 #define VN_LOST_TIMEOUT_MS 100
-#define CONTROLS_MAX_LEVEL ControlsLevel_SKIDPAD
+#define CONTROLS_MAX_LEVEL ControlsLevel_BASIC_VEL
+// Scale factor for median wheel speed
+#define ESTIMATED_VELOCITY_SCALE 0.99f
 
 #define ENDURANCE_MAX_CHARGE    39600.0f
 #define ENDURANCE_MAX_ENERGY    5.5f
@@ -96,8 +99,8 @@
 #define CG_TC_FX_REAR               1050.0f
 #define CG_TC_FX_FRONT              350.0f
 #define CG_TC_N_SLIP_RATIO          1
-#define CG_TARGET_SR_NOMINAL_REAR   0.18f
-#define CG_TARGET_SR_NOMINAL_FRONT  0.15f
+#define CG_TARGET_SR_NOMINAL_REAR   100.0f
+#define CG_TARGET_SR_NOMINAL_FRONT  100.0f
 #define CG_TARGET_SR_AX_MIN         0.1f
 #define CG_TARGET_SR_AY_MIN         0.1f
 #define CG_TARGET_SR_MAX            0.22f
@@ -110,7 +113,7 @@
 #define CG_KD_SLIP_RATIO            (0.00125f)
 #define CG_TC_ACTIVATION_THRESHOLD  0.0f
 #define CG_LC_PRELOAD               0.35f
-#define CG_LC_TMAX                  55.0f
+#define CG_LC_TMAX                  67.0f
 #define CG_LC_WDOT_MAX              1000.0f
 #define CG_LC_TBLEND1               0.05f
 #define CG_LC_TBLEND2               0.2f
@@ -138,6 +141,8 @@
 #define CS_LONG_FUNC(vel)       (0.00019f*vel*vel + 0.28f)
 //#define CS_LAT_FUNC(vel)        (-0.0003f*vel*vel + 0.6f) // TODO: increase low-speed lat split
 #define CS_LAT_FUNC(vel)        (-0.00058f*vel*vel + 0.70f) // Increased zero-speed lat split with crossover at 19m/s
+                                                            // Increased baseline from 0.7 to 0.75 for Hunter autocross
+                                                            // Returned to 0.7 after last endurance
 //#define CS_LAT_FUNC(vel)        (-0.000f)
 #define CS_LONG_FUNC_BRAKE(vel)       (0.00023f*vel*vel + 0.5f)
 
@@ -145,6 +150,8 @@
 #define CS_SKIDPAD_REAR_LAT_SPLIT   0.45f
 #define CS_SKIDPAD_FRONT_LAT_SPLIT  0.45f
 #define CS_SKIDPAD_MAX_STEER        0.2f
+
+#define CS_SKIDPAD_BODY_SLIP_CONTROLLER_ENABLED
 #define CS_SKIDPAD_BETA_HIGH        0.18f
 #define CS_SKIDPAD_BETA_LOW         (-0.18f)
 #define CS_SKIDPAD_BETA_RAMP        (0.06f)
@@ -158,12 +165,18 @@
 #define TC_D_GAIN 0.005f
 #define TC_RESET_STEP 0.10f
 
-//#define CS_ENABLE_RPM_LIMIT
-#define CS_RPM_LIMIT_GAIN 0.002
-#define CS_RPM_LIMIT_THRESHOLD ((float)(19/(0.2032*2*M_PI)*12.97*60))
+//#define CS_ENABLE_VELOCITY_LIMIT
+#define CS_VELOCITY_LIMIT_GAIN 1.22f
+#define CS_VELOCITY_LIMIT_THRESHOLD 19.0f
+#define CS_ENABLE_ENDURANCE_MODE
+#define CS_ENABLE_DYNAMIC_VELOCITY_LIMIT
+#define CS_DYNAMIC_VELOCITY_LIMIT_GAIN      25.0f
+#define CS_DYNAMIC_VELOCITY_LIMIT_NOMINAL   19.0f
+#define CS_DYNAMIC_VELOCITY_LIMIT_MIN       17.0f
+#define CS_DYNAMIC_VELOCITY_LIMIT_MAX       23.0f
 
 /** Inverters **/
-#define MAX_TORQUE 200
+#define MAX_TORQUE 214
 #define POS_TORQUE_LIMIT (MAX_TORQUE)
 #define NEG_TORQUE_LIMIT (-MAX_TORQUE)
 #define INV_CAN_TIMEOUT_MS 300
@@ -233,7 +246,7 @@
 #define STEER_CENTER_ADC            1870
 #define HALF_STEER_RANGE_ADC        850
 #define STEER_IRRATIONAL_MAX_ADC    4000
-#define STEER_IRRATIONAL_MIN_ADC    1000
+#define STEER_IRRATIONAL_MIN_ADC    100
 #define STEER_RADIANS               0.3f
 
 #define DI_UPDATE_FREQ LOW_SPEED_TASK_FREQ_HZ

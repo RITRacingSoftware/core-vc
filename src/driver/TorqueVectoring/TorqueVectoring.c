@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include "TorqueVectoring.h"
+#include "vectornav.h"
 #include "config.h"
 #include "common_macros.h"
 #include "Inverters.h"
@@ -34,11 +35,14 @@ void TorqueVectoring(float maxTotalTorque, float *trqs, bool dynamic)
     steerPct = inputs.steerPct;
     brakePct = inputs.brakePct;
 
+    //float vel = (((vn_data_raw.InsStatus & 0x03) == 2) ? velX.val : Controls_estimated_velX);
+    float vel = Controls_estimated_velX;
+
     // Case: Acceleration with no braking
     if (accelPct > 0) {
         if (dynamic) {
-            lat_factor = CS_LAT_FUNC(velX.val);
-            long_split = CS_LONG_FUNC(velX.val);
+            lat_factor = CS_LAT_FUNC(vel);
+            long_split = CS_LONG_FUNC(vel);
         } else {
             lat_factor = CS_LAT_FACTOR_ACC;
             long_split = CS_LONG_SPLIT_ACC;
@@ -52,8 +56,8 @@ void TorqueVectoring(float maxTotalTorque, float *trqs, bool dynamic)
     // Case: Regen braking
     else if (accelPct < 0 && REGEN_ENABLED) {
         if (dynamic) {
-            lat_factor = CS_LAT_FUNC(velX.val);
-            long_split = CS_LONG_FUNC_BRAKE(velX.val);
+            lat_factor = CS_LAT_FUNC(vel);
+            long_split = CS_LONG_FUNC_BRAKE(vel);
         } else {
             lat_factor = CS_LAT_FACTOR_BRAKE;
             long_split = CS_LONG_SPLIT_BRAKE;
@@ -80,6 +84,7 @@ void TorqueVectoring_skidpad(float maxTotalTorque, float *trqs) {
     if (steerPct > 1.0f) steerPct = 1.0f;
     if (steerPct < -1.0f) steerPct = -1.0f;
 
+#ifdef CS_SKIDPAD_BODY_SLIP_CONTROLLER_ENABLED
     float stab = 1.0f;
     float beta_diff = 0.0f;
     if (velX.val > 5) {
@@ -90,8 +95,8 @@ void TorqueVectoring_skidpad(float maxTotalTorque, float *trqs) {
         if (stab > 1) stab = 1;
     }
     steerPct *= stab;
-    float debug[2] = {beta_diff, stab};
-    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
+    //float debug[2] = {beta_diff, stab};
+#endif
 
     if (inputs.accelPct > 0) {
         invArr[0] = maxTotalTorque * (1.0f-CS_SKIDPAD_LONG_SPLIT) * (0.5f + CS_SKIDPAD_REAR_LAT_SPLIT*steerPct);

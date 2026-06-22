@@ -513,7 +513,7 @@ static void check_errors()
                 errorCode == INV_OVER_CURRENT_ERROR) Inverters_set_state(inv, InvState_RESETTING);
             else {
                 rprintf("Error state %d: %d\n", inv, errorCode);
-                Inverters_set_state(inv, InvState_HARD_FAULT);
+                Inverters_set_state(inv, InvState_RESETTING);
             }
 
         }

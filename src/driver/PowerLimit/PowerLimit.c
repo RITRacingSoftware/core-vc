@@ -49,6 +49,11 @@ void PowerLimit_init()
     current_timeout.latching = 0;
     current_timeout.single_shot = 0;
     core_timeout_insert(&current_timeout);
+#ifdef CS_ENABLE_ENDURANCE_MODE
+    mainBus.endurance_info.vc_endurance_mode = 1;
+#else
+    mainBus.endurance_info.vc_endurance_mode = 0;
+#endif
 }
 
 void PowerLimit_set_initial_temp() {
@@ -73,12 +78,28 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq) {
     }
     
     // SoC and distance traveled
-    distance_traveled += sqrtf(velX.val*velX.val + velY.val*velY.val)*(0.01f/ENDURANCE_DISTANCE);
+    //distance_traveled += sqrtf(velX.val*velX.val + velY.val*velY.val)*(0.01f/ENDURANCE_DISTANCE);
+    distance_traveled += Controls_estimated_velX*(0.01f/ENDURANCE_DISTANCE);
     estimated_soc += amps*(0.01f/ENDURANCE_MAX_CHARGE);
-    mainBus.endurance_info.vc_relative_distance = (int)(65536*distance_traveled);
-    mainBus.endurance_info.vc_estimated_soc = (int)(65536*estimated_soc);
-    mainBus.endurance_info.vc_pack_temp = (int)(256*((mainBus.bms_cells.bms_overview_temp_max*0.1f - endurance_initial_temp)/(ENDURANCE_MAX_TEMP - endurance_initial_temp)));
+    float cell_frac = ((mainBus.bms_cells.bms_overview_temp_max*0.1f - endurance_initial_temp)/(ENDURANCE_MAX_TEMP - endurance_initial_temp));
+    int temp;
+    temp = (int)(65536*distance_traveled);
+    mainBus.endurance_info.vc_relative_distance = (temp < 0 ? 0 : (temp > 65535 ? 65535 : temp));
+    temp = (int)(65536*estimated_soc);
+    mainBus.endurance_info.vc_estimated_soc = (temp < 0 ? 0 : (temp > 65535 ? 65535 : temp));
+    temp = (int)(256*cell_frac);
+    mainBus.endurance_info.vc_pack_temp = (temp < 0 ? 0 : (temp > 255 ? 255 : temp));
     mainBus.endurance_info.vc_pack_temp_valid = endurance_initial_temp_valid && (FaultManager_read(FAULT_BMS) == 0);
+
+#ifdef CS_ENABLE_DYNAMIC_VELOCITY_LIMIT
+    float delta = estimated_soc;
+    if (mainBus.endurance_info.vc_pack_temp_valid && (cell_frac > delta)) delta = cell_frac;
+    delta = distance_traveled - cell_frac;
+    Controls_velocity_limit = CS_DYNAMIC_VELOCITY_LIMIT_NOMINAL + CS_DYNAMIC_VELOCITY_LIMIT_GAIN * delta;
+    if (Controls_velocity_limit > CS_DYNAMIC_VELOCITY_LIMIT_MAX) Controls_velocity_limit = CS_DYNAMIC_VELOCITY_LIMIT_MAX;
+    if (Controls_velocity_limit < CS_DYNAMIC_VELOCITY_LIMIT_MIN) Controls_velocity_limit = CS_DYNAMIC_VELOCITY_LIMIT_MIN;
+    mainBus.endurance_info.vc_velocity_limit = (int)(Controls_velocity_limit*100);
+#endif
 
 
     if (reqTrq >= 0) PowerLimit_deploy(reqTrq, limitedMaxTrq, packV, amps);
@@ -123,6 +144,7 @@ void PowerLimit_deploy(float reqTrq, float *limitedMaxTrq, float packV, float am
             ramp.target = 0;
         }
     }
+    core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t *)debug));
 #ifdef VC_TEST
     test((t_val) maxCurrent);
 #endif

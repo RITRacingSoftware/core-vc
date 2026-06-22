@@ -31,6 +31,8 @@ extern vn_input_t accelX;
 extern vn_input_t accelY;
 extern vn_input_t yaw;
 
+extern float Controls_estimated_velX, Controls_velocity_limit;
+
 void Controls_init();
 void Controls_Task_Update();
 void Controls_set_max_level(ControlsLevel_e l);

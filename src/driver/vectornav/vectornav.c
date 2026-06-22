@@ -172,7 +172,7 @@ static const uint8_t imu_group_sizes[] = {15, 10, 12, 16, 9, 11, 16};
   */
 static const uint32_t imu_offsets[] = {
     // common
-    MEMBER_OFFSET(TimeStartup), MEMBER_OFFSET(TimeGps), MEMBER_OFFSET(TimeSyncIn), MEMBER_OFFSET(YprY), 0, MEMBER_OFFSET(AngularRateX), MEMBER_OFFSET(PosLlaL), MEMBER_OFFSET(VelNedN), MEMBER_OFFSET(AccelX), 0, 0, 0, 0, 0, 0,
+    MEMBER_OFFSET(TimeStartup), MEMBER_OFFSET(TimeGps), MEMBER_OFFSET(TimeSyncIn), MEMBER_OFFSET(YprY), 0, MEMBER_OFFSET(AngularRateX), MEMBER_OFFSET(PosLlaL), MEMBER_OFFSET(VelNedN), MEMBER_OFFSET(AccelX), 0, 0, 0, MEMBER_OFFSET(InsStatus), MEMBER_OFFSET(SyncInCnt), MEMBER_OFFSET(TimeGpsPps),
     // time
     MEMBER_OFFSET(TimeStartup), MEMBER_OFFSET(TimeGps), MEMBER_OFFSET(GpsTow), MEMBER_OFFSET(GpsWeek), MEMBER_OFFSET(TimeSyncIn), MEMBER_OFFSET(TimeGpsPps), MEMBER_OFFSET(TimeUtc), MEMBER_OFFSET(SyncInCnt), MEMBER_OFFSET(SyncOutCnt), MEMBER_OFFSET(TimeStatus),
     // imu
@@ -193,7 +193,7 @@ static const uint32_t imu_offsets[] = {
   */
 static const uint8_t imu_lengths[] = {
     // common
-    8, 8, 8, 12, 16, 12, 24, 12, 12, 24, 20, 28, 2, 4, 8,
+    8, 8, 8, 12, 0, 12, 24, 12, 12, 0, 0, 0, 2, 4, 8,
     // time
     8, 8, 8, 2, 8, 8, 8, 4, 4, 1,
     // imu
@@ -284,6 +284,8 @@ void vectornav_handler(uint8_t *rxbuf, uint32_t rxbuflen) {
     vectornav_packets++;
     if (vectornav_parse(rxbuf, rxbuflen, &vn_data_raw)) {
         if (!Controls_update_vn()) core_timeout_resume(&vn_timeout);
+        if ((vn_data_raw.InsStatus & 0x03) != 2) FaultManager_set(FAULT_VN_NO_LOCK);
+        else FaultManager_reset(FAULT_VN_NO_LOCK);
     } else vectornav_errors++;
 }
 

@@ -44,6 +44,8 @@ vn_input_t accelY = {.val=0, .p_msg=&(vn_data_raw.AccelY), .irrVal = VN_IRR_ACCE
 vn_input_t yaw = {.val=0, .p_msg=&(vn_data_raw.YprY), .irrVal = VN_IRR_YAW, .irrCnt=0};
 vn_input_t *vnIns[NUM_VN_INPUTS] = {&velX, &velY, &angRateZ, &accelX, &accelY, &yaw};
 
+float Controls_estimated_velX, Controls_velocity_limit = CS_DYNAMIC_VELOCITY_LIMIT_NOMINAL;
+
 core_timeout_t runaway_timeout;
 
 static const TCParams tc_params = {
@@ -121,13 +123,37 @@ void Controls_Task_Update()
     float maxTotalTrq;
     float tvTrqs[4];
 
+    // Compute estimated velocity
+    float vels[4], temp;
+    Inverters_get_velocities_codegen(vels);
+    for (uint8_t i=3; i > 0; i--) {
+        for (uint8_t j=0; j < i; j++) {
+            if (vels[j]>vels[j+1]) {
+                temp = vels[j]; vels[j]=vels[j+1]; vels[j+1]=temp;
+            }
+        }
+    }
+    Controls_estimated_velX = (vels[1] + vels[2]) * ((float)(2*M_PI*VEHICLE_TIRE_SIZE/60.0f/VEHICLE_RATIO/2.0f * ESTIMATED_VELOCITY_SCALE));
+
+    // Apply power limit and compute endurance info
     PowerLimit(reqTrq, &maxTotalTrq);
+
+    // Apply velocity limit
+#ifdef CS_ENABLE_VELOCITY_LIMIT
+#ifdef CS_ENABLE_DYNAMIC_VELOCITY_LIMIT
+    float vel_max_trq = CS_VELOCITY_LIMIT_GAIN * (Controls_velocity_limit - Controls_estimated_velX);
+#else
+    float vel_max_trq = CS_VELOCITY_LIMIT_GAIN * (CS_VELOCITY_LIMIT_THRESHOLD - Controls_estimated_velX);
+#endif
+    if (vel_max_trq < 0) vel_max_trq = 0;
+    if (maxTotalTrq > vel_max_trq) maxTotalTrq = vel_max_trq;
+#endif
 
     //ControlsLevel = ControlsLevel_BASIC_VEL;
     //velX.val = 10.0f;
-    if (FaultManager_read(FAULT_VN_LOST | FAULT_VN_IRR) && ((ControlsLevel == ControlsLevel_ADVANCED) || (ControlsLevel == ControlsLevel_BASIC_VEL))) {
-        ControlsLevel = ControlsLevel_BASIC;
-    }
+    /*if (FaultManager_read(FAULT_VN_LOST | FAULT_VN_IRR | FAULT_VN_NO_LOCK)) {
+        if (ControlsLevel == ControlsLevel_ADVANCED) ControlsLevel = ControlsLevel_BASIC_VEL;
+    } else if (CONTROLS_MAX_LEVEL == ControlsLevel_ADVANCED) ControlsLevel = ControlsLevel_ADVANCED;*/
     if (FaultManager_read(FAULT_STEER_IRRA)) {
         ControlsLevel = ControlsLevel_OFF;
     }
@@ -149,8 +175,13 @@ void Controls_Task_Update()
             break;
 
         case ControlsLevel_OFF: 
-            tvTrqs[0] = tvTrqs[1] = (maxTotalTrq * 0.5 * (1 - CS_LONG_SPLIT_ACC));
-            tvTrqs[2] = tvTrqs[3] = (maxTotalTrq * 0.5 * CS_LONG_SPLIT_ACC);
+            if (maxTotalTrq > 0) {
+                tvTrqs[0] = tvTrqs[1] = (maxTotalTrq * 0.5 * (1 - CS_LONG_SPLIT_ACC));
+                tvTrqs[2] = tvTrqs[3] = (maxTotalTrq * 0.5 * CS_LONG_SPLIT_ACC);
+            } else {
+                tvTrqs[0] = tvTrqs[1] = (maxTotalTrq * 0.5 * (1 - CS_LONG_SPLIT_BRAKE));
+                tvTrqs[2] = tvTrqs[3] = (maxTotalTrq * 0.5 * CS_LONG_SPLIT_BRAKE);
+            }
             break;
     }
 
@@ -178,19 +209,6 @@ void Controls_Task_Update()
 
 static void step_basic(float maxTrq, bool dynamic, float *tvTrqs)
 {
-#ifdef CS_ENABLE_RPM_LIMIT
-    // Compute minimum velocity
-    float vel[4];
-    Inverters_get_velocities_codegen(vel);
-    float min_vel = vel[0];
-    for (uint8_t i=1; i < 4; i++) {
-        if (vel[i] < min_vel) min_vel = vel[i];
-    }
-    float vel_max_trq = CS_RPM_LIMIT_GAIN * (CS_RPM_LIMIT_THRESHOLD - min_vel);
-    if (vel_max_trq < 0) vel_max_trq = 0;
-    if (maxTrq > vel_max_trq) maxTrq = vel_max_trq;
-#endif
-
     TorqueVectoring(maxTrq, tvTrqs, dynamic);
 
     //if (dynamic) TractionControl_test(velX.val, tvTrqs);
@@ -210,18 +228,7 @@ static void step_advanced(float maxTrq, float *tvTrqs)
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Launch_Button = mainBus.dash_buttons & 0x01;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.dt_loop = 0.01f;
     update_controls_params();
-#ifdef CS_ENABLE_RPM_LIMIT
-    // Compute minimum velocity
-    float min_vel = F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[0];
-    for (uint8_t i=1; i < 4; i++) {
-        if (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[i] < min_vel) {
-            min_vel = F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[i];
-        }
-    }
-    float vel_max_trq = CS_RPM_LIMIT_GAIN * (CS_RPM_LIMIT_THRESHOLD - min_vel);
-    if (vel_max_trq < 0) vel_max_trq = 0;
-    if (maxTrq > vel_max_trq) maxTrq = vel_max_trq;
-#endif
+    
     TorqueVectoring(maxTrq, tvArr, true);
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[0] = tvArr[3] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[1] = tvArr[1] * 9.8f;

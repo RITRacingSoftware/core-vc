@@ -10,7 +10,8 @@ typedef enum
     VehicleState_WAIT, // Wait for enable button to be pressed
     VehicleState_STANDBY, // Send inverter enable and on, receive inverter on echos and confirmation, set BE2
     VehicleState_RTD, // Actively running, send torque request every 200ms. Wait for stop button
-    VehicleState_SHUTDOWN // Turn off everything in sequence
+    VehicleState_SHUTDOWN, // Turn off everything in sequence
+    VehicleState_RTD_AS
 } VehicleState_e;
 
 void VehicleState_init();

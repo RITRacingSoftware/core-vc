@@ -11,6 +11,7 @@
 #include "rtt.h"
 #include "FaultManager.h"
 #include "PowerLimit.h"
+#include "driverless.h"
 
 static unsigned long precharge_time;
 static VehicleState_e state;
@@ -104,7 +105,11 @@ void VehicleState_Task_Update()
             Inverters_set_torque_request(INV_FR, 0, 0, 0);
             Inverters_set_torque_request(INV_FL, 0, 0, 0);
 
+#ifdef DRIVERLESS_ENABLED
+            if ((GPIO_get_ASMS() ? mainBus.rss_pdo.rss_k3 : GPIO_get_RTD()) && (inputs.brakePct > 0.05))
+#else
             if (GPIO_get_RTD() && (inputs.brakePct > 0.05))
+#endif
             {
                 PowerLimit_set_initial_temp();
                 new_state(VehicleState_STANDBY);
@@ -132,11 +137,21 @@ void VehicleState_Task_Update()
             // X140 binary input BE2 = 1
             GPIO_set_activate_inv_relays(true);
 
+#ifdef DRIVERLESS_ENABLED
+            if (GPIO_get_ASMS()) new_state(VehicleState_RTD_AS);
+            else new_state(VehicleState_RTD);
+#else
             new_state(VehicleState_RTD);
+#endif
             break;
 
         case VehicleState_RTD:
             break;
+
+#ifdef DRIVERLESS_ENABLED
+        case VehicleState_RTD_AS:
+            break;
+#endif
 
         case VehicleState_SHUTDOWN: 
             core_GPIO_digital_write(SENSOR_LED_PORT, SENSOR_LED_PIN, true);
@@ -182,6 +197,8 @@ void VehicleState_Task_Update()
             }
             break;
     }
+
+    driverless_state_update();
 
     mainBus.vc_status.vc_status_vehicle_state = state;
     uint64_t msg;

@@ -30,9 +30,9 @@ typedef struct
     struct main_dbc_bms_cell_overview_t bms_cells;
 
     // Sent by VC
-    struct main_dbc_vc_rtds_request_t rtds_request;
-    struct main_dbc_vc_processed_inputs_t processed_inputs;
-    struct main_dbc_vc_pedal_inputs_raw_t pedal_inputs_raw;
+    struct main_dbc_vc_rtds_request_d rtds_request;
+    struct main_dbc_vc_processed_inputs_d processed_inputs;
+    struct main_dbc_vc_pedal_inputs_raw_d pedal_inputs_raw;
     struct main_dbc_vc_status_t vc_status;
     struct main_dbc_vc_inverter_status_t inverter_status;
     struct main_dbc_vc_controls_out1_t controls_out1;

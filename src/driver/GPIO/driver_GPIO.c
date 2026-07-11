@@ -1,7 +1,7 @@
-#include "driver_GPIO.h"
+#include "driver_GPIO.h" 
 #include "Inverters.h"
 #include "config.h"
-#include "gpio.h"
+#include "../../../../core/src/driver/Inc/gpio.h"
 
 static uint8_t RTD_counter;
 static bool RTD_state;

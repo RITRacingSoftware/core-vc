@@ -18,16 +18,16 @@
 typedef struct
 {
     // Received by VC 
-    struct main_dbc_bms_fault_vector_t bms_fault_vector;
-    struct main_dbc_bms_status_t bms_status;
+    struct main_dbc_bms_fault_vector_d bms_fault_vector;
+    struct main_dbc_bms_status_d bms_status;
     // struct main_dbc_bms_current_limit_t bms_current_limit;
-    struct main_dbc_ssdb_front_t ssdb_front;
-    struct main_dbc_vector_nav0_t vn0;
-    struct main_dbc_vector_nav2_t vn2; 
-    struct main_dbc_vector_nav6_t vn6;
-    struct main_dbc_vector_nav7_t vn7;
-    struct main_dbc_bms_current_t bms_current;
-    struct main_dbc_bms_cell_overview_t bms_cells;
+    struct main_dbc_ssdb_front_d ssdb_front;
+    struct main_dbc_vector_nav0_d vn0;
+    struct main_dbc_vector_nav2_d vn2; 
+    struct main_dbc_vector_nav6_d vn6;
+    struct main_dbc_vector_nav7_d vn7;
+    struct main_dbc_bms_current_d bms_current;
+    struct main_dbc_bms_cell_overview_d bms_cells;
 
     // Sent by VC
     struct main_dbc_vc_rtds_request_d rtds_request;
@@ -35,14 +35,14 @@ typedef struct
     struct main_dbc_vc_pedal_inputs_raw_d pedal_inputs_raw;
     struct main_dbc_vc_status_t vc_status;
     struct main_dbc_vc_inverter_status_t inverter_status;
-    struct main_dbc_vc_controls_out1_t controls_out1;
-    struct main_dbc_vc_controls_out2_t controls_out2;
-    struct main_dbc_vc_controls_out3_t controls_out3;
-    struct main_dbc_vc_controls_out4_t controls_out4;
-    struct main_dbc_vc_controls_constants1_t controls_const1;
-    struct main_dbc_vc_controls_constants2_t controls_const2;
-    struct main_dbc_vc_target_wheel_speeds_t target_wheel_speeds;
-    struct sensor_dbc_vc_endurance_info_t endurance_info;
+    struct main_dbc_vc_controls_out1_d controls_out1;
+    struct main_dbc_vc_controls_out2_d controls_out2;
+    struct main_dbc_vc_controls_out3_d controls_out3;
+    struct main_dbc_vc_controls_out4_d controls_out4;
+    struct main_dbc_vc_controls_constants1_d controls_const1;
+    struct main_dbc_vc_controls_constants2_d controls_const2;
+    struct main_dbc_vc_target_wheel_speeds_d target_wheel_speeds;
+    struct sensor_dbc_vc_endurance_info_d endurance_info;
     int16_t motor_temps[4];
     int16_t inverter_temps[4];
     uint8_t dash_buttons;

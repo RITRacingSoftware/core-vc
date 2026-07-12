@@ -98,7 +98,7 @@ void PowerLimit(float reqTrq, float *limitedMaxTrq) {
     Controls_velocity_limit = CS_DYNAMIC_VELOCITY_LIMIT_NOMINAL + CS_DYNAMIC_VELOCITY_LIMIT_GAIN * delta;
     if (Controls_velocity_limit > CS_DYNAMIC_VELOCITY_LIMIT_MAX) Controls_velocity_limit = CS_DYNAMIC_VELOCITY_LIMIT_MAX;
     if (Controls_velocity_limit < CS_DYNAMIC_VELOCITY_LIMIT_MIN) Controls_velocity_limit = CS_DYNAMIC_VELOCITY_LIMIT_MIN;
-    mainBus.endurance_info.vc_velocity_limit = (int)(Controls_velocity_limit*100);
+    //mainBus.endurance_info.vc_velocity_limit = (int)(Controls_velocity_limit*100);
 #endif
 
 

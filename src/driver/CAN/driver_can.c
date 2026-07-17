@@ -90,11 +90,13 @@ bool CAN_init()
     return true;
 }
 
+
 bool CAN_tx_main()
 {
     core_CAN_send_from_tx_queue_task(CAN_MAIN);
     return false;
 }
+
 
 bool CAN_tx_sense()
 {
@@ -120,40 +122,40 @@ void CAN_rx_main()
         switch (id)
         {
             case MAIN_DBC_BMS_FAULT_VECTOR_FRAME_ID:
-                main_dbc_bms_fault_vector_unpack(&mainBus.bms_fault_vector, (uint8_t *) &canMessage.data, canMessage.dlc);
+                main_dbc_bms_fault_vector_full_decode(&mainBus.bms_fault_vector, (uint8_t *) &canMessage.data, canMessage.dlc);
                 if (canMessage.data & (~(1<<12))) FaultManager_set(FAULT_BMS);
                 break;
 
             case MAIN_DBC_BMS_STATUS_FRAME_ID:
-                main_dbc_bms_status_unpack(&mainBus.bms_status, (uint8_t *) &canMessage.data, canMessage.dlc);
+                main_dbc_bms_status_full_decode(&mainBus.bms_status, (uint8_t *) &canMessage.data, canMessage.dlc);
                 mainBus.bms_status.bms_status_pack_voltage *= PACK_VOLTAGE_SCALE; break;
 
             // case MAIN_DBC_BMS_CURRENT_LIMIT_FRAME_ID:
                 // main_dbc_bms_current_limit_unpack(&mainBus.bms_current_limit, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_BMS_CURRENT_FRAME_ID:
-                main_dbc_bms_current_unpack(&mainBus.bms_current, (uint8_t *) &canMessage.data, canMessage.dlc);
+                main_dbc_bms_current_full_decode(&mainBus.bms_current, (uint8_t *) &canMessage.data, canMessage.dlc);
                 core_CAN_add_message_to_tx_queue(CAN_MAIN, 7, 8, mainBus.bms_current.bms_inst_current_filt);
                 break;
 
             case MAIN_DBC_SSDB_FRONT_FRAME_ID:
                 //core_timeout_reset(&fssdb_lost_timeout);
-                main_dbc_ssdb_front_unpack(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, 8); break;
+                main_dbc_ssdb_front_full_decode(&mainBus.ssdb_front, (uint8_t *) &canMessage.data, 8); break;
 
             case MAIN_DBC_VECTOR_NAV0_FRAME_ID:
-                main_dbc_vector_nav0_unpack(&mainBus.vn0, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+                main_dbc_vector_nav0_full_decode(&mainBus.vn0, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_VECTOR_NAV2_FRAME_ID:
-                main_dbc_vector_nav2_unpack(&mainBus.vn2, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+                main_dbc_vector_nav2_full_decode(&mainBus.vn2, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_VECTOR_NAV6_FRAME_ID:
-                main_dbc_vector_nav6_unpack(&mainBus.vn6, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+                main_dbc_vector_nav6_full_decode(&mainBus.vn6, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_VECTOR_NAV7_FRAME_ID:
-                main_dbc_vector_nav7_unpack(&mainBus.vn7, (uint8_t *) &canMessage.data, canMessage.dlc); break;
+                main_dbc_vector_nav7_full_decode(&mainBus.vn7, (uint8_t *) &canMessage.data, canMessage.dlc); break;
 
             case MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID:
-                main_dbc_bms_cell_overview_unpack(&mainBus.bms_cells, (uint8_t *) &canMessage.data, canMessage.dlc);
+                main_dbc_bms_cell_overview_full_decode(&mainBus.bms_cells, (uint8_t *) &canMessage.data, canMessage.dlc);
                 break;
 
             case 510:
@@ -264,11 +266,11 @@ static void send_controls_params()
     mainBus.controls_const2.vc_k_f_yaw_rate = main_dbc_vc_controls_constants2_vc_k_f_yaw_rate_encode(CG_KF_YAW_RATE);
 
     uint64_t msg;
-    main_dbc_vc_controls_constants1_pack((uint8_t *)&msg, &mainBus.controls_const1, 8);
+    main_dbc_vc_controls_constants1_full_encode((uint8_t *)&msg, &mainBus.controls_const1, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_CONSTANTS1_FRAME_ID, 8, msg);
 
     msg = 0;
-    main_dbc_vc_controls_constants2_pack((uint8_t *)&msg, &mainBus.controls_const2, 8);
+    main_dbc_vc_controls_constants2_full_encode((uint8_t *)&msg, &mainBus.controls_const2, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_CONSTANTS2_FRAME_ID, 8, msg);
 
 

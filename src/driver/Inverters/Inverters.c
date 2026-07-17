@@ -153,8 +153,8 @@ void Inverters_set_inv_on(bool val) {
 void Inverters_set_torque_request(uint8_t invNum, float reqSetpoint, float negLimit, float posLimit)
 {
     invArr[invNum]->req_setpoint = (reqSetpoint < MAX_TORQUE) ? reqSetpoint : MAX_TORQUE; 
-    invArr[invNum]->setpoints.torque_limit_negative = inverter_dbc_setpoints_torque_limit_negative_encode(negLimit);
-    invArr[invNum]->setpoints.torque_limit_positive = inverter_dbc_setpoints_torque_limit_positive_encode(posLimit);
+    invArr[invNum]->setpoints.torque_limit_negative = negLimit;
+    invArr[invNum]->setpoints.torque_limit_positive = posLimit;
 }
 
 
@@ -263,86 +263,86 @@ void Inverters_CAN_rx()
         {
             // RR
             case INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID:
-                inverter_dbc_actual_1_unpack(&invRR.actual1, (uint8_t *) &canMessage.data, 8);
-                invRR.actual1.feedback_velocity = (float)inverter_dbc_actual_1_feedback_velocity_decode(invRR.actual1.feedback_velocity);
-                invRR.actual1.feedback_torque = (float)inverter_dbc_actual_1_feedback_torque_decode(invRR.actual1.feedback_torque);
+                inverter_dbc_actual_1_full_decode(&invRR.actual1, (uint8_t *) &canMessage.data, 8);
+                invRR.actual1.feedback_velocity = ((float)invRR.actual1.feedback_velocity);
+                invRR.actual1.feedback_torque = ((float)invRR.actual1.feedback_torque);
                 break;
                 //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;  // Echo over main bus
 
             case INVERTER_DBC_RR_AMK_ACTUAL_2_FRAME_ID:
-                inverter_dbc_actual_2_unpack(&invRR.actual2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_actual_2_full_decode(&invRR.actual2, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID:
-                inverter_dbc_rit_set1_unpack(&invRR.set1, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set1_full_decode(&invRR.set1, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_RR_AMK_RIT_SET2_FRAME_ID:
-                inverter_dbc_rit_set2_unpack(&invRR.set2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set2_full_decode(&invRR.set2, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_RR_AMK_RIT_SET3_FRAME_ID:
-                inverter_dbc_rit_set3_unpack(&invRR.set3, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set3_full_decode(&invRR.set3, (uint8_t *) &canMessage.data, 8); break;
 
 
             // RL
             case INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_actual_1_unpack(&invRL.actual1, (uint8_t *) &canMessage.data, 8);
-                invRL.actual1.feedback_velocity = (float)inverter_dbc_actual_1_feedback_velocity_decode(invRL.actual1.feedback_velocity);
-                invRL.actual1.feedback_torque = (float)inverter_dbc_actual_1_feedback_torque_decode(invRL.actual1.feedback_torque);
+                invRL.actual1.feedback_velocity = ((float)invRL.actual1.feedback_velocity);
+                invRL.actual1.feedback_torque = ((float)invRL.actual1.feedback_torque);
                 break;
                 //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_RL_AMK_ACTUAL_2_FRAME_ID:
-                inverter_dbc_actual_2_unpack(&invRL.actual2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_actual_2_full_decode(&invRL.actual2, (uint8_t *) &canMessage.data, 8); break;
             
             case INVERTER_DBC_RL_AMK_RIT_SET1_FRAME_ID:
-                inverter_dbc_rit_set1_unpack(&invRL.set1, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set1_full_decode(&invRL.set1, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_RL_AMK_RIT_SET2_FRAME_ID:
-                inverter_dbc_rit_set2_unpack(&invRL.set2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set2_full_decode(&invRL.set2, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_RL_AMK_RIT_SET3_FRAME_ID:
-                inverter_dbc_rit_set3_unpack(&invRL.set3, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set3_full_decode(&invRL.set3, (uint8_t *) &canMessage.data, 8); break;
 
 
             // FR
             case INVERTER_DBC_FR_AMK_ACTUAL_1_FRAME_ID:
-                inverter_dbc_actual_1_unpack(&invFR.actual1, (uint8_t *) &canMessage.data, 8);
-                invFR.actual1.feedback_velocity = (float)inverter_dbc_actual_1_feedback_velocity_decode(invFR.actual1.feedback_velocity);
-                invFR.actual1.feedback_torque = (float)inverter_dbc_actual_1_feedback_torque_decode(invFR.actual1.feedback_torque);
+                inverter_dbc_actual_1_full_decode(&invFR.actual1, (uint8_t *) &canMessage.data, 8);
+                invFR.actual1.feedback_velocity = ((float)invFR.actual1.feedback_velocity);
+                invFR.actual1.feedback_torque = ((float)invFR.actual1.feedback_torque);
                 break;
                 //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FR_AMK_ACTUAL_2_FRAME_ID:
-                inverter_dbc_actual_2_unpack(&invFR.actual2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_actual_2_full_decode(&invFR.actual2, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_FR_AMK_RIT_SET1_FRAME_ID:
-                inverter_dbc_rit_set1_unpack(&invFR.set1, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set1_full_decode(&invFR.set1, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_FR_AMK_RIT_SET2_FRAME_ID:
-                inverter_dbc_rit_set2_unpack(&invFR.set2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set2_full_decode(&invFR.set2, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_FR_AMK_RIT_SET3_FRAME_ID:
-                inverter_dbc_rit_set3_unpack(&invFR.set3, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set3_full_decode(&invFR.set3, (uint8_t *) &canMessage.data, 8); break;
 
 
             // FL
             case INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID:
                 inverter_dbc_actual_1_unpack(&invFL.actual1, (uint8_t *) &canMessage.data, 8);
-                invFL.actual1.feedback_velocity = (float)inverter_dbc_actual_1_feedback_velocity_decode(invFL.actual1.feedback_velocity);
-                invFL.actual1.feedback_torque = (float)inverter_dbc_actual_1_feedback_torque_decode(invFL.actual1.feedback_torque);
+                invFL.actual1.feedback_velocity = ((float)invFL.actual1.feedback_velocity);
+                invFL.actual1.feedback_torque = ((float)invFL.actual1.feedback_torque);
                 break;
                 //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_ACTUAL_1_FRAME_ID, canMessage.dlc, canMessage.data); break;   // Echo over main bus
 
             case INVERTER_DBC_FL_AMK_ACTUAL_2_FRAME_ID:
-                inverter_dbc_actual_2_unpack(&invFL.actual2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_actual_2_full_decode(&invFL.actual2, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_FL_AMK_RIT_SET1_FRAME_ID:
-                inverter_dbc_rit_set1_unpack(&invFL.set1, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set1_full_decode(&invFL.set1, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_FL_AMK_RIT_SET2_FRAME_ID:
-                inverter_dbc_rit_set2_unpack(&invFL.set2, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set2_full_decode(&invFL.set2, (uint8_t *) &canMessage.data, 8); break;
 
             case INVERTER_DBC_FL_AMK_RIT_SET3_FRAME_ID:
-                inverter_dbc_rit_set3_unpack(&invFL.set3, (uint8_t *) &canMessage.data, 8); break;
+                inverter_dbc_rit_set3_full_decode(&invFL.set3, (uint8_t *) &canMessage.data, 8); break;
 
         }
     }
@@ -464,26 +464,26 @@ static void send_setpoints()
     uint64_t msg_data;
 
     // RR
-    invRR.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRR.req_setpoint);
-    inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRR.setpoints, 8);
+    invRR.setpoints.torque_setpoint = invRR.req_setpoint;
+    inverter_dbc_setpoints_full_encode((uint8_t *)&msg_data, &invRR.setpoints, 8);
     core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
     //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
 
     // RL
-    invRL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invRL.req_setpoint);
-    inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invRL.setpoints, 8);
+    invRL.setpoints.torque_setpoint = invRL.req_setpoint;
+    inverter_dbc_setpoints_full_encode((uint8_t *)&msg_data, &invRL.setpoints, 8);
     core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
     //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
 
     // FR
-    invFR.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFR.req_setpoint);
-    inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFR.setpoints, 8);
+    invFR.setpoints.torque_setpoint = invFR.req_setpoint;
+    inverter_dbc_setpoints_full_encode((uint8_t *)&msg_data, &invFR.setpoints, 8);
     core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
     //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FR_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
 
     // FL
-    invFL.setpoints.torque_setpoint = inverter_dbc_setpoints_torque_setpoint_encode(invFL.req_setpoint);
-    inverter_dbc_setpoints_pack((uint8_t *)&msg_data, &invFL.setpoints, 8);
+    invFL.setpoints.torque_setpoint = invFL.req_setpoint;
+    inverter_dbc_setpoints_full_encode((uint8_t *)&msg_data, &invFL.setpoints, 8);
     core_CAN_add_message_to_tx_queue(CAN_INV, INVERTER_DBC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on inv bus
     //core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_FL_AMK_SETPOINTS_FRAME_ID, 8, msg_data); // Send on main bus
 }

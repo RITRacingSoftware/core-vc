@@ -151,8 +151,7 @@ void Steer_process()
 
         // if ((fabs(steerPct - lastSteer) > STEER_DIFF_FAULT) && (VehicleState_get_state() > VehicleState_VC_NOT_READY)) FaultManager_set(FAULT_STEER_IRRA);
         // else lastSteer = steerPct;
-        mainBus.processed_inputs.vc_p_inputs_steer_pct = 
-            main_dbc_vc_processed_inputs_vc_p_inputs_steer_pct_encode(steerPct * 100);
+        mainBus.processed_inputs.vc_p_inputs_steer_pct = steerPct * 100;
         //Scale: -1 -> 1
         driverInputs.steerPct = steerPct;
     }
@@ -190,10 +189,8 @@ void Accel_process()
     core_ADC_read_channel(ACCEL_B_PORT, ACCEL_B_PIN, &accelBVal);
     
     // Echo raw APPS ADC values on main bus
-    mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_a_adc =
-            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_a_adc_encode(accelAVal);
-    mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_b_adc =
-            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_accel_b_adc_encode(accelBVal);
+    mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_a_adc = accelAVal;
+    mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_accel_b_adc = accelBVal;
 
 
     // ADC irrationality check
@@ -202,16 +199,14 @@ void Accel_process()
     {
         aVal = SAT(accelAVal, ACCEL_A_OFFSET_ADC, ACCEL_A_MAX_ADC);
         accelAPos = ((aVal - ACCEL_A_OFFSET_ADC) / ((float)ACCEL_A_RANGE_ADC));
-        mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_a =
-                main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_accel_position_a_encode(accelAPos * 100);
+        mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_a = accelAPos * 100;
         core_timeout_reset(&accel_A_timeout);
     } else status = false;
     if (accelBVal <= ACCEL_B_IRRATIONAL_HIGH_ADC && accelBVal >= ACCEL_B_IRRATIONAL_LOW_ADC)
     {
         bVal = SAT(accelBVal, ACCEL_B_OFFSET_ADC, ACCEL_B_MAX_ADC);
         accelBPos = ((bVal - ACCEL_B_OFFSET_ADC) / ((float)ACCEL_B_RANGE_ADC));
-        mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_b =
-                main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_accel_position_b_encode(accelBPos * 100);
+        mainBus.pedal_inputs_raw.vc_pedal_inputs_accel_position_b = accelBPos * 100;
         core_timeout_reset(&accel_B_timeout);
     } else status = false;
 
@@ -238,8 +233,7 @@ void Accel_process()
     {
         driverInputs.accelPct = avgPos;
 
-        mainBus.processed_inputs.vc_p_inputs_accel_position =
-                main_dbc_vc_processed_inputs_vc_p_inputs_accel_position_encode(driverInputs.accelPct * 100);
+        mainBus.processed_inputs.vc_p_inputs_accel_position = driverInputs.accelPct * 100;
     }
 
 #ifdef VC_TEST
@@ -256,19 +250,16 @@ void Brakes_process()
     core_ADC_read_channel(BPS_PORT, BPS_PIN, &rearVal);
     
     // Send RBPS raw adc
-    mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_brakes_rear_adc =
-            main_dbc_vc_pedal_inputs_raw_vc_pedal_inputs_raw_brakes_rear_adc_encode(rearVal);
+    mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_brakes_rear_adc = rearVal;
 
     // Send RBPS PSI
-    mainBus.processed_inputs.vc_p_inputs_brakes_rear_psi =
-            main_dbc_vc_processed_inputs_vc_p_inputs_brakes_rear_psi_encode((rearVal * 1.2) - 375);
+    mainBus.processed_inputs.vc_p_inputs_brakes_rear_psi = ((rearVal * 1.2) - 375);
 
     uint16_t frontVal;
     frontVal = mainBus.ssdb_front.ssdb_brake_pressure_front_raw;
     
     // Send front PSI
-    mainBus.processed_inputs.vc_p_inputs_brakes_front_psi =
-            main_dbc_vc_processed_inputs_vc_p_inputs_brakes_front_psi_encode((frontVal * 0.924) - 375);
+    mainBus.processed_inputs.vc_p_inputs_brakes_front_psi = ((frontVal * 0.924) - 375);
 
     // Convert to percentages
     float frontPct, rearPct;
@@ -290,8 +281,7 @@ void Brakes_process()
         driverInputs.brakePct = rearPct;
     } else driverInputs.brakePct = 0.0f;
 
-    mainBus.processed_inputs.vc_p_inputs_brakes_pct = 
-        main_dbc_vc_processed_inputs_vc_p_inputs_brakes_pct_encode(frontPct * 100);
+    mainBus.processed_inputs.vc_p_inputs_brakes_pct = (frontPct * 100);
 
 #ifdef VC_TEST
     test((t_val) frontPct);

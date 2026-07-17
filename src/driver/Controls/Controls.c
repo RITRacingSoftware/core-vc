@@ -296,15 +296,15 @@ bool Controls_update_vn() {
 static void send_logging_outputs()
 {
     struct main_dbc_vc_controls_debug_t dbg;
-    mainBus.controls_out1.vc_fl_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[0]);
-    mainBus.controls_out1.vc_rl_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[1]);
-    mainBus.controls_out1.vc_fr_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[2]);
-    mainBus.controls_out1.vc_rr_slip_ratio = main_dbc_vc_controls_out1_vc_rr_slip_ratio_encode(F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[3]);
+    mainBus.controls_out1.vc_fl_slip_ratio = F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[0];
+    mainBus.controls_out1.vc_rl_slip_ratio = F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[1];
+    mainBus.controls_out1.vc_fr_slip_ratio = F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[2];
+    mainBus.controls_out1.vc_rr_slip_ratio = F34_Torque_Vectoring_Simulink_Y.Slip_Ratios_[3];
 
-    mainBus.controls_out2.vc_e_yaw_rate = main_dbc_vc_controls_out2_vc_e_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.e_yaw_raterads);
-    mainBus.controls_out2.vc_lateral_torque_bias = main_dbc_vc_controls_out2_vc_e_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasNm);
-    mainBus.controls_out2.vc_desired_yaw_rate = main_dbc_vc_controls_out2_vc_desired_yaw_rate_encode(F34_Torque_Vectoring_Simulink_Y.Desired_Yaw_Rate_rads);
-    mainBus.controls_out2.vc_steer_angle = main_dbc_vc_controls_out2_vc_steer_angle_encode(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle);
+    mainBus.controls_out2.vc_e_yaw_rate = F34_Torque_Vectoring_Simulink_Y.e_yaw_raterads;
+    mainBus.controls_out2.vc_lateral_torque_bias = F34_Torque_Vectoring_Simulink_Y.LateralTorqueBiasNm;
+    mainBus.controls_out2.vc_desired_yaw_rate = F34_Torque_Vectoring_Simulink_Y.Desired_Yaw_Rate_rads;
+    mainBus.controls_out2.vc_steer_angle = F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle;
     
     mainBus.controls_out3.vc_yaw_rate_proportional = F34_Torque_Vectoring_Simulink_Y.Yaw_Rate_Proportional_nm;
     mainBus.controls_out3.vc_yaw_rate_integral = F34_Torque_Vectoring_Simulink_Y.Yaw_Rate_Integral_nm;
@@ -316,23 +316,23 @@ static void send_logging_outputs()
     mainBus.controls_out4.vc_lc_blend = F34_Torque_Vectoring_Simulink_Y.LC_blend_pct * 255;
 
     uint64_t msg;
-    main_dbc_vc_controls_out1_pack((uint8_t *)&msg, &mainBus.controls_out1, 8);
+    main_dbc_vc_controls_out1_full_encode((uint8_t *)&msg, &mainBus.controls_out1, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT1_FRAME_ID, 8, msg);
 
-    main_dbc_vc_controls_out2_pack((uint8_t *)&msg, &mainBus.controls_out2, 8);
+    main_dbc_vc_controls_out2_full_encode((uint8_t *)&msg, &mainBus.controls_out2, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT2_FRAME_ID, 8, msg);
     
-    main_dbc_vc_controls_out3_pack((uint8_t *)&msg, &mainBus.controls_out3, 8);
+    main_dbc_vc_controls_out3_full_encode((uint8_t *)&msg, &mainBus.controls_out3, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT3_FRAME_ID, 8, msg);
 
-    main_dbc_vc_controls_out4_pack((uint8_t *)&msg, &mainBus.controls_out4, 8);
+    main_dbc_vc_controls_out4_full_encode((uint8_t *)&msg, &mainBus.controls_out4, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_CONTROLS_OUT4_FRAME_ID, 8, msg);
 
     mainBus.target_wheel_speeds.vc_rr_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[0];
     mainBus.target_wheel_speeds.vc_rl_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[1];
     mainBus.target_wheel_speeds.vc_fr_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[2];
     mainBus.target_wheel_speeds.vc_fl_target_wheel_speed = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[3];
-    main_dbc_vc_target_wheel_speeds_pack((uint8_t*)(&msg), &(mainBus.target_wheel_speeds), 8);
+    main_dbc_vc_target_wheel_speeds_full_encode((uint8_t*)(&msg), &(mainBus.target_wheel_speeds), 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_TARGET_WHEEL_SPEEDS_FRAME_ID, 8, msg);
 }
 

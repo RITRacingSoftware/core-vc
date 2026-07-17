@@ -117,6 +117,6 @@ void DRS_task() {
     DRS_set(servo1, servo2);
     drs_status.vc_drs1_setting = servo1;
     drs_status.vc_drs2_setting = servo2;
-    sensor_dbc_vc_drs_status_pack((uint8_t *)&msg, &drs_status, 8);
+    sensor_dbc_vc_drs_status_full_encode((uint8_t *)&msg, &drs_status, 8);
     core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_DRS_STATUS_FRAME_ID, 8, msg);
 }

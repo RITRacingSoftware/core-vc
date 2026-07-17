@@ -185,7 +185,7 @@ void VehicleState_Task_Update()
 
     mainBus.vc_status.vc_status_vehicle_state = state;
     uint64_t msg;
-    uint8_t dlc = main_dbc_vc_status_pack((uint8_t *)&msg, &mainBus.vc_status, 8);
+    uint8_t dlc = main_dbc_vc_status_full_encode((uint8_t *)&msg, &mainBus.vc_status, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_STATUS_FRAME_ID, dlc, msg);
     core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_STATUS_FRAME_ID, dlc, msg);
 }

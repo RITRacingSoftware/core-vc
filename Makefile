@@ -37,38 +37,38 @@ DRIVER_INCLUDE := $(DRIVER_INCLUDE) $(CODEGEN_EXT_INCLUDE)
 STM32_DRIVER_OBJS := $(DRIVER_SRCS:$(DRIVER_DIR)/%=$(STM32_BUILD_DIR)/obj/driver/%.o)
 
 # Libraries
-STM32CUBE_DIR := ../../STM32CubeG4
+STM32CUBE_DIR := ../STM32CubeG4
 STM32CUBE_HAL_DIR := $(STM32CUBE_DIR)/Drivers/STM32G4xx_HAL_Driver
 STM32CUBE_CMSIS_DIR := $(STM32CUBE_DIR)/Drivers/CMSIS/Device/ST/STM32G4xx
 STM32CUBE_SRC_DIRS := $(STM32CUBE_HAL_DIR)/Src
 STM32CUBE_SRCS := $(shell find $(STM32CUBE_SRC_DIRS) -maxdepth 1 -type f -name "*.c") $(STM32CUBE_CMSIS_DIR)/Source/Templates/system_stm32g4xx.c
-STM32CUBE_ASMS := src/startup_stm32g473xx.s
+STM32CUBE_ASMS := ./src/startup_stm32g473xx.s
 STM32CUBE_INCLUDES := $(STM32CUBE_HAL_DIR)/Inc $(STM32CUBE_DIR)/Drivers/CMSIS/Include $(STM32CUBE_CMSIS_DIR)/Include
 STM32CUBE_INCLUDES := $(foreach d, $(STM32CUBE_INCLUDES),-I $d)
 STM32CUBE_OBJS := $(STM32CUBE_SRCS:$(STM32CUBE_DIR)/%=$(STM32_BUILD_DIR)/obj/stm32cube/%.o) $(STM32_BUILD_DIR)/obj/stm32cube/startup_stm32g473xx.s.o
 
-FREERTOS_DIR := ../../FreeRTOS-Kernel
+FREERTOS_DIR := ../FreeRTOS-Kernel
 FREERTOS_SRC_DIRS := $(FREERTOS_DIR) $(FREERTOS_DIR)/portable/GCC/ARM_CM4F
 FREERTOS_SRCS := $(shell find $(FREERTOS_SRC_DIRS) -maxdepth 1 -type f -name "*.c") $(FREERTOS_DIR)/portable/MemMang/heap_4.c
 FREERTOS_INCLUDES := $(FREERTOS_DIR)/include $(FREERTOS_DIR)/portable/GCC/ARM_CM4F
 FREERTOS_INCLUDES := $(foreach d, $(FREERTOS_INCLUDES),-I $d)
 FREERTOS_OBJS := $(FREERTOS_SRCS:$(FREERTOS_DIR)/%=$(STM32_BUILD_DIR)/obj/freertos/%.o)
 
-RTT_DIR := ../../RTT
+RTT_DIR := ../RTT
 ifneq ("$(wildcard $(RTT_DIR))","")
 RTT_SRCS := $(RTT_DIR)/RTT/SEGGER_RTT.c $(RTT_DIR)/Syscalls/SEGGER_RTT_Syscalls_GCC.c $(RTT_DIR)/RTT/SEGGER_RTT_printf.c
 RTT_INCLUDES := $(addprefix -I, ./src) $(addprefix -I, $(RTT_DIR)/RTT)
 RTT_OBJS := $(RTT_SRCS:$(RTT_DIR)/%=$(STM32_BUILD_DIR)/obj/rtt/%.o)
 endif
 
-DBC_DIR := ../../Formula-DBC
+DBC_DIR := ../Formula-DBC
 ifneq ("$(wildcard $(DBC_DIR))","")
 DBC_SRCS := $(shell find -L $(DBC_DIR)/c_files -name "*.c")
 DBC_INCLUDES := -I $(DBC_DIR)/c_files
 DBC_OBJS := $(DBC_SRCS:$(DBC_DIR)/c_files/%=$(STM32_BUILD_DIR)/obj/formula_dbc/%.o)
 endif
 
-CORE_DIR := ../../core/src/driver
+CORE_DIR := ../core/src/driver
 CORE_SRCS := $(shell find $(CORE_DIR)/Src -type f -name "*.c")
 CORE_INCLUDES := -I $(CORE_DIR)/Inc $(STM32CUBE_INCLUDES) $(FREERTOS_INCLUDES) $(RTT_INCLUDES)
 CORE_INCLUDES := $(foreach d, $(CORE_INCLUDES),-I $d)

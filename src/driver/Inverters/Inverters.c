@@ -284,7 +284,7 @@ void Inverters_CAN_rx()
 
             // RL
             case INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID:
-                inverter_dbc_actual_1_unpack(&invRL.actual1, (uint8_t *) &canMessage.data, 8);
+                inverter_dbc_actual_1_full_decode(&invRL.actual1, (uint8_t *) &canMessage.data, 8);
                 invRL.actual1.feedback_velocity = ((float)invRL.actual1.feedback_velocity);
                 invRL.actual1.feedback_torque = ((float)invRL.actual1.feedback_torque);
                 break;
@@ -326,7 +326,7 @@ void Inverters_CAN_rx()
 
             // FL
             case INVERTER_DBC_FL_AMK_ACTUAL_1_FRAME_ID:
-                inverter_dbc_actual_1_unpack(&invFL.actual1, (uint8_t *) &canMessage.data, 8);
+            inverter_dbc_actual_1_full_decode(&invFL.actual1, (uint8_t *) &canMessage.data, 8);
                 invFL.actual1.feedback_velocity = ((float)invFL.actual1.feedback_velocity);
                 invFL.actual1.feedback_torque = ((float)invFL.actual1.feedback_torque);
                 break;

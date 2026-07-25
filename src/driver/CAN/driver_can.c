@@ -12,6 +12,7 @@
 #include <math.h>
 #include <string.h>
 
+
 MAIN_BUS mainBus = {0};
 // SENSE_BUS senseBus = {0};
 
@@ -187,13 +188,13 @@ void CAN_Task_Update()
     uint64_t msg;
 
     Inverters_set_can_states();
-    main_dbc_vc_inverter_status_pack((uint8_t *)&msg, &mainBus.inverter_status, 8);
+    main_dbc_vc_inverter_status_full_encode((uint8_t *)&msg, &mainBus.inverter_status, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_INVERTER_STATUS_FRAME_ID, 8, msg);
 
-    main_dbc_vc_processed_inputs_pack((uint8_t *)&msg, &mainBus.processed_inputs, 8);
+    main_dbc_vc_processed_inputs_full_encode((uint8_t *)&msg, &mainBus.processed_inputs, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PROCESSED_INPUTS_FRAME_ID, 8, msg);
 
-    main_dbc_vc_pedal_inputs_raw_pack((uint8_t *)&msg, &mainBus.pedal_inputs_raw, 8);
+    main_dbc_vc_pedal_inputs_raw_full_encode((uint8_t *)&msg, &mainBus.pedal_inputs_raw, 8);
     core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_PEDAL_INPUTS_RAW_FRAME_ID, 8, msg);
     
     // Dash temperature messages

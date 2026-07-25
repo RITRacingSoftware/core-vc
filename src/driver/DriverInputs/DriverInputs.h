@@ -13,7 +13,6 @@
 #define ACCEL_B_PORT GPIOB
 #define ACCEL_B_PIN GPIO_PIN_14
 
-extern float avgPos;
 
 typedef enum
 {

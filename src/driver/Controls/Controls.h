@@ -17,6 +17,13 @@ typedef enum {
     ControlsLevel_SKIDPAD,      // Fixed torque distribution when steering
 } ControlsLevel_e;
 
+typedef enum {
+    AUTOCROSS,
+    ACCEL,
+    SKIDPAD,
+    ENDURANCE,
+} DrivingEvent_e;
+
 typedef struct{
     float val;          // Previous rational value
     float *p_msg;       // Pointer to VN CAN message from RSSDB

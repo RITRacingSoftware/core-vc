@@ -24,6 +24,8 @@
 static DriverInputs_s inputs;
 static ControlsLevel_e ControlsLevel = CONTROLS_MAX_LEVEL;
 
+static DrivingEvent_e DrivingEvent;
+
 static void update_controls_params();
 static void step_advanced(float maxTrq, float *tvTrqs);
 static void step_basic(float maxTrq, bool dynamic, float *tvTrqs);
@@ -374,4 +376,30 @@ void rampup_trigger(float val, rampup_t *ramp)
 {
     ramp->prev = val;
     ramp->done = false;
+}
+
+void set_driving_event(){
+    uint64_t msg;
+    
+    
+    switch(DrivingEvent){
+        case AUTOCROSS: {
+            break;
+        }
+
+        case ACCEL: {
+            break;
+        }
+
+        case SKIDPAD: {
+            break;
+        }
+
+        case ENDURANCE: {
+            break;
+        }
+
+    }
+
+    mainBus.vc_status.vc_driving_event = DrivingEvent;
 }

@@ -23,7 +23,6 @@
 
 static DriverInputs_s inputs;
 static ControlsLevel_e ControlsLevel = CONTROLS_MAX_LEVEL;
-
 static DrivingEvent_e DrivingEvent;
 
 static void update_controls_params();
@@ -379,23 +378,31 @@ void rampup_trigger(float val, rampup_t *ramp)
 }
 
 void set_driving_event(){
-    uint64_t msg;
-    
+    DrivingEvent = DrivingEventOFF;
     
     switch(DrivingEvent){
         case AUTOCROSS: {
+            set_Autocross();
             break;
         }
 
         case ACCEL: {
+            set_Accel();
             break;
         }
 
         case SKIDPAD: {
+            set_Skidpad();
             break;
         }
 
         case ENDURANCE: {
+            set_Endurance();
+            break;
+        }
+
+        case DrivingEventOFF: {
+            set_EventOFF();
             break;
         }
 
@@ -403,3 +410,12 @@ void set_driving_event(){
 
     mainBus.vc_status.vc_driving_event = DrivingEvent;
 }
+
+void set_EventOFF(){}
+void set_Autocross(){}
+void set_Accel(){}
+void set_Endurance(){}
+void set_Skidpad(){
+
+}
+

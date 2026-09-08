@@ -18,6 +18,7 @@ typedef enum {
 } ControlsLevel_e;
 
 typedef enum {
+    DrivingEvent_OFF,
     AUTOCROSS,
     ACCEL,
     SKIDPAD,
@@ -50,3 +51,11 @@ void rampup_init(rampup_t *ramp);
 bool rampup_update(float target, float *out, rampup_t *ramp);
 bool rampdown_update(float target, float *out, rampup_t *ramp);
 void rampup_trigger(float val, rampup_t *ramp);
+
+
+
+void set_EventOFF();
+void set_Autocross();
+void set_Accel();
+void set_Endurance();
+void set_Skidpad();

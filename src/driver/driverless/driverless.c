@@ -30,9 +30,9 @@ void driverless_state_update() {
     mainBus.vc_status.vc_ds_rear_enable = (vs == VehicleState_RTD_AS) && (Inverters_get_state(0) == InvState_NORMAL) && (Inverters_get_state(1) == InvState_NORMAL);
     mainBus.vc_status.vc_ds_front_enable = (vs == VehicleState_RTD_AS) && (Inverters_get_state(2) == InvState_NORMAL) && (Inverters_get_state(3) == InvState_NORMAL);
     // Check that the datalogger releases the inverters. If not, turn off the car
-    if ((mainBus.vc_status.vc_ds_rear_enable || !(mainBus.ds_status.ds_rear_active)) && (mainBus.vc_status.vc_ds_front_enable || !(mainBus.ds_status.ds_front_active))) {
+    //if ((mainBus.vc_status.vc_ds_rear_enable || !(mainBus.ds_status.ds_rear_active)) && (mainBus.vc_status.vc_ds_front_enable || !(mainBus.ds_status.ds_front_active))) {
         core_timeout_reset(&ds_timeout);
-    }
+    //}
 }
 
 // For torque sentpoints from the VC to be enabled, the VC must both not

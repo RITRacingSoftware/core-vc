@@ -6,6 +6,8 @@
 
 #include "Controls.h"
 
+#define DRIVERLESS_ENABLED
+
 /********************** GENERAL **********************/
 /*****************************************************/
 #define LOW_SPEED_TASK_FREQ_HZ 100
@@ -27,7 +29,7 @@
 /******************** POWER LIMIT ********************/
 /*****************************************************/
 #define PL_THRESHOLD 0.30f
-#define PL_MAX_POWER_W 30000
+#define PL_MAX_POWER_W 80000
 #define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_VOLT_CURRENT_LIMIT_CUTOFF 3.6f
@@ -65,6 +67,8 @@
 #define DRS_ACCEL_VELOCITY      18
 #define DRS_ACCEL_THROTTLE      0.5f
 #define DRS_ACCEL_DELAY         5
+
+#define DRS_MANUAL_MODE
 
 #define DRS_THROTTLE_THRESHOLD 0.5f
 #define DRS_BRAKE_THRESHOLD 0.1f
@@ -168,8 +172,8 @@
 
 //#define CS_ENABLE_VELOCITY_LIMIT
 #define CS_VELOCITY_LIMIT_GAIN 1.22f
-#define CS_VELOCITY_LIMIT_THRESHOLD 19.0f
-#define CS_ENABLE_ENDURANCE_MODE
+#define CS_VELOCITY_LIMIT_THRESHOLD 10.0f
+//#define CS_ENABLE_ENDURANCE_MODE
 #define CS_ENABLE_DYNAMIC_VELOCITY_LIMIT
 #define CS_DYNAMIC_VELOCITY_LIMIT_GAIN      25.0f
 #define CS_DYNAMIC_VELOCITY_LIMIT_NOMINAL   19.0f
@@ -177,7 +181,7 @@
 #define CS_DYNAMIC_VELOCITY_LIMIT_MAX       23.0f
 
 /** Inverters **/
-#define MAX_TORQUE 214
+#define MAX_TORQUE 200
 #define POS_TORQUE_LIMIT (MAX_TORQUE)
 #define NEG_TORQUE_LIMIT (-MAX_TORQUE)
 #define INV_CAN_TIMEOUT_MS 300
@@ -191,13 +195,13 @@
 /** Accelerator **/
 #define ACCEL_A_IRRATIONAL_HIGH_ADC 2500
 #define ACCEL_A_MAX_ADC 1900
-#define ACCEL_A_OFFSET_ADC 900
+#define ACCEL_A_OFFSET_ADC 690
 #define ACCEL_A_RANGE_ADC (ACCEL_A_MAX_ADC - ACCEL_A_OFFSET_ADC)
 #define ACCEL_A_IRRATIONAL_LOW_ADC 100
 
-#define ACCEL_B_IRRATIONAL_HIGH_ADC 3900
-#define ACCEL_B_MAX_ADC 3400
-#define ACCEL_B_OFFSET_ADC 1600
+#define ACCEL_B_IRRATIONAL_HIGH_ADC 4000
+#define ACCEL_B_MAX_ADC 3900
+#define ACCEL_B_OFFSET_ADC 1670
 #define ACCEL_B_RANGE_ADC (ACCEL_B_MAX_ADC - ACCEL_B_OFFSET_ADC)
 #define ACCEL_B_IRRATIONAL_LOW_ADC 200
 #define ACCEL_MAX_DISAGREEMENT 25

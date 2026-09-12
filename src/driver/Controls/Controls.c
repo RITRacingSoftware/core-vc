@@ -140,13 +140,15 @@ void Controls_Task_Update()
 
     // Apply velocity limit
 #ifdef CS_ENABLE_VELOCITY_LIMIT
+    if (mainBus.dash_buttons & 0x01) {
 #ifdef CS_ENABLE_DYNAMIC_VELOCITY_LIMIT
-    float vel_max_trq = CS_VELOCITY_LIMIT_GAIN * (Controls_velocity_limit - Controls_estimated_velX);
+        float vel_max_trq = CS_VELOCITY_LIMIT_GAIN * (Controls_velocity_limit - Controls_estimated_velX);
 #else
-    float vel_max_trq = CS_VELOCITY_LIMIT_GAIN * (CS_VELOCITY_LIMIT_THRESHOLD - Controls_estimated_velX);
+        float vel_max_trq = CS_VELOCITY_LIMIT_GAIN * (CS_VELOCITY_LIMIT_THRESHOLD - Controls_estimated_velX);
 #endif
-    if (vel_max_trq < 0) vel_max_trq = 0;
-    if (maxTotalTrq > vel_max_trq) maxTotalTrq = vel_max_trq;
+        if (vel_max_trq < 0) vel_max_trq = 0;
+        if (maxTotalTrq > vel_max_trq) maxTotalTrq = vel_max_trq;
+    }
 #endif
 
     //ControlsLevel = ControlsLevel_BASIC_VEL;

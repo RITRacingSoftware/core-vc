@@ -51,7 +51,7 @@
 /************************ DRS ************************/
 /*****************************************************/
 #define DRS_ENABLED
-//#define DRS_FORCE_CLOSED
+#define DRS_FORCE_CLOSED
 #define DRS_SERVO1_CLOSED 3325
 #define DRS_SERVO1_OPEN 5050
 #define DRS_SERVO1_CLOSED_OVERDRIVE (-125)
@@ -170,7 +170,7 @@
 #define TC_D_GAIN 0.005f
 #define TC_RESET_STEP 0.10f
 
-//#define CS_ENABLE_VELOCITY_LIMIT
+#define CS_ENABLE_VELOCITY_LIMIT
 #define CS_VELOCITY_LIMIT_GAIN 1.22f
 #define CS_VELOCITY_LIMIT_THRESHOLD 10.0f
 //#define CS_ENABLE_ENDURANCE_MODE

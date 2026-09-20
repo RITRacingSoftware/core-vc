@@ -10,7 +10,7 @@
 
 static core_timeout_t ds_timeout;
 
-static timeout_callback(core_timeout_t *to) {
+static void timeout_callback(core_timeout_t *to) {
     FaultManager_set(FAULT_DS_TIMEOUT);
 }
 

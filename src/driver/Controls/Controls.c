@@ -15,7 +15,7 @@
 #include "FaultManager.h"
 #include "timeout.h"
 #include "driver_can.h"
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_4.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_5.h"
 #include "rtt.h"
 #include "vectornav.h"
 
@@ -72,7 +72,7 @@ void Controls_init()
     runaway_timeout.single_shot = 0;
     core_timeout_insert(&runaway_timeout);
 
-    F34_Torque_Vectoring_Simulink_v1_5_3_4_initialize();
+    F34_Torque_Vectoring_Simulink_v1_5_3_5_initialize();
     
     ControlsLevel = CONTROLS_MAX_LEVEL;
 
@@ -235,7 +235,7 @@ static void step_advanced(float maxTrq, float *tvTrqs)
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[2] = tvArr[2] * 9.8f;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[3] = tvArr[0] * 9.8f;
 
-    F34_Torque_Vectoring_Simulink_v1_5_3_4_step();
+    F34_Torque_Vectoring_Simulink_v1_5_3_5_step();
 
     send_logging_outputs();
 

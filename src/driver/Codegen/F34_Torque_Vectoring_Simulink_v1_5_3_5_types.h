@@ -1,15 +1,15 @@
 /*
- * F34_Torque_Vectoring_Simulink_v1_5_3_4_types.h
+ * F34_Torque_Vectoring_Simulink_v1_5_3_5_types.h
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_4".
+ * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_5".
  *
- * Model version              : 1.454
+ * Model version              : 1.466
  * Simulink Coder version : 23.2 (R2023b) 01-Aug-2023
- * C source code generated on : Fri May 22 16:15:57 2026
+ * C source code generated on : Mon Sep  7 11:34:26 2026
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -18,8 +18,8 @@
  * Validation result: Not run
  */
 
-#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_4_types_h_
-#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_4_types_h_
+#ifndef RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_5_types_h_
+#define RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_5_types_h_
 #include "rtwtypes.h"
 #ifndef DEFINED_TYPEDEF_FOR_YawParams_
 #define DEFINED_TYPEDEF_FOR_YawParams_
@@ -115,4 +115,4 @@ typedef struct P_F34_Torque_Vectoring_Simuli_T_ P_F34_Torque_Vectoring_Simuli_T;
 /* Forward declaration for rtModel */
 typedef struct tag_RTM_F34_Torque_Vectoring__T RT_MODEL_F34_Torque_Vectoring_T;
 
-#endif          /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_4_types_h_ */
+#endif          /* RTW_HEADER_F34_Torque_Vectoring_Simulink_v1_5_3_5_types_h_ */

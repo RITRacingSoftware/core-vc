@@ -253,7 +253,7 @@ void Brakes_process()
     mainBus.pedal_inputs_raw.vc_pedal_inputs_raw_brakes_rear_adc = rearVal;
 
     // Send RBPS PSI
-    mainBus.processed_inputs.vc_p_inputs_brakes_rear_psi = ((rearVal * 1.2) - 375);
+    mainBus.processed_inputs.vc_p_inputs_brakes_rear_psi = ((rearVal * 0.924) - 375);
 
     uint16_t frontVal;
     frontVal = mainBus.ssdb_front.ssdb_brake_pressure_front_raw;

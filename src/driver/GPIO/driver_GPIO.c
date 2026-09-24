@@ -2,18 +2,20 @@
 #include "Inverters.h"
 #include "config.h"
 #include "gpio.h"
+#include "rtt.h"
 
 static uint8_t RTD_counter;
 static bool RTD_state;
 static uint8_t TSMS_counter;
 static bool TSMS_state;
-static uint8_t LC_counter;
-static bool LC_state = 0;
+static uint8_t ASMS_counter;
+static bool ASMS_state = 0;
 
 void GPIO_init()
 {
     core_GPIO_init(TSMS_PORT, TSMS_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN);
     core_GPIO_init(RTD_PORT, RTD_PIN, GPIO_MODE_INPUT, GPIO_PULLDOWN);
+    core_GPIO_init(ASMS_PORT, ASMS_PIN, GPIO_MODE_INPUT, GPIO_PULLUP);
 
     core_GPIO_init(PRECHARGE_RELAY_PORT, PRECHARGE_RELAY_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(AIR1_PORT, AIR1_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
@@ -67,6 +69,7 @@ bool GPIO_set_interlock_relay(bool on) {
 
 bool GPIO_get_TSMS() {return TSMS_state;}
 bool GPIO_get_RTD() {return RTD_state;}
+bool GPIO_get_ASMS() {return ASMS_state;}
 bool GPIO_get_LC() {return RTD_state;}
 
 void GPIO_set_activate_inv_relays(bool on)
@@ -88,4 +91,10 @@ void GPIO_Task_Update()
         if (++RTD_counter >= RTD_HOLD_SAMPLES) RTD_state = !RTD_state;
     }
     else RTD_counter = 0;
+    
+    if (core_GPIO_digital_read(ASMS_PORT, ASMS_PIN) != ASMS_state) {
+        if (++ASMS_counter >= ASMS_HOLD_SAMPLES) ASMS_state = !ASMS_state;
+    }
+    else ASMS_counter = 0;
+    rprintf("ASMS %d\n", ASMS_state);
 }

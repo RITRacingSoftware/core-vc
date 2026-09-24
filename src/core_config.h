@@ -49,7 +49,7 @@
 /**
   * @brief  Number of CAN messages that can be stored in the CAN FreeRTOS queue
   */
-#define CORE_CAN_QUEUE_LENGTH 30
+#define CORE_CAN_QUEUE_LENGTH 40
 /**
   * @brief  Timeout waiting for RX queue
   */
@@ -314,7 +314,7 @@
 /**
  * @brief Number of timeouts used
  */
-#define CORE_TIMEOUT_NUM 23
+#define CORE_TIMEOUT_NUM 24
 
 
 /********************* WATCHDOG PARAMETERS *********************/

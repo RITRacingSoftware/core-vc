@@ -1,10 +1,10 @@
-#pragma once
-
 #ifndef VC_TEST
 #include <stm32g4xx_hal.h>
 #endif
 
 #include "Controls.h"
+
+#define DRIVERLESS_ENABLED
 
 /********************** GENERAL **********************/
 /*****************************************************/
@@ -15,6 +15,7 @@
 #define OVERSPEED_RPM 20000
 #define RTD_HOLD_TIME 1000
 #define TSMS_HOLD_SAMPLES 10
+#define ASMS_HOLD_SAMPLES 10
 #define RTD_HOLD_SAMPLES 10
 #define LC_HOLD_SAMPLES 10
 #define PACK_IRR_V 380
@@ -26,7 +27,7 @@
 /******************** POWER LIMIT ********************/
 /*****************************************************/
 #define PL_THRESHOLD 0.30f
-#define PL_MAX_POWER_W 30000
+#define PL_MAX_POWER_W 80000
 #define ENDURANCE_CURRENT_LIMIT 0
 #define SHORT_CURRENT_LIMIT_CUTOFF 3.6f
 #define ENDUR_VOLT_CURRENT_LIMIT_CUTOFF 3.6f
@@ -60,10 +61,12 @@
 #define DRS_RAMP_TIME 60
 #define DRS_OVERDRIVE_TIME 50
 
-//#define DRS_ACCEL_MODE_ENABLED
-#define DRS_ACCEL_VELOCITY      18
+#define DRS_ACCEL_MODE_ENABLED
+#define DRS_ACCEL_VELOCITY      10
 #define DRS_ACCEL_THROTTLE      0.5f
 #define DRS_ACCEL_DELAY         5
+
+// #define DRS_MANUAL_MODE
 
 #define DRS_THROTTLE_THRESHOLD 0.5f
 #define DRS_BRAKE_THRESHOLD 0.1f
@@ -78,7 +81,7 @@
 #define RUNAWAY_PCT 1.05f
 #define RUNAWAY_OFFSET 0.02f
 #define VN_LOST_TIMEOUT_MS 100
-#define CONTROLS_MAX_LEVEL ControlsLevel_BASIC_VEL
+#define CONTROLS_MAX_LEVEL ControlsLevel_ADVANCED
 // Scale factor for median wheel speed
 #define ESTIMATED_VELOCITY_SCALE 0.99f
 
@@ -96,11 +99,11 @@
 #define CG_KI_YAW_RATE 10.0f
 #define CG_KF_YAW_RATE 5.53f
 
-#define CG_TC_FX_REAR               1050.0f
-#define CG_TC_FX_FRONT              350.0f
+#define CG_TC_FX_REAR               1250.0f
+#define CG_TC_FX_FRONT              450.0f
 #define CG_TC_N_SLIP_RATIO          1
-#define CG_TARGET_SR_NOMINAL_REAR   100.0f
-#define CG_TARGET_SR_NOMINAL_FRONT  100.0f
+#define CG_TARGET_SR_NOMINAL_REAR   0.4f
+#define CG_TARGET_SR_NOMINAL_FRONT  0.4f
 #define CG_TARGET_SR_AX_MIN         0.1f
 #define CG_TARGET_SR_AY_MIN         0.1f
 #define CG_TARGET_SR_MAX            0.22f
@@ -108,15 +111,15 @@
 #define CG_TARGET_SR_LAT            0.0f
 #define CG_TARGET_SR_LONG           0.0f
 #define CG_TARGET_SR_LAT_MIN        0.0f
-#define CG_KP_SLIP_RATIO            (0.0025f)
-#define CG_KI_SLIP_RATIO            (0.00005f)
+#define CG_KP_SLIP_RATIO            (0.005f)
+#define CG_KI_SLIP_RATIO            (0.0f)
 #define CG_KD_SLIP_RATIO            (0.00125f)
 #define CG_TC_ACTIVATION_THRESHOLD  0.0f
 #define CG_LC_PRELOAD               0.35f
 #define CG_LC_TMAX                  67.0f
-#define CG_LC_WDOT_MAX              1000.0f
-#define CG_LC_TBLEND1               0.05f
-#define CG_LC_TBLEND2               0.2f
+#define CG_LC_TBLEND1               0.05f   // t1
+#define CG_LC_TBLEND2               0.25f   // t2
+#define CG_LC_WDOT_MAX              0.35f    // t3
 
 #define CG_FULL_LEFT_STEER_DEG 90.0f
 #define CG_FULL_RIGHT_STEER_DEG -90.0f
@@ -167,8 +170,8 @@
 
 //#define CS_ENABLE_VELOCITY_LIMIT
 #define CS_VELOCITY_LIMIT_GAIN 1.22f
-#define CS_VELOCITY_LIMIT_THRESHOLD 19.0f
-#define CS_ENABLE_ENDURANCE_MODE
+#define CS_VELOCITY_LIMIT_THRESHOLD 10.0f
+//#define CS_ENABLE_ENDURANCE_MODE
 #define CS_ENABLE_DYNAMIC_VELOCITY_LIMIT
 #define CS_DYNAMIC_VELOCITY_LIMIT_GAIN      25.0f
 #define CS_DYNAMIC_VELOCITY_LIMIT_NOMINAL   19.0f
@@ -176,7 +179,7 @@
 #define CS_DYNAMIC_VELOCITY_LIMIT_MAX       23.0f
 
 /** Inverters **/
-#define MAX_TORQUE 214
+#define MAX_TORQUE 200
 #define POS_TORQUE_LIMIT (MAX_TORQUE)
 #define NEG_TORQUE_LIMIT (-MAX_TORQUE)
 #define INV_CAN_TIMEOUT_MS 300
@@ -190,13 +193,13 @@
 /** Accelerator **/
 #define ACCEL_A_IRRATIONAL_HIGH_ADC 2500
 #define ACCEL_A_MAX_ADC 1900
-#define ACCEL_A_OFFSET_ADC 900
+#define ACCEL_A_OFFSET_ADC 690
 #define ACCEL_A_RANGE_ADC (ACCEL_A_MAX_ADC - ACCEL_A_OFFSET_ADC)
 #define ACCEL_A_IRRATIONAL_LOW_ADC 100
 
-#define ACCEL_B_IRRATIONAL_HIGH_ADC 3900
-#define ACCEL_B_MAX_ADC 3400
-#define ACCEL_B_OFFSET_ADC 1600
+#define ACCEL_B_IRRATIONAL_HIGH_ADC 4000
+#define ACCEL_B_MAX_ADC 3900
+#define ACCEL_B_OFFSET_ADC 1670
 #define ACCEL_B_RANGE_ADC (ACCEL_B_MAX_ADC - ACCEL_B_OFFSET_ADC)
 #define ACCEL_B_IRRATIONAL_LOW_ADC 200
 #define ACCEL_MAX_DISAGREEMENT 25

@@ -8,6 +8,7 @@
 #include "DriverInputs.h"
 #include "FaultManager.h"
 #include "Controls.h"
+#include "driver_can.h"
 
 #include "sensor_dbc.h"
 
@@ -73,6 +74,8 @@ void DRS_task() {
         }
     } else drs_status.vc_drs_condition_count = 0;
     drs_status.vc_drs_state = (drs_status.vc_drs_condition_count == DRS_ACCEL_DELAY) && !(FaultManager_read(FAULT_VN_IRR | FAULT_VN_LOST));
+#elif defined(DRS_MANUAL_MODE)
+    drs_status.vc_drs_state = mainBus.dash_buttons & 0x01;
 #else
     if ((di.accelPct > DRS_THROTTLE_THRESHOLD) && (di.brakePct < DRS_BRAKE_THRESHOLD) && (fabsf(di.steerPct) < DRS_STEER_THRESHOLD) /*&& (fabsf(accelY.val) < DRS_LAT_ACCEL_THRESHOLD)*/) {
         if (drs_status.vc_drs_condition_count < DRS_ACTUATION_DELAY) {

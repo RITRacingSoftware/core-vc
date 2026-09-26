@@ -1,15 +1,15 @@
 /*
- * F34_Torque_Vectoring_Simulink_v1_5_3_4.c
+ * F34_Torque_Vectoring_Simulink_v1_5_3_5.c
  *
  * Academic License - for use in teaching, academic research, and meeting
  * course requirements at degree granting institutions only.  Not for
  * government, commercial, or other organizational use.
  *
- * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_4".
+ * Code generation for model "F34_Torque_Vectoring_Simulink_v1_5_3_5".
  *
- * Model version              : 1.454
+ * Model version              : 1.466
  * Simulink Coder version : 23.2 (R2023b) 01-Aug-2023
- * C source code generated on : Fri May 22 16:15:57 2026
+ * C source code generated on : Mon Sep  7 11:34:26 2026
  *
  * Target selection: grt.tlc
  * Note: GRT includes extra infrastructure and instrumentation for prototyping
@@ -18,12 +18,13 @@
  * Validation result: Not run
  */
 
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_4.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_5.h"
 #include "rtwtypes.h"
 #include <math.h>
 #include "rt_nonfinite.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_5_private.h"
 #include <string.h>
-#include "F34_Torque_Vectoring_Simulink_v1_5_3_4_capi.h"
+#include "F34_Torque_Vectoring_Simulink_v1_5_3_5_capi.h"
 
 /* Block signals (default storage) */
 B_F34_Torque_Vectoring_Simuli_T F34_Torque_Vectoring_Simulink_B;
@@ -41,9 +42,54 @@ ExtY_F34_Torque_Vectoring_Sim_T F34_Torque_Vectoring_Simulink_Y;
 static RT_MODEL_F34_Torque_Vectoring_T F34_Torque_Vectoring_Simulin_M_;
 RT_MODEL_F34_Torque_Vectoring_T *const F34_Torque_Vectoring_Simulin_M =
   &F34_Torque_Vectoring_Simulin_M_;
+real32_T rt_powf_snf(real32_T u0, real32_T u1)
+{
+  real32_T y;
+  if (rtIsNaNF(u0) || rtIsNaNF(u1)) {
+    y = (rtNaNF);
+  } else {
+    real32_T tmp;
+    real32_T tmp_0;
+    tmp = fabsf(u0);
+    tmp_0 = fabsf(u1);
+    if (rtIsInfF(u1)) {
+      if (tmp == 1.0F) {
+        y = 1.0F;
+      } else if (tmp > 1.0F) {
+        if (u1 > 0.0F) {
+          y = (rtInfF);
+        } else {
+          y = 0.0F;
+        }
+      } else if (u1 > 0.0F) {
+        y = 0.0F;
+      } else {
+        y = (rtInfF);
+      }
+    } else if (tmp_0 == 0.0F) {
+      y = 1.0F;
+    } else if (tmp_0 == 1.0F) {
+      if (u1 > 0.0F) {
+        y = u0;
+      } else {
+        y = 1.0F / u0;
+      }
+    } else if (u1 == 2.0F) {
+      y = u0 * u0;
+    } else if ((u1 == 0.5F) && (u0 >= 0.0F)) {
+      y = sqrtf(u0);
+    } else if ((u0 < 0.0F) && (u1 > floorf(u1))) {
+      y = (rtNaNF);
+    } else {
+      y = powf(u0, u1);
+    }
+  }
+
+  return y;
+}
 
 /* Model step function */
-void F34_Torque_Vectoring_Simulink_v1_5_3_4_step(void)
+void F34_Torque_Vectoring_Simulink_v1_5_3_5_step(void)
 {
   /* local block i/o variables */
   boolean_T rtb_Memory_f;
@@ -218,6 +264,23 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_step(void)
     a = F34_Torque_Vectoring_Simulink_Y.TargetMotorSpeedsRPM[ForEach_itr] -
       F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds[ForEach_itr];
 
+    /* Signum: '<S7>/Sign' */
+    if (rtIsNaNF(a)) {
+      modifier_idx_0 = (rtNaNF);
+    } else if (a < 0.0F) {
+      modifier_idx_0 = -1.0F;
+    } else {
+      modifier_idx_0 = (real32_T)(a > 0.0F);
+    }
+
+    /* Product: '<S7>/Product' incorporates:
+     *  Abs: '<S7>/Abs'
+     *  Math: '<S7>/Power'
+     *  Signum: '<S7>/Sign'
+     */
+    // a = modifier_idx_0 * rt_powf_snf(fabsf(a),
+      // F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Activation_Threshold);
+
     /* Memory: '<S7>/Memory' */
     rtb_Memory_f = F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
       Memory_PreviousInput;
@@ -269,10 +332,6 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_step(void)
                        + F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr]
                        .Integrator_DSTATE) + rtb_NProdOut) + modifier_idx_0;
 
-    /* Product: '<S7>/Product' */
-    modifier_idx_0 *=
-      F34_Torque_Vectoring_Simulink_U.TCParams_i.TC_Activation_Threshold;
-
     /* Switch: '<S7>/Switch' incorporates:
      *  ForEachSliceSelector generated from: '<S7>/Wheel Torque [Nm]'
      *  MinMax: '<S7>/Max'
@@ -288,9 +347,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_step(void)
        */
       if (modifier_idx_1 > 21.0F) {
         modifier_idx_1 = 21.0F;
-      } else if (modifier_idx_1 < modifier_idx_0) {
+      } else if (modifier_idx_1 < 0) {
         /* Switch: '<S9>/Switch' */
-        modifier_idx_1 = modifier_idx_0;
+        // modifier_idx_1 = modifier_idx_0;
+        modifier_idx_1 = 0;
       }
 
       /* End of Switch: '<S9>/Switch2' */
@@ -318,9 +378,10 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_step(void)
       }
 
       /* End of Switch: '<S10>/Switch2' */
-      modifier_idx_1 = fmaxf
-        (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[ForEach_itr],
-         modifier_idx_0);
+      // modifier_idx_1 = fmaxf
+      //   (F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[ForEach_itr],
+      //    modifier_idx_0);
+      modifier_idx_1 = F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Torque_Requests[ForEach_itr];
     }
 
     /* End of Switch: '<S7>/Switch' */
@@ -340,13 +401,13 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_step(void)
     F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Integrator_DSTATE +=
       a * F34_Torque_Vectoring_Simulink_U.TCParams_i.kI_Slip_Ratio;
     if (F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
-        Integrator_DSTATE > 5.0F) {
+        Integrator_DSTATE > 21.0F) {
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Integrator_DSTATE =
-        5.0F;
+        21.0F;
     } else if (F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
-               Integrator_DSTATE < -5.0F) {
+               Integrator_DSTATE < -21.0F) {
       F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].Integrator_DSTATE =
-        -5.0F;
+        -21.0F;
     }
 
     F34_Torque_Vectoring_Simulin_DW.CoreSubsys[ForEach_itr].
@@ -494,11 +555,24 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_step(void)
         modifier_idx_2 += F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
         modifier_idx_3 = rtb_BodyVelocityms +
           F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
+      } else if (modifier_idx_0 <=
+                 F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend2) {
+        modifier_idx_2 = 0.5F * rtb_BodyVelocityms *
+          F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax;
+        modifier_idx_0 = modifier_idx_2 +
+          F34_Torque_Vectoring_Simulin_DW.preloadTorques[0];
+        rtb_BodyVelocityms = (1.0F - rtb_BodyVelocityms) * 0.5F *
+          F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax;
+        modifier_idx_1 = rtb_BodyVelocityms +
+          F34_Torque_Vectoring_Simulin_DW.preloadTorques[1];
+        modifier_idx_2 += F34_Torque_Vectoring_Simulin_DW.preloadTorques[2];
+        modifier_idx_3 = rtb_BodyVelocityms +
+          F34_Torque_Vectoring_Simulin_DW.preloadTorques[3];
       } else {
         rtb_NProdOut = fmaxf(fminf((modifier_idx_0 -
-          F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend1) /
-          (F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend2 -
-           F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend1), 1.0F), 0.0F);
+          F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend2) /
+          (F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wdot_max -
+           F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_wblend2), 1.0F), 0.0F);
         modifier_idx_2 = F34_Torque_Vectoring_Simulink_U.LCParams_e.LC_Tmax *
           0.5F;
         modifier_idx_3 = modifier_idx_2 * rtb_BodyVelocityms;
@@ -604,7 +678,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_step(void)
 }
 
 /* Model initialize function */
-void F34_Torque_Vectoring_Simulink_v1_5_3_4_initialize(void)
+void F34_Torque_Vectoring_Simulink_v1_5_3_5_initialize(void)
 {
   /* Registration code */
 
@@ -632,7 +706,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_initialize(void)
                (ExtY_F34_Torque_Vectoring_Sim_T));
 
   /* Initialize DataMapInfo substructure containing ModelMap for C API */
-  F34_Torque_Vectoring_Simulink_v1_5_3_4_InitializeDataMapInfo();
+  F34_Torque_Vectoring_Simulink_v1_5_3_5_InitializeDataMapInfo();
 
   {
     /* local scratch DWork variables */
@@ -767,7 +841,7 @@ void F34_Torque_Vectoring_Simulink_v1_5_3_4_initialize(void)
 }
 
 /* Model terminate function */
-void F34_Torque_Vectoring_Simulink_v1_5_3_4_terminate(void)
+void F34_Torque_Vectoring_Simulink_v1_5_3_5_terminate(void)
 {
   /* (no terminate code required) */
 }

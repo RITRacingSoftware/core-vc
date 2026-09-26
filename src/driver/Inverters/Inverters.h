@@ -85,3 +85,4 @@ void Inverters_CAN_rx();
 void Inverters_get_velocities_codegen(float *velArr);
 void Inverters_get_voltages(float *volArr);
 void Inverters_get_torques(float *trqArr);
+InvState_e Inverters_get_state(uint8_t invNum);

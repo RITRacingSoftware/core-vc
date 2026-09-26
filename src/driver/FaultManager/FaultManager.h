@@ -25,6 +25,7 @@
 #define FAULT_RUNAWAY             0x00080000
 #define FAULT_CURRENT_IRR         0x00100000
 #define FAULT_VN_LOST             0x00200000
+#define FAULT_DS_TIMEOUT          0x00400000
 
 
 

@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include "inverter_dbc.h"
 
+#define DTI_RR 1
+#define DTI_RL 2
+#define DTI_FR 3
+#define DTI_FL 4
+
 
 //Fault Codes
 #define DTI_OVER_VOLT_ERR 1 //input voltage was higher then set max 
@@ -21,10 +26,10 @@
 #define DTI_INDEX_LOST_ERR 13 //absolute position index lost 
 
 typedef enum{
-	DTI_NORMAL,
-	DTI_RESETTING,
-	DTI_HARD_PAIRED,
-	DTI_HARD_FAULT
+	DTIState_NORMAL,
+	DTIState_RESETTING,
+	DTIState_HARD_PAIRED,
+	DTIState_HARD_FAULT
 } DTIState_e
 
 

@@ -44,10 +44,10 @@ void VehicleState_Task_Update()
     switch(state)
     {
         case VehicleState_VC_NOT_READY:
-            if ( !(Inverters_get_state(INV_RR) == InvState_NORMAL &&
-                   Inverters_get_state(INV_RL) == InvState_NORMAL &&
-                   Inverters_get_state(INV_FR) == InvState_NORMAL &&
-                   Inverters_get_state(INV_FL) == InvState_NORMAL) ) break;
+            if ( !(Inverters_get_state(DTI_RR) == DTIState_NORMAL &&
+                   Inverters_get_state(DTI_RL) == DTIState_NORMAL &&
+                   Inverters_get_state(DTI_FR) == DTIState_NORMAL &&
+                   Inverters_get_state(DTI_FL) == DTIState_NORMAL) ) break;
 
             // If TSMS is switched, move to next state
             if (GPIO_get_TSMS())
@@ -76,9 +76,9 @@ void VehicleState_Task_Update()
             if ((HAL_GetTick() - precharge_time) > PRECHARGE_MAX_TIME_MS) FaultManager_set(FAULT_PRECHARGE_TIMEOUT);
 
             // If precharge is finished with all 4, confirm precharge done
-            if (!Inverters_get_precharged_all()) break;
+            if (!DTI_get_precharged_all()) break;
 
-            Inverters_set_dc_on(true); // AMK_bDcOn = 1
+            DTI_set_dc_on(true); // AMK_bDcOn = 1
 
             // Receive echo for confirmation of precharge finishing
             // AMK_bDcOn = 1 MIRROR
@@ -100,10 +100,10 @@ void VehicleState_Task_Update()
             break;
 
         case VehicleState_WAIT:
-            Inverters_set_torque_request(INV_RR, 0, 0, 0);
-            Inverters_set_torque_request(INV_RL, 0, 0, 0);
-            Inverters_set_torque_request(INV_FR, 0, 0, 0);
-            Inverters_set_torque_request(INV_FL, 0, 0, 0);
+            Inverters_set_torque_request(DTI_RR, 0, 0, 0);
+            Inverters_set_torque_request(DTI_RL, 0, 0, 0);
+            Inverters_set_torque_request(DTI_FR, 0, 0, 0);
+            Inverters_set_torque_request(DTI_FL, 0, 0, 0);
 
 #ifdef DRIVERLESS_ENABLED
             if ((GPIO_get_ASMS() ? mainBus.rss_pdo.rss_k3 : GPIO_get_RTD()) && (inputs.brakePct > 0.05))
@@ -156,10 +156,10 @@ void VehicleState_Task_Update()
         case VehicleState_SHUTDOWN: 
             core_GPIO_digital_write(SENSOR_LED_PORT, SENSOR_LED_PIN, true);
             // Send zeroes for torque requests, turn off activation relay, send inverter off message
-            Inverters_set_torque_request(INV_RR, 0, 0, 0);
-            Inverters_set_torque_request(INV_RL, 0, 0, 0);
-            Inverters_set_torque_request(INV_FR, 0, 0, 0);
-            Inverters_set_torque_request(INV_FL, 0, 0, 0);
+            Inverters_set_torque_request(DTI_RR, 0, 0, 0);
+            Inverters_set_torque_request(DTI_RL, 0, 0, 0);
+            Inverters_set_torque_request(DTI_FR, 0, 0, 0);
+            Inverters_set_torque_request(DTI_FL, 0, 0, 0);
             Inverters_reset_setpoints();
             GPIO_set_activate_inv_relays(false); // X140 binary input BE2 = 0
             Inverters_set_inv_on(false); // AMK_bInverterOn = 0
@@ -187,10 +187,10 @@ void VehicleState_Task_Update()
             if (Inverters_get_dc_on_any()) break;
 
             
-            if (Inverters_get_state(INV_RR) <= InvState_SOFT_FAULT &&
-                Inverters_get_state(INV_RL) <= InvState_SOFT_FAULT &&
-                Inverters_get_state(INV_FR) <= InvState_SOFT_FAULT &&
-                Inverters_get_state(INV_FL) <= InvState_SOFT_FAULT &&
+            if (Inverters_get_state(DTI_RR) <= InvState_SOFT_FAULT &&
+                Inverters_get_state(DTI_RL) <= InvState_SOFT_FAULT &&
+                Inverters_get_state(DTI_FR) <= InvState_SOFT_FAULT &&
+                Inverters_get_state(DTI_FL) <= InvState_SOFT_FAULT &&
                 !FaultManager_hardfault_active())
             {
                 new_state(VehicleState_VC_NOT_READY);

@@ -67,9 +67,28 @@ bool DTI_get_precharged_all(){
 
 }
 
+bool DTI_get_prechared_any(){
+
+}
+
+bool DTI_get_dc_on_all(){
+
+}
+
+
+bool DTI_get_dc_on_any(){
+
+}
+
+
 DTIState_e DTI_get_state(uint8_t dtiNum){
 	return dtiArr[dtiNum]->state];
 }
 
 
+
+bool DTI_set_dc_on_all(bool val){
+
+
+}
 

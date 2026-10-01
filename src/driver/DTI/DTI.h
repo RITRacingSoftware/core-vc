@@ -9,6 +9,8 @@
 #define DTI_FR 2
 #define DTI_FL 3
 
+#define DRIVE_ENABLE_OFF 0
+#define DRIVE_ENABLE_ON 1
 
 //Fault Codes
 #define DTI_OVER_VOLT_ERR 1 //input voltage was higher then set max 

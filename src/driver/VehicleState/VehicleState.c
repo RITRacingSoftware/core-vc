@@ -44,10 +44,10 @@ void VehicleState_Task_Update()
     switch(state)
     {
         case VehicleState_VC_NOT_READY:
-            if ( !(Inverters_get_state(DTI_RR) == DTIState_NORMAL &&
-                   Inverters_get_state(DTI_RL) == DTIState_NORMAL &&
-                   Inverters_get_state(DTI_FR) == DTIState_NORMAL &&
-                   Inverters_get_state(DTI_FL) == DTIState_NORMAL) ) break;
+            if ( !(DTI_get_state(DTI_RR) == DTIState_NORMAL &&
+                   DTI_get_state(DTI_RL) == DTIState_NORMAL &&
+                   DTI_get_state(DTI_FR) == DTIState_NORMAL &&
+                   DTI_get_state(DTI_FL) == DTIState_NORMAL) ) break;
 
             // If TSMS is switched, move to next state
             if (GPIO_get_TSMS())
@@ -77,16 +77,6 @@ void VehicleState_Task_Update()
 
             // If precharge is finished with all 4, confirm precharge done
             if (!DTI_get_precharged_all()) break;
-
-            DTI_set_dc_on(true); // AMK_bDcOn = 1
-
-            // Receive echo for confirmation of precharge finishing
-            // AMK_bDcOn = 1 MIRROR
-            if (!Inverters_get_dc_on_echo_all()) break;
-
-            // Receive confirmation from inverters that they have been precharged
-            // AMK_bQuitDcOn = 1
-            if (!Inverters_get_dc_on_all()) break;
 
             // Wait for minimum time before closing AIR 1
             if ((HAL_GetTick() - precharge_time) < PRECHARGE_MIN_TIME_MS) break;

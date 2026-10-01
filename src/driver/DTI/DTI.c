@@ -32,12 +32,12 @@ void DTI_Task_Update(){
 	state_machine();
 
 	if (vs != VehicleState_RTD) {
-		for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
+		for (int inv = 0; inv < 4; inv++) { DTI_set_drive_enable(DRIVE_ENABLE_OFF); }
 	}
 
     // Check if we're double pedaling
 	if (FaultManager_read(FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL)) {
-		for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
+		for (int inv = 0; inv < 4; inv++) { DTI_set_drive_enable(DRIVE_ENABLE_OFF); }
 	}
 
 	// Check if the motorspeeds are too low for regen
@@ -62,13 +62,13 @@ void DTI_Task_Update(){
 
 bool DTI_get_precharged_all(){
 	for(int i=0; i<4; i++){
-		if(dtiArr[i]->erpm_duty_voltage.input_voltage < (main.bms_status_pack_voltage * 0.9f) || dtiArr[i]->erpm_duty_voltage.input_voltage < MIN_PRECHARGE_VOL) return false;
+		if(dtiArr[i]->erpm_duty_voltage.inputvoltage < (main.bms_status_pack_voltage * 0.9f) || dtiArr[i]->erpm_duty_voltage.inputvoltage < MIN_PRECHARGE_VOL) return false;
 	}
 
 }
 
 DTIState_e DTI_get_state(uint8_t dtiNum){
-	return dtiArr[dtiNum]->state];
+	return dtiArr[dtiNum]->state;
 }
 
 bool DTI_get_drive_enable_all(void){
@@ -145,4 +145,9 @@ void DTI_CAN_rx(){
 		
 	}
 
+}
+
+
+void DTI_set_torque_request(uint8_t invNum){
+	
 }

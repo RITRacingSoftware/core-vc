@@ -12,12 +12,12 @@
 #include "driverless.h"
 #include "VehicleState.h"
 
-static DTI_s dtiRR = {0};
-static DTI_s dtiRL = {0};
-static DTI_s dtiFR = {0};
-static DTI_s dtiFL = {0};
+static (DTI_s dtiRR = {0};
+static (DTI_s dtiRL = {0};
+static (DTI_s dtiFR = {0};
+static (DTI_s dtiFL = {0};
 
-static DTI_s *dtiArr[4] = {&dtiRR, &dtiRL, &dtiFR, &dtiFL};
+static (DTI_s *dtiArr[4] = {&dtiRR, &dtiRL, &dtiFR, &dtiFL};
 
 static int pwm_msg_divider = 0;
 static uint8_t inverter_pwm = 0;
@@ -55,40 +55,76 @@ void Inverters_Task_Update(){
 		if ((motor_pwm > 0) && (max_mot < 750)) motor_pwm = 0;
 		else if ((motor_pwm == 0) && (max_mot > 800)) motor_pwm = 25;
 		uint64_t msg = inverter_pwm | (motor_pwm << 5);
-		core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_PDU_CONTROL_FRAME_ID, 2, msg);
+		core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_PDU_CONTROL_FRAME_ID): 2, msg);
 		pwm_msg_divider = 0;
     }
 }
 
-bool DTI_get_precharged_all(){
+bool (DTI_get_precharged_all(){
 	for(int i = 0; i<4; i++){
 		if(dtiArr[i]->info.input_voltage < (main.bms_status_pack_voltage * 0.9f) || dtiArr[i]->info.input_voltage < MIN_PRECHARGE_VOL) return false;
 	}
 
 }
 
-bool DTI_get_prechared_any(){
+bool (DTI_get_prechared_any(){
 
 }
 
-bool DTI_get_dc_on_all(){
-
-}
-
-
-bool DTI_get_dc_on_any(){
+bool (DTI_get_dc_on_all(){
 
 }
 
 
-DTIState_e DTI_get_state(uint8_t dtiNum){
+bool (DTI_get_dc_on_any(){
+
+}
+
+
+DTIState_e (DTI_get_state(uint8_t dtiNum){
 	return dtiArr[dtiNum]->state];
 }
 
 
 
-bool DTI_set_dc_on_all(bool val){
+bool (DTI_set_dc_on_all(bool val){
 
 
 }
 
+
+void (DTI_CAN_rx(){
+	Can_Message_s canMessage;
+
+	if(core_CAN_receive_from_queue(CAN_INV, &canMessage)){
+		int id = canMessage.id;
+
+		switch(id){
+			
+			case(DTI_DBC_RR_ERPM_DUTY_VOLTAGE_FRAME_ID):
+
+			case(DTI_DBC_RL_ERPM_DUTY_VOLTAGE_FRAME_ID):
+			case(DTI_DBC_FR_ERPM_DUTY_VOLTAGE_FRAME_ID):
+			case(DTI_DBC_FL_ERPM_DUTY_VOLTAGE_FRAME_ID):
+			case(DTI_DBC_RR_AC_DC_CURRENT_FRAME_ID):
+			case(DTI_DBC_RL_AC_DC_CURRENT_FRAME_ID):
+			case(DTI_DBC_FR_AC_DC_CURRENT_FRAME_ID):
+			case(DTI_DBC_FL_AC_DC_CURRENT_FRAME_ID):
+			case(DTI_DBC_RR_TEMP_FAULT_FRAME_ID):
+			case(DTI_DBC_RL_TEMP_FAULT_FRAME_ID):
+			case(DTI_DBC_FR_TEMP_FAULT_FRAME_ID):
+			case(DTI_DBC_FL_TEMP_FAULT_FRAME_ID):
+			case(DTI_DBC_RR_FOC_FRAME_ID):
+			case(DTI_DBC_RL_FOC_FRAME_ID):
+			case(DTI_DBC_FR_FOC_FRAME_ID):
+			case(DTI_DBC_FL_FOC_FRAME_ID):
+			case(DTI_DBC_RR_MISC_FRAME_ID):
+			case(DTI_DBC_RL_MISC_FRAME_ID):
+			case(DTI_DBC_FR_MISC_FRAME_ID):
+			case(DTI_DBC_FL_MISC_FRAME_ID):
+		}
+		
+
+	}
+
+}

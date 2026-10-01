@@ -4,10 +4,10 @@
 #include <stdint.h>
 #include "inverter_dbc.h"
 
-#define DTI_RR 1
-#define DTI_RL 2
-#define DTI_FR 3
-#define DTI_FL 4
+#define DTI_RR 0
+#define DTI_RL 1
+#define DTI_FR 2
+#define DTI_FL 3
 
 
 //Fault Codes
@@ -34,11 +34,12 @@ typedef enum{
 
 
 typedef struct{
-	struct dti_dbc__1_t info_1;
-	struct dti_dbc_current_t current;
+	struct dti_dbc_erpm_duty_votlage1_t erpm_duty_voltage;
+	struct dti_dbc_ac_dc_current_t current;
 	struct dti_dbc_temp_fault_t tempFault;
-	struct dti_dbc_foc_values_t foc;
-	struct dti_dbc_misc_t
+	struct dti_dbc_foc_t foc;
+	struct dti_dbc_misc_t misc;
+	struct dti_dbc_drive_enable enable;
 	DTIState_e state;
 } DTI_s;
 
@@ -49,27 +50,11 @@ void DTI_update();
 
 //Getters
 DTIState_e DTI_get_state(uint8_t dtiNum);
-bool DTI_get_RPM(void);
-bool DTI_get_duty_cycle(void);
-bool DTI_get_input_voltage(void);
-bool DTI_get_current(void);
-bool DTI_get_temps(void);
-bool DTI_get_faults(void);
-bool DTI_get_FOC(void);
-bool DTI_get_enable(void);
-
+bool DTI_get_precharged_all(void);
+bool DTI_get_precharged_any(void);
+bool DTI_get_drive_enable_all(void);
+bool DTI_get_drive_enable_any(void);
 //Setters for CAN messages
-void DTI_set_current(int_16 val);
-void DTI_set_brake_current(uint16_t val);
-void DTI_set_RPM(int32_t val);
-void DTI_set_motor_postion(uint16_t val);
-void DTI_set_relative_current(int16_t val);
-void DTI_set_relative_brake_current(uint16_t val);
-void DTI_set_digital_output(uint8_t val);
-void DTI_set_max_AC_current(uint16_t val);
-void DTI_set_max_AC_brake_current(int16_t val);
-void DTI_set_max_DC_current(uint16_t val);
-void DTI_set_max_DC_brake_current(int16_t val);
 void DTI_set_drive_enable(uint8_t val);
 
 void DTI_set_state(uint8_t dtiNum, DTIState_e state);

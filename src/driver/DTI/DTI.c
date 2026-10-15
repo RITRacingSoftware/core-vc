@@ -24,6 +24,8 @@ static uint8_t inverter_pwm = 0;
 static uint8_t motor_pwm = 0;
 
 
+static void check_errors();
+
 void DTI_Task_Update(){
 	float debug[2];
 	VehicleState_e vs = VehicleState_get_state();
@@ -32,7 +34,7 @@ void DTI_Task_Update(){
 	state_machine();
 
 	if (vs != VehicleState_RTD) {
-		for (int inv = 0; inv < 4; inv++) { DTI_set_drive_enable(DRIVE_ENABLE_OFF); }
+		for (int inv = 0; inv < 4; inv++) { DTI_set_drive_enable_all(DRIVE_ENABLE_OFF); }
 	}
 
     // Check if we're double pedaling
@@ -64,15 +66,30 @@ bool DTI_get_precharged_all(){
 	for(int i=0; i<4; i++){
 		if(dtiArr[i]->erpm_duty_voltage.inputvoltage < (main.bms_status_pack_voltage * 0.9f) || dtiArr[i]->erpm_duty_voltage.inputvoltage < MIN_PRECHARGE_VOL) return false;
 	}
-
 }
 
 DTIState_e DTI_get_state(uint8_t dtiNum){
 	return dtiArr[dtiNum]->state;
 }
 
+void DTI_set_state(uint8_t, dtiNum, DTIState_e state){
+
+	if(check_state_change(dtiArr[dtiNum], state)){
+		DTI_s *target = dtiArr[dtiNum];
+		DTI_s *paired;
+
+
+		
+
+
+
+
+		target->state;
+	}
+}
+
 bool DTI_get_drive_enable_all(void){
-	for(int i = 0; i<4; i++){
+	for(int i=0; i<4; i++){
 		if(dtiArr[i]->misc.drive_enable != 1) return false;
 	}
 }
@@ -82,8 +99,6 @@ void DTI_set_drive_enable_all(uint8_t val){
 		dtiArr[i]->enable.drive_enable = val;
 	}
 }
-
-
 
 void DTI_CAN_rx(){
 	Can_Message_s canMessage;
@@ -147,7 +162,45 @@ void DTI_CAN_rx(){
 
 }
 
+void DTI_set_torque_request(uint8_t dtiNum, uint16_t torque){
+	int16_t currentValue = (torque/TORQUE_CONSTANT);
+	dtiArr[dtiNum]->current.target_ac_current = inverter_dbc_set_ac_current_target_ac_current_encode(currentValue);
+}
 
-void DTI_set_torque_request(uint8_t invNum){
+static void check_errors(){
+	for(int dti=0; dti<4; dti++){
+		uint8_t errorCode = dtiArr[dti]->tempFault.actual_;
+		for(int i=0; i<13;i++){
+			if(errorCode == DTI_OVER_VOLT_ERR||errorCode == DTI_UNDER_VOLT_ERR||errorCode == DTI_DRV_ERR||errorCode == DTI_ABS_OVER_CURRENT_ERR||errorCode == DTI_CONTROLLER_OVER_TEMP_ERR||errorCode == DTI_MOTOR_OVER_TEMP_ERR||errorCode == DTI_SENSOR_WIRE_ERR||errorCode == DTI_SENSOR_GEN_ERR||errorCode == DTI_CAN_ERR||errorCode == DTI_ANALOG_INPUT_ERR||errorCode == DTI_INTERNAL_ERR||errorCode == DTI_MCU_OVER_TEMP_ERR||errorCode == DTI_INDEX_LOST_ERR) DTI_set_state(dti, DTIState_RESETTING);
+			else{
+				rprintf("Error Code %d: %d\n", dti, errorCode);
+				DTI_set_state(dti, DTIState_RESETTING);
+			}
+		}
+	}
+
+}
+
+static void set_zero(uint8_t dtiNum){
+	dtiArr[dtiNum]->current.target_ac_current = 0;
+}
+
+static bool check_state_change(DTI_s *dti, DTIState_e state){
 	
+	switch(dti->state){
+		case DTIState_NORMAL:
+			return true;
+		case DTIState_RESETTING:
+			return (state != DTIState_SOFT_FAULT);
+		case DTIState_HARD_PAIRED:
+			return (state == DTIState_HARD_FAULT);
+		case DTIState_SOFT_PAIRED:
+			return (state != DTIState_SOFT_FAULT && state != DTIState_NORMAL);
+		case DTIState_SOFT_FAULT:
+			return (state != DTIState_NORMAL && state != DTIState_SOFT_PAIRED)
+		case DTIState_HARD_FAULT:
+			return false;
+	
+	}
+
 }

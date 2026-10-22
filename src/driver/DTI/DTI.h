@@ -9,13 +9,13 @@
 #define DTI_FR 3
 #define DTI_FL 4
 
-<<<<<<< Updated upstream
-=======
+
+
 #define DRIVE_ENABLE_OFF 0
 #define DRIVE_ENABLE_ON 1
 
 #define TORQUE_CONSTANT 0.492f
->>>>>>> Stashed changes
+
 
 //Fault Codes
 #define DTI_OVER_VOLT_ERR 1 //input voltage was higher then set max 
@@ -34,20 +34,15 @@
 
 typedef enum{
 	DTIState_NORMAL,
-	DTIState_RESETTING,
+	DTIState_SOFT_PAIRED,
+	DTIState_SOFT_FAULT,
 	DTIState_HARD_PAIRED,
 	DTIState_HARD_FAULT
 } DTIState_e;
 
 
 typedef struct{
-<<<<<<< Updated upstream
-	struct dti_dbc__1_t info_1;
-	struct dti_dbc_current_t current;
-	struct dti_dbc_temp_fault_t tempFault;
-	struct dti_dbc_foc_values_t foc;
-	struct dti_dbc_misc_t
-=======
+
 	struct inverter_dbc_erpm_duty_voltage_t erpm_duty_voltage;
 	struct inverter_dbc_set_ac_current_t current;
 	struct inverter_dbc_temp_fault_t tempFault;
@@ -55,7 +50,7 @@ typedef struct{
 	struct inverter_dbc_misc_t misc;
 	struct inverter_dbc_enable_t enable;
 	bool hyst;
->>>>>>> Stashed changes
+
 	DTIState_e state;
 } DTI_s;
 
@@ -66,14 +61,7 @@ void DTI_update();
 
 //Getters
 DTIState_e DTI_get_state(uint8_t dtiNum);
-<<<<<<< Updated upstream
 bool DTI_get_RPM(void);
-bool DTI_get_duty_cycle(void);
-bool DTI_get_input_voltage(void);
-bool DTI_get_current(void);
-bool DTI_get_temps(void);
-bool DTI_get_faults(void);
-bool DTI_get_FOC(void);
 bool DTI_get_enable(void);
 
 //Setters for CAN messages
@@ -89,7 +77,7 @@ void DTI_set_max_AC_brake_current(int16_t val);
 void DTI_set_max_DC_current(uint16_t val);
 void DTI_set_max_DC_brake_current(int16_t val);
 void DTI_set_drive_enable(uint8_t val);
-=======
+
 bool DTI_get_precharged_all(void);
 bool DTI_get_precharged_any(void);
 bool DTI_get_drive_enable_all(void);
@@ -101,7 +89,7 @@ void DTI_set_drive_enable_all(uint8_t val);
 void DTI_set_state(uint8_t dtiNum, DTIState_e state);
 void DTI_set_torque_request(uint8_t dtiNum, uint16_t torque);
 void DTI_set_state(uint8_t dtiNum, DTIState_e state);
->>>>>>> Stashed changes
+
 
 void DTI_set_state(uint8_t dtiNum, DTIState_e state);
 void DTI_set_can_states();

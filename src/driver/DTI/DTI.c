@@ -24,17 +24,16 @@ static int pwm_msg_divider = 0;
 static uint8_t inverter_pwm = 0;
 static uint8_t motor_pwm = 0;
 
-<<<<<<< Updated upstream
 
-void Inverters_Task_Update(){
-=======
+
+
 static void check_errors();
 static void state_machine();
 static void check_regen();
 static bool check_state_change(DTI_s *dti, DTIState_e state);
 
 void DTI_Task_Update(){
->>>>>>> Stashed changes
+
 	float debug[2];
 	VehicleState_e vs = VehicleState_get_state();
 
@@ -42,20 +41,20 @@ void DTI_Task_Update(){
 	state_machine();
 
 	if (vs != VehicleState_RTD) {
-<<<<<<< Updated upstream
+
 		for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
-=======
+
 		DTI_set_drive_enable_all(DRIVE_ENABLE_OFF);
->>>>>>> Stashed changes
+
 	}
 
     // Check if we're double pedaling
 	if (FaultManager_read(FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL)) {
-<<<<<<< Updated upstream
+
 		for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
-=======
+
 		DTI_set_drive_enable_all(DRIVE_ENABLE_OFF);
->>>>>>> Stashed changes
+
 	}
 
 	// Check if the motorspeeds are too low for regen
@@ -65,13 +64,9 @@ void DTI_Task_Update(){
 	if ((++pwm_msg_divider) == 100) {
 		int16_t max_inv = 0, max_mot = 0;
 		for (int i=0; i < 4; i++) {
-<<<<<<< Updated upstream
-			if (dtiARR[i]->actual2.temp_motor > max_mot) max_mot = dtiArr[i]->actual2.temp_motor;
-			if (dtiArr[i]->actual2.temp_inverter > max_inv) max_inv = dtiArr[i]->actual2.temp_inverter;
-=======
 			if (dtiArr[i]->tempFault.actual_temp_motor > max_mot) max_mot = dtiArr[i]->tempFault.actual_temp_motor;
 			if (dtiArr[i]->tempFault.actual_temp_controller > max_inv) max_inv = dtiArr[i]->tempFault.actual_temp_controller;
->>>>>>> Stashed changes
+
 		}
 		if ((inverter_pwm > 0) && (max_inv < 250)) inverter_pwm = 0;
 		else if ((inverter_pwm == 0) && (max_inv >= 300)) inverter_pwm = 25;
@@ -84,44 +79,21 @@ void DTI_Task_Update(){
 }
 
 bool DTI_get_precharged_all(){
-<<<<<<< Updated upstream
+
 	for(int i = 0; i<4; i++){
 		if(dtiArr[i]->info.input_voltage < (main.bms_status_pack_voltage * 0.9f) || dtiArr[i]->info.input_voltage < MIN_PRECHARGE_VOL) return false;
-=======
+
 	for(int dti = 0; dti < 4; dti++){
 		if(dtiArr[dti]->erpm_duty_voltage.input_voltage < (mainBus.bms_status.bms_status_pack_voltage * 0.9f) || dtiArr[dti]->erpm_duty_voltage.input_voltage < MIN_PRECHARGE_VOL) return false;
->>>>>>> Stashed changes
+
 	}
 
 }
-
-bool DTI_get_prechared_any(){
-
-}
-
-bool DTI_get_dc_on_all(){
-
-}
-
-
-bool DTI_get_dc_on_any(){
-
-}
-
 
 DTIState_e DTI_get_state(uint8_t dtiNum){
 	return dtiArr[dtiNum]->state];
 }
 
-<<<<<<< Updated upstream
-
-
-bool DTI_set_dc_on_all(bool val){
-
-
-}
-
-=======
 void DTI_set_state(uint8_t dtiNum, DTIState_e state){
 
 	if(check_state_change(dtiArr[dtiNum], state)){
@@ -288,4 +260,4 @@ static void check_regen(){
 		if(dtiArr[dti]->hyst) set_zero(dti);
 	}
 }
->>>>>>> Stashed changes
+

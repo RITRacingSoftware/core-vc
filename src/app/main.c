@@ -5,7 +5,8 @@
 
 #include "VC.h"
 #include "driver_can.h"
-#include "Inverters.h"
+//#include "Inverters.h"
+#include "DTI.h"
 #include "driver_GPIO.h"
 
 #include "FreeRTOS.h"
@@ -48,7 +49,7 @@ void task_CAN_rx_main(void *pvParameters)
 void task_CAN_rx_inv(void *pvParameters)
 {
     (void) pvParameters;
-    while(true) {Inverters_CAN_rx();}
+    while(true) {DTI_CAN_rx();}
 }
 
 void task_100Hz(void *pvParameters)

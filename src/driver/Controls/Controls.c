@@ -4,13 +4,13 @@
 #include "config.h"
 #include "common_macros.h"
 #include "can.h"
-
+#include "DTI.h"
 #include "Controls.h"
 #include "driver_GPIO.h"
 #include "PowerLimit.h"
 #include "TorqueVectoring.h"
 #include "TractionControl.h"
-#include "Inverters.h"
+//#include "Inverters.h"
 #include "DriverInputs.h"
 #include "FaultManager.h"
 #include "timeout.h"
@@ -126,7 +126,7 @@ void Controls_Task_Update()
 
     // Compute estimated velocity
     float vels[4], temp;
-    Inverters_get_velocities_codegen(vels);
+    DTI_get_velocities_codegen(vels);
     for (uint8_t i=3; i > 0; i--) {
         for (uint8_t j=0; j < i; j++) {
             if (vels[j]>vels[j+1]) {
@@ -199,7 +199,7 @@ void Controls_Task_Update()
     //core_CAN_add_message_to_tx_queue(CAN_MAIN, 328, 8, *((uint64_t*)debug));
 
     for (int i = 0; i < 4; i++) {
-        Inverters_set_torque_request(i, (trqPrev[i] * 100), NEG_TORQUE_LIMIT, POS_TORQUE_LIMIT);
+        DTI_set_torque_request(i, (trqPrev[i] * 100));
     }
 
     mainBus.vc_status.vc_controls_level = ControlsLevel;
@@ -267,7 +267,7 @@ static void update_controls_params()
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Steering_Angle = inputs.steerPct; //SCALE(inputs.steerPct, -1.0f, 1.0f, CG_FULL_RIGHT_STEER_DEG, CG_FULL_LEFT_STEER_DEG);
     // Invert angular rate Z so when it is turning counterclockwise it is positive
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Yaw_Rate = -1 * angRateZ.val;
-    Inverters_get_velocities_codegen(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds);
+    DTI_get_velocities_codegen(F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Feedback_Speeds);
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.X_accel = accelX.val;
     F34_Torque_Vectoring_Simulink_U.VariableInBus_g.Y_accel = 0; //accelY.val;
 }
@@ -377,6 +377,7 @@ void rampup_trigger(float val, rampup_t *ramp)
     ramp->done = false;
 }
 
+/*
 void set_driving_event(){
     DrivingEvent = DrivingEventOFF;
     
@@ -415,7 +416,5 @@ void set_EventOFF(){}
 void set_Autocross(){}
 void set_Accel(){}
 void set_Endurance(){}
-void set_Skidpad(){
-
-}
-
+void set_Skidpad(){}
+*/

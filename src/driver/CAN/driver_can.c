@@ -35,14 +35,15 @@ int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_CURRENT_FRAME_ID,
         MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID 
 };
-/*
+<<<<<<< Updated upstream
+
 int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID,
         INVERTER_DBC_RR_AMK_ACTUAL_2_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET1_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET2_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET3_FRAME_ID,
-        INVERTER_DVC_RR_AMK_RIT_SET4_FRAME_ID,
+        INVERTER_DBC_RR_AMK_RIT_SET4_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET5_FRAME_ID,
         INVERTER_DBC_RR_AMK_RIT_SET6_FRAME_ID,
         INVERTER_DBC_RL_AMK_ACTUAL_1_FRAME_ID,
@@ -70,32 +71,34 @@ int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_FL_AMK_RIT_SET5_FRAME_ID,
         INVERTER_DBC_FL_AMK_RIT_SET6_FRAME_ID
 };
-*/
 
+
+=======
 
 int DTI_id_arr[NUM_IDS_INV] = {
-        DTI_DBC_RR_ERPM_DUTY_VOLTAGE_FRAME_ID,
-        DTI_DBC_RL_ERPM_DUTY_VOLTAGE_FRAME_ID,
-        DTI_DBC_FR_ERPM_DUTY_VOLTAGE_FRAME_ID,
-        DTI_DBC_FL_ERPM_DUTY_VOLTAGE_FRAME_ID,
-        DTI_DBC_RR_AC_DC_CURRENT_FRAME_ID,
-        DTI_DBC_RL_AC_DC_CURRENT_FRAME_ID,
-        DTI_DBC_FR_AC_DC_CURRENT_FRAME_ID,
-        DTI_DBC_FL_AC_DC_CURRENT_FRAME_ID,
-        DTI_DBC_RR_TEMP_FAULT_FRAME_ID,  
-        DTI_DBC_RL_TEMP_FAULT_FRAME_ID,  
-        DTI_DBC_FR_TEMP_FAULT_FRAME_ID,  
-        DTI_DBC_FL_TEMP_FAULT_FRAME_ID,
-        DTI_DBC_RR_FOC_FRAME_ID,
-        DTI_DBC_RL_FOC_FRAME_ID,
-        DTI_DBC_FR_FOC_FRAME_ID,
-        DTI_DBC_FL_FOC_FRAME_ID,
-        DTI_DBC_RR_MISC_FRAME_ID,
-        DTI_DBC_RL_MISC_FRAME_ID,
-        DTI_DBC_FR_MISC_FRAME_ID,
-        DTI_DBC_FL_MISC_FRAME_ID
+        INVERTER_DBC_RR_ERPM_DUTY_VOLTAGE_FRAME_ID,
+        INVERTER_DBC_RL_ERPM_DUTY_VOLTAGE_FRAME_ID,
+        INVERTER_DBC_FR_ERPM_DUTY_VOLTAGE_FRAME_ID,
+        INVERTER_DBC_FL_ERPM_DUTY_VOLTAGE_FRAME_ID,
+        INVERTER_DBC_RR_AC_DC_CURRENT_FRAME_ID,
+        INVERTER_DBC_RL_AC_DC_CURRENT_FRAME_ID,
+        INVERTER_DBC_FR_AC_DC_CURRENT_FRAME_ID,
+        INVERTER_DBC_FL_AC_DC_CURRENT_FRAME_ID,
+        INVERTER_DBC_RR_TEMP_FAULT_FRAME_ID,  
+        INVERTER_DBC_RL_TEMP_FAULT_FRAME_ID,  
+        INVERTER_DBC_FR_TEMP_FAULT_FRAME_ID,  
+        INVERTER_DBC_FL_TEMP_FAULT_FRAME_ID,
+        INVERTER_DBC_RR_FOC_FRAME_ID,
+        INVERTER_DBC_RL_FOC_FRAME_ID,
+        INVERTER_DBC_FR_FOC_FRAME_ID,
+        INVERTER_DBC_FL_FOC_FRAME_ID,
+        INVERTER_DBC_RR_MISC_FRAME_ID,
+        INVERTER_DBC_RL_MISC_FRAME_ID,
+        INVERTER_DBC_FR_MISC_FRAME_ID,
+        INVERTER_DBC_FL_MISC_FRAME_ID
 };
 
+>>>>>>> Stashed changes
 bool CAN_init()
 {
     if (!core_CAN_init(CAN_INV, 1000000)) return false;
@@ -269,12 +272,12 @@ static bool CAN_add_filters()
     }
     status = (status && core_CAN_add_filter(CAN_MAIN, false, minFilter, maxFilter));
 
-    minFilter = inv_id_arr[0];
-    maxFilter = inv_id_arr[0];
+    minFilter = DTI_id_arr[0];
+    maxFilter = DTI_id_arr[0];
     for (int i = 1; i < NUM_IDS_INV; i++)
     {
-        if (inv_id_arr[i] < minFilter) minFilter = inv_id_arr[i];
-        if (inv_id_arr[i] > maxFilter) maxFilter = inv_id_arr[i];
+        if (DTI_id_arr[i] < minFilter) minFilter = DTI_id_arr[i];
+        if (DTI_id_arr[i] > maxFilter) maxFilter = DTI_id_arr[i];
     }
     status = (status && core_CAN_add_filter(CAN_INV, false, minFilter, maxFilter));
 

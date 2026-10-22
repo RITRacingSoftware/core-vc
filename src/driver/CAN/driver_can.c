@@ -36,6 +36,7 @@ int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID 
 };
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID,
@@ -72,6 +73,8 @@ int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_FL_AMK_RIT_SET6_FRAME_ID
 };
 
+=======
+>>>>>>> Stashed changes
 
 =======
 

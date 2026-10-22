@@ -3,16 +3,22 @@
 #include <stdbool.h>
 
 #define TSMS_PORT GPIOC
-#define TSMS_PIN GPIO_PIN_6
+#define TSMS_PIN GPIO_PIN_7
 
 #define RTD_PORT GPIOB
 #define RTD_PIN GPIO_PIN_15
 
 #define ASMS_PORT   GPIOC
-#define ASMS_PIN    GPIO_PIN_7
+#define ASMS_PIN    GPIO_PIN_8
+
+#define PRECHARGE_RELAY_PORT GPIOB
+#define PRECHARGE_RELAY_PIN GPIO_PIN_10
 
 #define AIR1_PORT GPIOB
 #define AIR1_PIN GPIO_PIN_2
+
+#define SDC_PORT GPIOB
+#define SDC_PIN GPIO_PIN_9
 
 // KRB INPUTS
 #define RR_ACTIVATE_RELAY_PORT GPIOC
@@ -28,18 +34,35 @@
 #define FL_ACTIVATE_RELAY_PIN GPIO_PIN_6
 
 // ONBOARD LEDS
-<<<<<<< Updated upstream
-=======
 #define ALIVE_LED_PORT GPIOA
 #define ALIVE_LED_PIN GPIO_PIN_3
 
->>>>>>> Stashed changes
 #define VC_LED_PORT GPIOA
-#define VC_LED_PIN GPIO_PIN_1
+#define VC_LED_PIN GPIO_PIN_4
 
 #define MAIN_LED_PORT GPIOA
 #define MAIN_LED_PIN GPIO_PIN_0
 
+#define AMK_LED_PORT GPIOA
+#define AMK_LED_PIN GPIO_PIN_5
+
+#define SENSOR_LED_PORT GPIOA
+#define SENSOR_LED_PIN GPIO_PIN_1
+
+#define RR_STATUS_PORT GPIOC
+#define RR_STATUS_PIN GPIO_PIN_2
+
+#define RL_STATUS_PORT GPIOA
+#define RL_STATUS_PIN GPIO_PIN_3
+
+#define FR_STATUS_PORT GPIOC
+#define FR_STATUS_PIN GPIO_PIN_1
+
+#define FL_STATUS_PORT GPIOA
+#define FL_STATUS_PIN GPIO_PIN_2
+
+
+// DTI DIGTAL OUTPUTS
 #define RR_ENABLE_PORT GPIOC
 #define RR_ENABLE_PIN GPIO_PIN_2
 
@@ -52,15 +75,8 @@
 #define FL_ENABLE_PORT GPIOC
 #define FL_ENABLE_PIN GPIO_PIN_5
 
-<<<<<<< Updated upstream
-#define FR_STATUS_PORT GPIOC
-#define FR_STATUS_PIN GPIO_PIN_1
 
-#define FL_STATUS_PORT GPIOA
-#define FL_STATUS_PIN GPIO_PIN_2
 
-=======
->>>>>>> Stashed changes
 
 void GPIO_init();
 void GPIO_set_precharge_relay(bool on);

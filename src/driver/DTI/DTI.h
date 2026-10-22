@@ -9,28 +9,25 @@
 #define DTI_FR 3
 #define DTI_FL 4
 
-
-
 #define DRIVE_ENABLE_OFF 0
 #define DRIVE_ENABLE_ON 1
 
 #define TORQUE_CONSTANT 0.492f
 
-
 //Fault Codes
-#define DTI_OVER_VOLT_ERR 1 //input voltage was higher then set max 
-#define DTI_UNDER_VOLT_ERR 2 //input voltage was lower then set min
-#define DTI_DRV_ERR 3 // transistor or transistor drive error
-#define DTI_ABS_OVER_CURRENT_ERR 4 //AC current is higher than absolute max
-#define DTI_CONTROLLER_OVER_TEMP_ERR 5 //controller temp higher then set max
-#define DTI_MOTOR_OVER_TEMP_ERR 6 //motor temp higher then set max
-#define DTI_SENSOR_WIRE_ERR 7 //issue with sensor differential signals
-#define DTI_SENSOR_GEN_ERR 8 //sensor processing error
-#define DTI_CAN_ERR 9 //invalid CAN command received 
-#define DTI_ANALOG_INPUT_ERR 10 //excessive deviation in redundant config in HV550/HV850
-#define DTI_INTERNAL_ERR 11 //internal hardware fault
-#define DTI_MCU_OVER_TEMP_ERR 12 //MCU temp too high
-#define DTI_INDEX_LOST_ERR 13 //absolute position index lost 
+#define DTI_ERR_OVER_VOLT 1 //input voltage was higher then set max 
+#define DTI_ERR_UNDER_VOLT 2 //input voltage was lower then set min
+#define DTI_ERR_DRV 3 // transistor or transistor drive error
+#define DTI_ERR_ABS_OVER_CURRENT 4 //AC current is higher than absolute max
+#define DTI_ERR_CONTROLLER_OVER_TEMP 5 //controller temp higher then set max
+#define DTI_ERR_MOTOR_OVER_TEMP 6 //motor temp higher then set max
+#define DTI_ERR_SENSOR_WIRE 7 //issue with sensor differential signals
+#define DTI_ERR_SENSOR_GEN 8 //sensor processing error
+#define DTI_ERR_CAN 9 //invalid CAN command received 
+#define DTI_ERR_ANALOG_INPUT 10 //excessive deviation in redundant config in HV550/HV850
+#define DTI_ERR_INTERNAL 11 //internal hardware fault
+#define DTI_ERR_MCU_OVER_TEMP 12 //MCU temp too high
+#define DTI_ERR_INDEX_LOST 13 //absolute position index lost 
 
 typedef enum{
 	DTIState_NORMAL,
@@ -50,7 +47,6 @@ typedef struct{
 	struct inverter_dbc_misc_t misc;
 	struct inverter_dbc_enable_t enable;
 	bool hyst;
-
 	DTIState_e state;
 } DTI_s;
 
@@ -63,25 +59,8 @@ void DTI_update();
 DTIState_e DTI_get_state(uint8_t dtiNum);
 bool DTI_get_RPM(void);
 bool DTI_get_enable(void);
-
-//Setters for CAN messages
-void DTI_set_current(int_16 val);
-void DTI_set_brake_current(uint16_t val);
-void DTI_set_RPM(int32_t val);
-void DTI_set_motor_postion(uint16_t val);
-void DTI_set_relative_current(int16_t val);
-void DTI_set_relative_brake_current(uint16_t val);
-void DTI_set_digital_output(uint8_t val);
-void DTI_set_max_AC_current(uint16_t val);
-void DTI_set_max_AC_brake_current(int16_t val);
-void DTI_set_max_DC_current(uint16_t val);
-void DTI_set_max_DC_brake_current(int16_t val);
-void DTI_set_drive_enable(uint8_t val);
-
 bool DTI_get_precharged_all(void);
-bool DTI_get_precharged_any(void);
 bool DTI_get_drive_enable_all(void);
-bool DTI_get_drive_enable_any(void);
 void DTI_get_velocities_codegen(float *velArr);
 
 //Setters

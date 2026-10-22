@@ -18,20 +18,15 @@ void GPIO_init()
     core_GPIO_init(ASMS_PORT, ASMS_PIN, GPIO_MODE_INPUT, GPIO_PULLUP);
 
     core_GPIO_init(AIR1_PORT, AIR1_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
-<<<<<<< Updated upstream
-
 //    core_GPIO_init(VC_LED_PORT, VC_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(MAIN_LED_PORT, MAIN_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(AMK_LED_PORT, AMK_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(SENSOR_LED_PORT, SENSOR_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
 
-=======
     core_GPIO_init(SDC_PORT, SDC_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
-
 //    core_GPIO_init(VC_LED_PORT, VC_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(MAIN_LED_PORT, MAIN_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     
->>>>>>> Stashed changes
     core_GPIO_init(RR_ACTIVATE_RELAY_PORT, RR_ACTIVATE_RELAY_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(RL_ACTIVATE_RELAY_PORT, RL_ACTIVATE_RELAY_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(FR_ACTIVATE_RELAY_PORT, FR_ACTIVATE_RELAY_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
@@ -64,7 +59,7 @@ void GPIO_init()
 
 bool GPIO_set_interlock_relay(bool on) {
     if (on) {
-        if (!Inverters_get_precharged_all()) return false;
+        if (!DTI_get_precharged_all()) return false;
     }    
     core_GPIO_digital_write(AIR1_PORT, AIR1_PIN, on);
     return true;
@@ -101,8 +96,6 @@ void GPIO_Task_Update()
     else ASMS_counter = 0;
     rprintf("ASMS %d\n", ASMS_state);
 }
-<<<<<<< Updated upstream
-=======
 
 void GPIO_set_LEDs_on(bool on){
     core_GPIO_digital_write(MAIN_LED_PORT, MAIN_LED_PIN, on);
@@ -110,4 +103,4 @@ void GPIO_set_LEDs_on(bool on){
     core_GPIO_digital_write(VC_LED_PORT, VC_LED_PIN, on);
              
 }
->>>>>>> Stashed changes
+

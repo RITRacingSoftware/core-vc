@@ -12,7 +12,6 @@
 #include "driverless.h"
 #include "VehicleState.h"
 
-
 static DTI_s dtiRR = {0};
 static DTI_s dtiRL = {0};
 static DTI_s dtiFR = {0};
@@ -23,8 +22,6 @@ static DTI_s *dtiArr[4] = {&dtiRR, &dtiRL, &dtiFR, &dtiFL};
 static int pwm_msg_divider = 0;
 static uint8_t inverter_pwm = 0;
 static uint8_t motor_pwm = 0;
-
-
 
 
 static void check_errors();
@@ -43,20 +40,11 @@ void DTI_Task_Update(){
 	if (vs != VehicleState_RTD) {
 
 		for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
-
 		DTI_set_drive_enable_all(DRIVE_ENABLE_OFF);
-
 	}
 
     // Check if we're double pedaling
 	if (FaultManager_read(FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL)) {
-
-		for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
-
-		DTI_set_drive_enable_all(DRIVE_ENABLE_OFF);
-
-	}
-
 	// Check if the motorspeeds are too low for regen
 	check_regen();
 
@@ -66,7 +54,6 @@ void DTI_Task_Update(){
 		for (int i=0; i < 4; i++) {
 			if (dtiArr[i]->tempFault.actual_temp_motor > max_mot) max_mot = dtiArr[i]->tempFault.actual_temp_motor;
 			if (dtiArr[i]->tempFault.actual_temp_controller > max_inv) max_inv = dtiArr[i]->tempFault.actual_temp_controller;
-
 		}
 		if ((inverter_pwm > 0) && (max_inv < 250)) inverter_pwm = 0;
 		else if ((inverter_pwm == 0) && (max_inv >= 300)) inverter_pwm = 25;
@@ -79,13 +66,8 @@ void DTI_Task_Update(){
 }
 
 bool DTI_get_precharged_all(){
-
-	for(int i = 0; i<4; i++){
-		if(dtiArr[i]->info.input_voltage < (main.bms_status_pack_voltage * 0.9f) || dtiArr[i]->info.input_voltage < MIN_PRECHARGE_VOL) return false;
-
 	for(int dti = 0; dti < 4; dti++){
 		if(dtiArr[dti]->erpm_duty_voltage.input_voltage < (mainBus.bms_status.bms_status_pack_voltage * 0.9f) || dtiArr[dti]->erpm_duty_voltage.input_voltage < MIN_PRECHARGE_VOL) return false;
-
 	}
 
 }
@@ -213,7 +195,19 @@ static void check_errors(){
 	for(int dti=0; dti<4; dti++){
 		uint8_t errorCode = dtiArr[dti]->tempFault.actual_fault_code;
 		for(int i=0; i<13;i++){
-			if(errorCode == DTI_ERR_OVER_VOLT||errorCode == DTI_ERR_UNDER_VOLT||errorCode == DTI_ERR_DRV||errorCode == DTI_ERR_ABS_OVER_CURRENT||errorCode == DTI_ERR_CONTROLLER_OVER_TEMP||errorCode == DTI_ERR_MOTOR_OVER_TEMP||errorCode == DTI_ERR_SENSOR_WIRE||errorCode == DTI_ERR_SENSOR_GEN||errorCode == DTI_ERR_CAN||errorCode == DTI_ERR_ANALOG_INPUT||errorCode == DTI_ERR_INTERNAL||errorCode == DTI_ERR_MCU_OVER_TEMP||errorCode == DTI_ERR_INDEX_LOST) DTI_set_state(dti, DTIState_SOFT_FAULT);
+			if(errorCode == DTI_ERR_OVER_VOLT ||
+			errorCode == DTI_ERR_UNDER_VOLT ||
+			errorCode == DTI_ERR_DRV ||
+			errorCode == DTI_ERR_ABS_OVER_CURRENT ||
+			errorCode == DTI_ERR_CONTROLLER_OVER_TEMP ||
+			errorCode == DTI_ERR_MOTOR_OVER_TEMP ||
+			errorCode == DTI_ERR_SENSOR_WIRE ||
+			errorCode == DTI_ERR_SENSOR_GEN ||
+			errorCode == DTI_ERR_CAN ||
+			errorCode == DTI_ERR_ANALOG_INPUT ||
+			errorCode == DTI_ERR_INTERNAL ||
+			errorCode == DTI_ERR_MCU_OVER_TEMP ||
+			errorCode == DTI_ERR_INDEX_LOST){ DTI_set_state(dti, DTIState_SOFT_FAULT);}
 			else{
 				DTI_set_state(dti, DTIState_NORMAL);
 			}
@@ -222,7 +216,7 @@ static void check_errors(){
 
 }
 
-static void set_zero(uint8_t dtiNum){
+void set_zero(uint8_t dtiNum){
 	dtiArr[dtiNum]->current.target_ac_current = 0;
 }
 
@@ -257,7 +251,10 @@ static void check_regen(){
 	for(int dti = 0; dti < 4; dti++){
 		if(dtiArr[dti]->erpm_duty_voltage.erpm < REGEN_MOTORSPEED_RPM_LOW) dtiArr[dti]->hyst = true;
 		else if(dtiArr[dti]->erpm_duty_voltage.erpm > REGEN_MOTORSPEED_RPM_HIGH) dtiArr[dti]->hyst = false;
-		if(dtiArr[dti]->hyst) set_zero(dti);
+		else if(dtiArr[dti]->hyst) set_zero(dti);
 	}
 }
+
+
+
 

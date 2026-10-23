@@ -35,8 +35,6 @@ int main_id_arr[NUM_IDS_MAIN] = {
         MAIN_DBC_BMS_CURRENT_FRAME_ID,
         MAIN_DBC_BMS_CELL_OVERVIEW_FRAME_ID 
 };
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 
 int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_RR_AMK_ACTUAL_1_FRAME_ID,
@@ -73,11 +71,6 @@ int inv_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_FL_AMK_RIT_SET6_FRAME_ID
 };
 
-=======
->>>>>>> Stashed changes
-
-=======
-
 int DTI_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_RR_ERPM_DUTY_VOLTAGE_FRAME_ID,
         INVERTER_DBC_RL_ERPM_DUTY_VOLTAGE_FRAME_ID,
@@ -101,7 +94,6 @@ int DTI_id_arr[NUM_IDS_INV] = {
         INVERTER_DBC_FL_MISC_FRAME_ID
 };
 
->>>>>>> Stashed changes
 bool CAN_init()
 {
     if (!core_CAN_init(CAN_INV, 1000000)) return false;

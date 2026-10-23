@@ -4,7 +4,7 @@
 #include "driver_can.h"
 #include "can.h"
 #include "driver_GPIO.h"
-#include "Inverters.h"
+#include "DTI.h"
 #include "gpio.h"
 #include <stdio.h>
 #include "rtt.h"
@@ -66,7 +66,7 @@ void PowerLimit_set_initial_temp() {
 void PowerLimit(float reqTrq, float *limitedMaxTrq) {
     // Calculate pack voltage
     float vol[4];
-    Inverters_get_voltages(vol);
+    DTI_get_voltages(vol);
     float packV = (vol[0] + vol[1] + vol[2] + vol[3]) / 4.0f;
 
     if (packV < PACK_IRR_V) packV = mainBus.bms_status.bms_status_pack_voltage;
@@ -126,7 +126,7 @@ void PowerLimit_deploy(float reqTrq, float *limitedMaxTrq, float packV, float am
     //rprintf("amps: %d, currP: %d\n", (int)(amps), (int)(currP));
 
     float trqs[4];
-    Inverters_get_torques(trqs);
+    DTI_get_voltages(trqs);
     float totalTrq = (trqs[0] + trqs[1] + trqs[2] + trqs[3]) / 100;
 
     if (currP > (PL_THRESHOLD * maxP))
@@ -200,7 +200,7 @@ void RegenLimit(float reqRgn, float *limitedMaxRgn, float packV, float amps)
 {
     float debug[2];
     float trqs[4];
-    Inverters_get_torques(trqs);
+    DTI_get_torques(trqs);
     float totalTrq = (trqs[0] + trqs[1] + trqs[2] + trqs[3]) / 100;
 
     last_reqRgn -= 0.07;

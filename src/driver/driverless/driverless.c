@@ -5,7 +5,7 @@
 #include "config.h"
 #include "FaultManager.h"
 #include "VehicleState.h"
-#include "Inverters.h"
+#include "DTI.h"
 #include "driver_can.h"
 
 static core_timeout_t ds_timeout;
@@ -27,8 +27,8 @@ void driverless_init() {
 void driverless_state_update() {
     VehicleState_e vs = VehicleState_get_state();
     // Update DS enable bits
-    mainBus.vc_status.vc_ds_rear_enable = (vs == VehicleState_RTD_AS) && (Inverters_get_state(0) == InvState_NORMAL) && (Inverters_get_state(1) == InvState_NORMAL);
-    mainBus.vc_status.vc_ds_front_enable = (vs == VehicleState_RTD_AS) && (Inverters_get_state(2) == InvState_NORMAL) && (Inverters_get_state(3) == InvState_NORMAL);
+    mainBus.vc_status.vc_ds_rear_enable = (vs == VehicleState_RTD_AS) && (DTI_get_state(0) == DTIState_NORMAL) && (DTI_get_state(1) == DTIState_NORMAL);
+    mainBus.vc_status.vc_ds_front_enable = (vs == VehicleState_RTD_AS) && (DTI_get_state(2) == DTIState_NORMAL) && (DTI_get_state(3) == DTIState_NORMAL);
     // Check that the datalogger releases the inverters. If not, turn off the car
     //if ((mainBus.vc_status.vc_ds_rear_enable || !(mainBus.ds_status.ds_rear_active)) && (mainBus.vc_status.vc_ds_front_enable || !(mainBus.ds_status.ds_front_active))) {
         core_timeout_reset(&ds_timeout);

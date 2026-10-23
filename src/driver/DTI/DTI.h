@@ -63,12 +63,17 @@ bool DTI_get_enable(void);
 bool DTI_get_precharged_all(void);
 bool DTI_get_drive_enable_all(void);
 void DTI_get_velocities_codegen(float *velArr);
+void DTI_get_voltages(float *volArr);
+void DTI_get_torques(float *trqArr);
+bool DTI_get_dc_on_any();
+
 
 //Setters
 void DTI_set_drive_enable_all(uint8_t val);
 void DTI_set_state(uint8_t dtiNum, DTIState_e state);
 void DTI_set_torque_request(uint8_t dtiNum, uint16_t torque);
 void DTI_set_state(uint8_t dtiNum, DTIState_e state);
+void DTI_set_can_states();
 
 
 void DTI_set_state(uint8_t dtiNum, DTIState_e state);

@@ -9,7 +9,7 @@
 #include "driver_GPIO.h"
 #include "driver_can.h"
 #include "FaultManager.h"
-#include "driverless.h"
+//#include "driverless.h"
 #include "VehicleState.h"
 
 static DTI_s dtiRR = {0};
@@ -110,17 +110,27 @@ void DTI_set_state(uint8_t dtiNum, DTIState_e state){
 	}
 }
 
+bool DTI_get_dc_on_any(){
+	for(int dti=0; dti<4; dti++){
+		if(dtiArr[dti]->erpm_duty_voltage.input_voltage < 0) return false;
+	}
+}
 
-
-bool DTI_get_drive_enable_all(void){
-	for(int i=0; i<4; i++){
-		if(dtiArr[i]->misc.drive_enable != 1) return false;
+bool DTI_get_drive_enable_all(){
+	for(int dti=0; dti<4; dti++){
+		if(dtiArr[dti]->misc.drive_enable != 1) return false;
 	}
 }
 
 void DTI_set_drive_enable_all(uint8_t val){
-	for(int i=0; i<4; i++){
-		dtiArr[i]->enable.drive_enable = val;
+	for(int dti=0; dti<4; dti++){
+		dtiArr[dti]->enable.drive_enable = val;
+	}
+}
+
+void DTI_get_voltages(float *volArr){
+	for(int dti=0; dti<4; dti++){
+		volArr[dti] = dtiArr[dti]->erpm_duty_voltage.input_voltage;
 	}
 }
 
@@ -188,6 +198,25 @@ static void state_machine(){
 
 }*/
 
+void DTI_set_can_states(){
+	mainBus.inverter_status.vc_rr_status = dtiRR.state;
+	mainBus.inverter_status.vc_rl_status = dtiRL.state;
+	mainBus.inverter_status.vc_fr_status = dtiFR.state;
+	mainBus.inverter_status.vc_fl_status = dtiFL.state;
+
+	for(int dti=0; dti<4; dti++){
+		mainBus.inverter_temps[dti] = dtiArr[dti]->tempFault.actual_temp_controller;
+		mainBus.motor_temps[dti] = dtiArr[dti]->tempFault.actual_temp_motor;
+	}
+}
+
+void DTI_get_torques(float *trqArr){
+	for(int dti=0; dti<4; dti++){
+		trqArr[dti] = dtiArr[dti]->erpm_duty_voltage.erpm;
+	}
+
+}
+
 void DTI_set_torque_request(uint8_t dtiNum, uint16_t torque){
 	int16_t currentValue = (torque/TORQUE_CONSTANT);
 	dtiArr[dtiNum]->current.target_ac_current = inverter_dbc_set_ac_current_target_ac_current_encode(currentValue);
@@ -196,23 +225,21 @@ void DTI_set_torque_request(uint8_t dtiNum, uint16_t torque){
 static void check_errors(){
 	for(int dti=0; dti<4; dti++){
 		uint8_t errorCode = dtiArr[dti]->tempFault.actual_fault_code;
-		for(int i=0; i<13;i++){
-			if(errorCode == DTI_ERR_OVER_VOLT ||
-			errorCode == DTI_ERR_UNDER_VOLT ||
-			errorCode == DTI_ERR_DRV ||
-			errorCode == DTI_ERR_ABS_OVER_CURRENT ||
-			errorCode == DTI_ERR_CONTROLLER_OVER_TEMP ||
-			errorCode == DTI_ERR_MOTOR_OVER_TEMP ||
-			errorCode == DTI_ERR_SENSOR_WIRE ||
-			errorCode == DTI_ERR_SENSOR_GEN ||
-			errorCode == DTI_ERR_CAN ||
-			errorCode == DTI_ERR_ANALOG_INPUT ||
-			errorCode == DTI_ERR_INTERNAL ||
-			errorCode == DTI_ERR_MCU_OVER_TEMP ||
-			errorCode == DTI_ERR_INDEX_LOST){ DTI_set_state(dti, DTIState_SOFT_FAULT);}
-			else{
-				DTI_set_state(dti, DTIState_NORMAL);
-			}
+		if(errorCode == DTI_ERR_OVER_VOLT ||
+		errorCode == DTI_ERR_UNDER_VOLT ||
+		errorCode == DTI_ERR_DRV ||
+		errorCode == DTI_ERR_ABS_OVER_CURRENT ||
+		errorCode == DTI_ERR_CONTROLLER_OVER_TEMP ||
+		errorCode == DTI_ERR_MOTOR_OVER_TEMP ||
+		errorCode == DTI_ERR_SENSOR_WIRE ||
+		errorCode == DTI_ERR_SENSOR_GEN ||
+		errorCode == DTI_ERR_CAN ||
+		errorCode == DTI_ERR_ANALOG_INPUT ||
+		errorCode == DTI_ERR_INTERNAL ||
+		errorCode == DTI_ERR_MCU_OVER_TEMP ||
+		errorCode == DTI_ERR_INDEX_LOST){ DTI_set_state(dti, DTIState_SOFT_FAULT);}
+		else{
+			DTI_set_state(dti, DTIState_NORMAL);
 		}
 	}
 

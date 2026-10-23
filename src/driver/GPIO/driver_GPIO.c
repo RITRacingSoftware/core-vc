@@ -23,7 +23,7 @@ void GPIO_init()
     core_GPIO_init(AMK_LED_PORT, AMK_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(SENSOR_LED_PORT, SENSOR_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
 
-    core_GPIO_init(SDC_PORT, SDC_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
+    core_GPIO_init(SDC_CTRL_PORT, SDC_CTRL_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
 //    core_GPIO_init(VC_LED_PORT, VC_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     core_GPIO_init(MAIN_LED_PORT, MAIN_LED_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN);
     
@@ -57,11 +57,11 @@ void GPIO_init()
 }
 
 
-bool GPIO_set_interlock_relay(bool on) {
-    if (on) {
+bool GPIO_set_interlock_relay(bool state) {
+    if (state) {
         if (!DTI_get_precharged_all()) return false;
     }    
-    core_GPIO_digital_write(AIR1_PORT, AIR1_PIN, on);
+    core_GPIO_digital_write(AIR1_PORT, AIR1_PIN, state);
     return true;
 }
 
@@ -70,12 +70,16 @@ bool GPIO_get_RTD() {return RTD_state;}
 bool GPIO_get_ASMS() {return ASMS_state;}
 bool GPIO_get_LC() {return RTD_state;}
 
-void GPIO_set_activate_inv_relays(bool on)
+void GPIO_set_SDC_CTRL(bool state){
+    core_GPIO_digital_write(SDC_CTRL_PORT, SDC_CTRL_PIN, state);
+}
+
+void GPIO_set_activate_inv_relays(bool state)
 {
-    core_GPIO_digital_write(RR_ACTIVATE_RELAY_PORT, RR_ACTIVATE_RELAY_PIN, on);
-    core_GPIO_digital_write(RL_ACTIVATE_RELAY_PORT, RL_ACTIVATE_RELAY_PIN, on);
-    core_GPIO_digital_write(FR_ACTIVATE_RELAY_PORT, FR_ACTIVATE_RELAY_PIN, on);
-    core_GPIO_digital_write(FL_ACTIVATE_RELAY_PORT, FL_ACTIVATE_RELAY_PIN, on);
+    core_GPIO_digital_write(RR_ACTIVATE_RELAY_PORT, RR_ACTIVATE_RELAY_PIN, state);
+    core_GPIO_digital_write(RL_ACTIVATE_RELAY_PORT, RL_ACTIVATE_RELAY_PIN, state);
+    core_GPIO_digital_write(FR_ACTIVATE_RELAY_PORT, FR_ACTIVATE_RELAY_PIN, state);
+    core_GPIO_digital_write(FL_ACTIVATE_RELAY_PORT, FL_ACTIVATE_RELAY_PIN, state);
 }
 
 void GPIO_Task_Update()

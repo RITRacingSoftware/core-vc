@@ -17,8 +17,8 @@
 #define AIR1_PORT GPIOB
 #define AIR1_PIN GPIO_PIN_2
 
-#define SDC_PORT GPIOB
-#define SDC_PIN GPIO_PIN_9
+#define SDC_CTRL_PORT GPIOB
+#define SDC_CTRL_PIN GPIO_PIN_9
 
 // KRB INPUTS
 #define RR_ACTIVATE_RELAY_PORT GPIOC
@@ -79,10 +79,11 @@
 
 
 void GPIO_init();
-void GPIO_set_precharge_relay(bool on);
-bool GPIO_set_interlock_relay(bool on);
+void GPIO_set_SDC_CTRL(bool state);
+void GPIO_set_LEDs_on(bool state);
+bool GPIO_set_interlock_relay(bool state);
 bool GPIO_get_TSMS();
 bool GPIO_get_RTD();
 bool GPIO_get_ASMS();
-void GPIO_set_activate_inv_relays(bool on);
+void GPIO_set_activate_inv_relays(bool state);
 void GPIO_Task_Update();

@@ -68,7 +68,7 @@ DBC_INCLUDES := -I $(DBC_DIR)/c_files
 DBC_OBJS := $(DBC_SRCS:$(DBC_DIR)/c_files/%=$(STM32_BUILD_DIR)/obj/formula_dbc/%.o)
 endif
 
-CORE_DIR := ../core/src/driver
+CORE_DIR := ../Core/src/driver
 CORE_SRCS := $(shell find $(CORE_DIR)/Src -type f -name "*.c")
 CORE_INCLUDES := -I $(CORE_DIR)/Inc $(STM32CUBE_INCLUDES) $(FREERTOS_INCLUDES) $(RTT_INCLUDES)
 CORE_INCLUDES := $(foreach d, $(CORE_INCLUDES),-I $d)

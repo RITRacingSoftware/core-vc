@@ -23,7 +23,7 @@ static int pwm_msg_divider = 0;
 static uint8_t inverter_pwm = 0;
 static uint8_t motor_pwm = 0;
 
-
+static void set_zero(uint8_t dtiNum);
 static void check_errors();
 static void state_machine();
 static void check_regen();
@@ -38,13 +38,14 @@ void DTI_Task_Update(){
 	state_machine();
 
 	if (vs != VehicleState_RTD) {
-
 		for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
 		DTI_set_drive_enable_all(DRIVE_ENABLE_OFF);
 	}
 
     // Check if we're double pedaling
 	if (FaultManager_read(FAULT_DOUBLE_PEDAL | FAULT_SOFT_DOUBLE_PEDAL)) {
+		for (int inv = 0; inv < 4; inv++) { set_zero(inv); }
+	}
 	// Check if the motorspeeds are too low for regen
 	check_regen();
 
@@ -62,8 +63,9 @@ void DTI_Task_Update(){
 		uint64_t msg = inverter_pwm | (motor_pwm << 5);
 		core_CAN_add_message_to_tx_queue(CAN_SENSE, SENSOR_DBC_VC_PDU_CONTROL_FRAME_ID, 2, msg);
 		pwm_msg_divider = 0;
-    }
-}
+		
+	}
+} 
 
 bool DTI_get_precharged_all(){
 	for(int dti = 0; dti < 4; dti++){
@@ -73,7 +75,7 @@ bool DTI_get_precharged_all(){
 }
 
 DTIState_e DTI_get_state(uint8_t dtiNum){
-	return dtiArr[dtiNum]->state];
+	return dtiArr[dtiNum]->state;
 }
 
 void DTI_set_state(uint8_t dtiNum, DTIState_e state){
@@ -181,10 +183,10 @@ void DTI_CAN_rx(){
 	}
 
 }
-
+/*
 static void state_machine(){
 
-}
+}*/
 
 void DTI_set_torque_request(uint8_t dtiNum, uint16_t torque){
 	int16_t currentValue = (torque/TORQUE_CONSTANT);
@@ -249,9 +251,11 @@ void DTI_get_velocities_codegen(float *velArr){
 
 static void check_regen(){
 	for(int dti = 0; dti < 4; dti++){
-		if(dtiArr[dti]->erpm_duty_voltage.erpm < REGEN_MOTORSPEED_RPM_LOW) dtiArr[dti]->hyst = true;
-		else if(dtiArr[dti]->erpm_duty_voltage.erpm > REGEN_MOTORSPEED_RPM_HIGH) dtiArr[dti]->hyst = false;
-		else if(dtiArr[dti]->hyst) set_zero(dti);
+		if(dtiArr[dti]->receivedCurrent.ac_current < 0){
+			if(dtiArr[dti]->erpm_duty_voltage.erpm < REGEN_MOTORSPEED_RPM_LOW) dtiArr[dti]->hyst = true;
+			else if(dtiArr[dti]->erpm_duty_voltage.erpm > REGEN_MOTORSPEED_RPM_HIGH) dtiArr[dti]->hyst = false;
+			if(dtiArr[dti]->hyst) set_zero(dti);
+		}
 	}
 }
 

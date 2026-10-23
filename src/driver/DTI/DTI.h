@@ -41,6 +41,7 @@ typedef enum{
 typedef struct{
 
 	struct inverter_dbc_erpm_duty_voltage_t erpm_duty_voltage;
+	struct inverter_dbc_ac_dc_current_t receivedCurrent;
 	struct inverter_dbc_set_ac_current_t current;
 	struct inverter_dbc_temp_fault_t tempFault;
 	struct inverter_dbc_foc_t foc;

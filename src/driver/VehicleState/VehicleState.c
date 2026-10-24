@@ -60,12 +60,10 @@ void VehicleState_Task_Update()
         case VehicleState_INVERTERS_POWERED: 
             GPIO_set_LEDs_on(true);
 
-            check_errors();
-             
-            if(DTI_get_state == DTIState_NORMAL){    
-                new_state(VehicleState_PRECHARGING);
-                precharge_time = HAL_GetTick();
-            } break;
+            check_errors();   
+            new_state(VehicleState_PRECHARGING);
+            precharge_time = HAL_GetTick();
+            break;
 
         case VehicleState_PRECHARGING: 
             if ((HAL_GetTick() - precharge_time) > PRECHARGE_MAX_TIME_MS) FaultManager_set(FAULT_PRECHARGE_TIMEOUT);

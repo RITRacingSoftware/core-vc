@@ -9,7 +9,7 @@
 #include "driver_GPIO.h"
 #include "driver_can.h"
 #include "FaultManager.h"
-//#include "driverless.h"
+#include "driverless.h"
 #include "VehicleState.h"
 
 static DTI_s dtiRR = {0};
@@ -19,15 +19,47 @@ static DTI_s dtiFL = {0};
 
 static DTI_s *dtiArr[4] = {&dtiRR, &dtiRL, &dtiFR, &dtiFL};
 
+static core_timeout_t rr_timeout;
+static core_timeout_t rl_timeout;
+static core_timeout_t fr_timeout;
+static core_timeout_t fl_timeout;
+
 static int pwm_msg_divider = 0;
 static uint8_t inverter_pwm = 0;
 static uint8_t motor_pwm = 0;
 
+static void timeout_callback(core_timeout_t *timeout);
 static void set_zero(uint8_t dtiNum);
-static void check_errors();
 static void state_machine();
 static void check_regen();
 static bool check_state_change(DTI_s *dti, DTIState_e state);
+static void state_machine();
+
+void DTI_init(){
+	rr_timeout.callback = timeout_callback;
+	rr_timeout.timeout = INV_CAN_TIMEOUT_MS;
+	rr_timeout.module = CAN_INV;
+	rr_timeout.ref = INVERTER_DBC_RR_ERPM_DUTY_VOLTAGE_FRAME_ID;
+	core_timeout_insert(&rr_timeout);
+	
+	rl_timeout.callback = timeout_callback;
+	rl_timeout.timeout = INV_CAN_TIMEOUT_MS;
+	rl_timeout.module = CAN_INV;
+	rl_timeout.ref = INVERTER_DBC_RL_ERPM_DUTY_VOLTAGE_FRAME_ID;
+	core_timeout_insert(&rl_timeout);
+
+	fr_timeout.callback = timeout_callback;
+	fr_timeout.timeout = INV_CAN_TIMEOUT_MS;
+	fr_timeout.module = CAN_INV;
+	fr_timeout.ref = INVERTER_DBC_FR_ERPM_DUTY_VOLTAGE_FRAME_ID;
+	core_timeout_insert(&fr_timeout);
+
+	fl_timeout.callback = timeout_callback;
+	fl_timeout.timeout = INV_CAN_TIMEOUT_MS;
+	fl_timeout.module = CAN_INV;
+	fl_timeout.ref = INVERTER_DBC_FL_ERPM_DUTY_VOLTAGE_FRAME_ID;
+	core_timeout_insert(&fl_timeout);
+}
 
 void DTI_Task_Update(){
 
@@ -110,7 +142,7 @@ void DTI_set_state(uint8_t dtiNum, DTIState_e state){
 	}
 }
 
-bool DTI_get_dc_on_any(){
+bool DTI_get_dc_on_all(){
 	for(int dti=0; dti<4; dti++){
 		if(dtiArr[dti]->erpm_duty_voltage.input_voltage < 0) return false;
 	}
@@ -193,10 +225,34 @@ void DTI_CAN_rx(){
 	}
 
 }
-/*
-static void state_machine(){
 
-}*/
+static void state_machine(){
+	for(int dti=0; dti<4; dti++){
+		DTI_s *target = dtiArr[dti];
+		if(target->state == DTIState_SOFT_FAULT){
+			switch(target->reset_state){
+				case ResetState_0:
+					check_errors();
+					if(target->state == DTIState_NORMAL) target->reset_state = ResetState_1;
+					break;
+
+				case ResetState_1:
+					DTI_set_drive_enable_all(true);
+					if(target->misc.drive_enable == 1){
+						target->reset_state = ResetState_2;
+					}
+					break;
+
+				case ResetState_2:
+					DTI_set_state(dti, DTIState_NORMAL);
+					target->reset_state = ResetState_0;
+					break;
+			}
+		}
+
+		if(target->state != DTIState_NORMAL) set_zero(dti);
+	}
+}
 
 void DTI_set_can_states(){
 	mainBus.inverter_status.vc_rr_status = dtiRR.state;
@@ -208,6 +264,14 @@ void DTI_set_can_states(){
 		mainBus.inverter_temps[dti] = dtiArr[dti]->tempFault.actual_temp_controller;
 		mainBus.motor_temps[dti] = dtiArr[dti]->tempFault.actual_temp_motor;
 	}
+}
+
+
+static void timeout_callback(core_timeout_t *timeout){
+	if(timeout == &rr_timeout) mainBus.inverter_status.vc_rr_lost = 1;
+	else if(timeout == &rl_timeout) mainBus.inverter_status.vc_rl_lost = 1;
+	else if(timeout == &fr_timeout) mainBus.inverter_status.vc_fr_lost = 1;
+	else if(timeout == &fl_timeout) mainBus.inverter_status.vc_fl_lost = 1;
 }
 
 void DTI_get_torques(float *trqArr){
@@ -222,7 +286,7 @@ void DTI_set_torque_request(uint8_t dtiNum, uint16_t torque){
 	dtiArr[dtiNum]->current.target_ac_current = inverter_dbc_set_ac_current_target_ac_current_encode(currentValue);
 }
 
-static void check_errors(){
+void check_errors(){
 	for(int dti=0; dti<4; dti++){
 		uint8_t errorCode = dtiArr[dti]->tempFault.actual_fault_code;
 		if(errorCode == DTI_ERR_OVER_VOLT ||

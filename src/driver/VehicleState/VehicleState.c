@@ -60,11 +60,12 @@ void VehicleState_Task_Update()
         case VehicleState_INVERTERS_POWERED: 
             GPIO_set_LEDs_on(true);
 
-            if (check_errors()){
+            check_errors();
+             
+            if(DTI_get_state == DTIState_NORMAL){    
                 new_state(VehicleState_PRECHARGING);
                 precharge_time = HAL_GetTick();
-            }
-            break;
+            } break;
 
         case VehicleState_PRECHARGING: 
             if ((HAL_GetTick() - precharge_time) > PRECHARGE_MAX_TIME_MS) FaultManager_set(FAULT_PRECHARGE_TIMEOUT);
@@ -106,7 +107,7 @@ void VehicleState_Task_Update()
             core_CAN_add_message_to_tx_queue(CAN_MAIN, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 0);
             core_CAN_add_message_to_tx_queue(CAN_SENSE, MAIN_DBC_VC_RTDS_REQUEST_FRAME_ID, 8, 0);
             // Set inverter enable and on
-            DTI_set_drive_enable_all(true); // AMK_bEnable = 1
+            DTI_set_drive_enable_all(true); 
 
       
 
@@ -133,13 +134,13 @@ void VehicleState_Task_Update()
             DTI_set_torque_request(DTI_RL, 0);
             DTI_set_torque_request(DTI_FR, 0);
             DTI_set_torque_request(DTI_FL, 0);
-            GPIO_set_activate_inv_relays(false); // X140 binary input BE2 = 0
+            GPIO_set_activate_inv_relays(false); 
              
             // Set inverter enables off
             DTI_set_drive_enable_all(false);
 
             // Receive confirmation that DC bus is off
-            if (DTI_get_dc_on_any()) break;
+            if (DTI_get_dc_on_all()) break;
 
             
             if (DTI_get_state(DTI_RR) <= DTIState_SOFT_FAULT &&

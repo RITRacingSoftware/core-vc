@@ -1,6 +1,6 @@
 #include "FaultManager.h"
 #include "DriverInputs.h"
-#include "Inverters.h"
+#include "DTI.h" 
 #include "driver_can.h"
 #include "VehicleState.h"
 #include "can.h"
@@ -37,26 +37,6 @@ void FaultManager_set(uint64_t faultCode)
 bool FaultManager_read(uint64_t faultCode)
 {
     return (faultList & faultCode);
-}
-
-
-void FaultManager_set_inv(uint8_t invNum, uint16_t errorInfo)
-{
-    core_GPIO_digital_write(RL_STATUS_PORT, RL_STATUS_PIN, true);
-    if (errorInfo == INV_DC_BUS_CHG_ERROR || 
-        errorInfo == INV_OVERSPEED_ERROR || 
-        errorInfo == INV_SPECIAL_SOFTWARE_MESSAGE_ERROR || 
-        errorInfo == INV_ENCODER_COMMS_ERROR ||
-        errorInfo == INV_OVER_CURRENT_ERROR ||
-        errorInfo == INV_OVERLOAD_WARNING_ERROR)
-    { 
-        core_GPIO_digital_write(RR_STATUS_PORT, RR_STATUS_PIN, true);
-        Inverters_set_state(invNum, InvState_RESETTING);
-    }
-    else
-    { 
-        Inverters_set_state(invNum, InvState_HARD_FAULT);
-    }
 }
 
 void FaultManager_reset(uint64_t faultCode) {

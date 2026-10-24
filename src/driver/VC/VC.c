@@ -12,7 +12,7 @@
 #include "rtt.h"
 #include "boot.h"
 
-#include "Inverters.h"
+#include "DTI.h"
 #include "driver_can.h"
 #include "driver_GPIO.h"
 #include "VehicleState.h"
@@ -41,11 +41,10 @@ bool VC_init()
     core_ADC_init(ADC1);
     core_RTT_init();
     rprintf("Inits\n");
-
     GPIO_init();
     vectornav_init();
     VehicleState_init();
-    Inverters_init();
+    DTI_init();
     if (!DriverInputs_init()) return false;
     FaultManager_init();
     TractionControl_init();
@@ -65,7 +64,7 @@ void VC_Task_Update()
     core_timeout_check_all();
     Controls_Task_Update();
     FaultManager_Task_Update();
-    Inverters_Task_Update();
+    DTI_Task_Update();
     CAN_Task_Update();
     GPIO_Task_Update();
     DRS_task();

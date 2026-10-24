@@ -1,7 +1,7 @@
 #include "TractionControl.h"
 #include "config.h"
 #include "driver_can.h"
-#include "Inverters.h"
+#include "DTI.h"
 #include "common_macros.h"
 #include "can.h"
 #include "filter.h"
@@ -72,8 +72,8 @@ void TractionControl_init()
 void TractionControl_test(float v, float *trq) {
     float n_target = (2*v-vPrev)*((float)((TC_SR_TARGET+1)/(M_PI*VEHICLE_TIRE_SIZE)*(30*VEHICLE_RATIO)));
     float vels[4];
-    Inverters_get_velocities_codegen(vels);
-    Inverters_get_torques(trqPrev+prev_idx);
+    DTI_get_velocities_codegen(vels);
+    DTI_get_torques(trqPrev+prev_idx);
     float temp = vels[0]; vels[0] = vels[3]; vels[3] = temp;
     uint64_t derMsg = 0, tcMsg = 0;
 
@@ -106,7 +106,7 @@ void TractionControl_test(float v, float *trq) {
 void TractionControl(float *inTrqs, float *outTrq, float *totalTrq)
 {
     float tempVels[4];
-    Inverters_get_velocities_codegen(tempVels);
+    DTI_get_velocities_codegen(tempVels);
 
     frontTC = false;
     rearTC = false;
@@ -204,7 +204,7 @@ static void calculate_derivatives()
 
 static void tcApply(uint8_t invNum)
 {
-    if (invNum < INV_FR) rearTC = true;
+    if (invNum < DTI_FR) rearTC = true;
     else frontTC = true;
 }
 

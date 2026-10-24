@@ -38,6 +38,12 @@ typedef enum{
 } DTIState_e;
 
 
+typedef enum{
+	ResetState_0,
+	ResetState_1,
+	ResetState_2
+} ResetState_e;
+
 typedef struct{
 
 	struct inverter_dbc_erpm_duty_voltage_t erpm_duty_voltage;
@@ -47,6 +53,7 @@ typedef struct{
 	struct inverter_dbc_foc_t foc;
 	struct inverter_dbc_misc_t misc;
 	struct inverter_dbc_enable_t enable;
+	ResetState_e reset_state;
 	bool hyst;
 	DTIState_e state;
 } DTI_s;
@@ -58,14 +65,12 @@ void DTI_update();
 
 //Getters
 DTIState_e DTI_get_state(uint8_t dtiNum);
-bool DTI_get_RPM(void);
-bool DTI_get_enable(void);
 bool DTI_get_precharged_all(void);
 bool DTI_get_drive_enable_all(void);
 void DTI_get_velocities_codegen(float *velArr);
 void DTI_get_voltages(float *volArr);
 void DTI_get_torques(float *trqArr);
-bool DTI_get_dc_on_any();
+bool DTI_get_dc_on_all();
 
 
 //Setters
@@ -79,4 +84,4 @@ void DTI_set_can_states();
 void DTI_set_state(uint8_t dtiNum, DTIState_e state);
 void DTI_set_can_states();
 void DTI_CAN_rx();
-
+void check_errors();
